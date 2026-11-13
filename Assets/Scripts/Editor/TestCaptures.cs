@@ -10,7 +10,8 @@ namespace Deckscent.Editor
     /// après un changement (shader, éclairage, prefabs). Menu Deckscent > Captures de la scène de test.
     ///
     /// Rendu dans l'éditeur, sans Play mode : les torches ne vacillent pas, deux captures du même
-    /// état sont identiques. Images dans Captures/ à la racine du projet (non versionné).
+    /// état sont identiques. Images dans Captures/ à la racine du projet, versionnées : le diff
+    /// d'un commit montre l'avant / après du rendu.
     /// </summary>
     public static class TestCaptures
     {
@@ -112,7 +113,8 @@ namespace Deckscent.Editor
                 var tex = new Texture2D(Width, Height, TextureFormat.RGB24, false);
                 tex.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
                 tex.Apply();
-                File.WriteAllBytes(Path.Combine(OutputDir, name + ".png"), tex.EncodeToPNG());
+                if (DocFiles.SaveImageIfChanged(tex, Path.Combine(OutputDir, name + ".png")))
+                    Debug.Log("Captures : " + name + ".png a changé.");
                 Object.DestroyImmediate(tex);
             }
             finally

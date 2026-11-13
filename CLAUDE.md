@@ -52,7 +52,9 @@ Assets/Scripts/Maze/Maze.cs            Labyrinthe [ExecuteAlways] : plan texte �
 Assets/Scripts/Maze/TorchFlicker.cs    Vacillement des torches (en jeu)
 Assets/Scripts/Player/PlayerController.cs  Déplacement en grille, tours, touches (InputAction dans l'inspecteur)
 Assets/Scripts/Editor/PrototypeBuilder.cs  Menu Deckscent > Construire… : prefabs, scène Main, scène de test
-Assets/Scripts/Editor/TestCaptures.cs  Menu Deckscent > Captures de la scène de test
+Assets/Scripts/Editor/TestCaptures.cs  Menu Deckscent > Captures de la scène de test (→ Captures/)
+Assets/Scripts/Editor/PrefabDocs.cs    Menu Deckscent > Documenter les prefabs (→ docs/prefabs/)
+Assets/Scripts/Editor/DocFiles.cs      Écriture des images et textes générés seulement s'ils ont changé
 Assets/Prefabs/Player.prefab           Joueur : PlayerController, Caméra (1,6 m, FOV 75), Lanterne
 Assets/Prefabs/Maze/                   Mur_01/03/04, Sol, Plafond (Synty), Mur_Gris, Sol_Gris, Plafond_Gris (secours), Torche
 Assets/Materials/                      M_Gris_* (secours), M_Flamme
@@ -67,7 +69,11 @@ Assets/Tests/PlayMode/                 Tests PlayMode (assembly Deckscent.Tests.
 
 **Prefabs construits par script** : `PrototypeBuilder` copie le maillage et les matériaux des pièces Synty (pas de prefab imbriqué : un prefab Synty manquant ne se détecterait pas). Relancer le menu **écrase** les prefabs : une fois réglés à la main dans l'éditeur, ne le relancer que pour repartir de zéro (ou reporter les réglages dans le script).
 
-**Scène de test** (`Test_Labyrinthe`, plan figé) : repère commun des captures et des tests. Ne pas changer son plan sans mettre à jour les poses de `TestCaptures` et les tests. Captures (`Captures/` à la racine, non versionné) : 5 vues joueur + 1 vue de dessus, rendues dans l'éditeur sans Play mode (torches figées, images comparables).
+**Scène de test** (`Test_Labyrinthe`, plan figé) : repère commun des captures et des tests. Ne pas changer son plan sans mettre à jour les poses de `TestCaptures` et les tests. Captures (`Captures/` à la racine, **versionnées**) : 5 vues joueur + 1 vue de dessus, rendues dans l'éditeur sans Play mode (torches figées, images comparables). Après un changement visuel, les régénérer et les commiter avec le changement : le diff montre l'avant / après.
+
+**Doc des prefabs** (`docs/prefabs/`, demande de l'utilisateur) : `README.md` = la liste, une page par prefab (hiérarchie, composants, réglages de nos scripts avec leur infobulle, image dans `images/`). **Générée** par *Deckscent > Documenter les prefabs* (`PrefabDocs.cs`) : ne pas l'éditer à la main. Après avoir créé ou modifié un prefab, la régénérer dans le même travail. Le rôle de chaque prefab est dans `PrefabDocs.Descriptions` : y ajouter chaque nouveau prefab.
+
+**Fichiers générés écrits seulement s'ils changent** (`DocFiles`) : une image n'est remplacée que si plus de 0,1 % de ses pixels diffèrent (au-delà du bruit du GPU), un texte que s'il diffère. Régénérer sans rien avoir changé ne crée donc aucun diff.
 
 **Tests** : `unity command test run --mode playmode --filter Deckscent.Tests.PlayMode --filter-type Assembly --async-tests true`, puis `unity command test status`. Les tests chargent la scène de test **au début de chaque test** (pas dans `[UnitySetUp]`, qui passe avant la remise à zéro de l'Input System par `InputTestFixture`). Le clavier réel est ignoré quand la vue Game n'a pas le focus : pour simuler des touches, toujours passer par un test avec `InputTestFixture`, pas par `script eval`.
 

@@ -9,9 +9,6 @@
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
 
-# Captures de la scène de test (menu Deckscent > Captures de la scène de test)
-/Captures/
-
 # Fichiers d'IDE générés par Unity
 .vs/
 .vscode/
