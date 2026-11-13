@@ -2,7 +2,7 @@
 
 *Deckscent* : **deck** + **descent**. Dungeon crawler dark fantasy en vue subjective, au tour par tour sur une grille, où le joueur construit le donjon qu'il doit survivre en posant des cartes-tuiles. Rendu gravure noir et blanc façon BD.
 
-Portage sous **Unity 6.3 LTS** (6000.3.11f1, URP) du prototype Godot (`dungeon-crawler-prototype`).
+**Unity 6.3 LTS** (6000.3.11f1, URP).
 
 ## Packages utilisés
 
@@ -25,7 +25,7 @@ Partagés entre tous les packs, et créés par le premier importé :
 - `Assets/Synty/PolygonGeneric` : shaders Synty (Shader Graph, compatibles URP), textures et matériaux communs.
 - `Assets/Synty/SyntyPackageHelper` : petit outil d'éditeur fourni par Synty.
 
-**Règle (reprise du projet Godot)** : on ne garde que les **maillages et les textures** des pièces Synty, avec notre propre matériau toon par-dessus. Le jeu doit rester jouable sans les packs : rien de versionné ne doit dépendre d'un fichier d'`Assets/Synty/` sans solution de repli.
+**Règle** : on ne garde que les **maillages et les textures** des pièces Synty, avec notre propre matériau toon par-dessus. Le jeu doit rester jouable sans les packs : rien de versionné ne doit dépendre d'un fichier d'`Assets/Synty/` sans solution de repli.
 
 ### Pour réimporter
 
@@ -50,8 +50,8 @@ Ou, Unity ouvert : *Assets > Import Package > Custom Package…*
 | Besoin | Package | Notes |
 |---|---|---|
 | Shake d'écran, recul au coup | **Cinemachine** (`com.unity.cinemachine`, gratuit) | Impulse Source / Impulse Listener sur la caméra du joueur. |
-| Tweens (déplacements, flashs, impacts) | **DOTween** (gratuit) ou coroutines | Remplace les `Tween` de Godot. |
-| Éclairage toon | Shader maison (portage de `toon.gdshader`) | Réglé avec les seuils des hachures Moebius. |
+| Tweens (déplacements, flashs, impacts) | **DOTween** (gratuit) ou coroutines | Déplacements case par case, rebonds, flashs. |
+| Éclairage toon | Shader maison | Réglé avec les seuils des hachures Moebius. |
 
 ## Outils
 
