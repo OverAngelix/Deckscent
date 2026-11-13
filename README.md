@@ -42,6 +42,7 @@ Ou, Unity ouvert : *Assets > Import Package > Custom Package…*
 | Package | Pour quoi faire |
 |---|---|
 | `com.unity.render-pipelines.universal` (URP) | Rendu. Le post-process Moebius sera une Renderer Feature. |
+| `com.unity.shadergraph` | Ajouté par l'outil Synty (`SyntyPackageHelper`) : les shaders Synty sont des Shader Graph. |
 | `com.unity.pipeline` | Pilotage de l'éditeur par le Unity CLI et son serveur MCP (voir plus bas). |
 
 ### Prévus, pas encore installés
