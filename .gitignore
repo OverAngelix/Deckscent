@@ -41,6 +41,14 @@ crashlytics-build.properties
 *.unitypackage
 *.app
 
+# Packs sous licence (Synty, Asset Store) : jamais sur GitHub, voir README.md
+/[Aa]ssets/Synty/
+/[Aa]ssets/Synty.meta
+/[Aa]ssets/JMO Assets/
+/[Aa]ssets/JMO Assets.meta
+/[Aa]ssets/Feel/
+/[Aa]ssets/Feel.meta
+
 # Addressables
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
