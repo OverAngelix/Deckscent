@@ -10,13 +10,15 @@ namespace Deckscent.Tests
 {
     /// <summary>
     /// Déplacement du joueur dans la scène de test (plan figé, voir PrototypeBuilder.TestPlan),
-    /// avec un clavier virtuel. Départ en (6, 3), tourné vers l'est.
+    /// avec un clavier et une manette virtuels, via les actions d'InputSystem_Actions (map Player).
+    /// Départ en (6, 3), tourné vers l'est.
     /// </summary>
     public class PlayerMovementTests : InputTestFixture
     {
         const string TestScene = "Assets/Scenes/Tests/Test_Labyrinthe.unity";
 
         Keyboard _keyboard;
+        Gamepad _gamepad;
         PlayerController _player;
 
         // Le clavier virtuel est ajouté après la remise à zéro de l'Input System par la fixture,
@@ -26,6 +28,7 @@ namespace Deckscent.Tests
         {
             base.Setup();
             _keyboard = InputSystem.AddDevice<Keyboard>();
+            _gamepad = InputSystem.AddDevice<Gamepad>();
         }
 
         IEnumerator LoadScene()
@@ -42,7 +45,7 @@ namespace Deckscent.Tests
         }
 
         /// <summary>Appuie brièvement sur une touche puis attend la fin de l'animation.</summary>
-        IEnumerator Tap(KeyControl key)
+        IEnumerator Tap(ButtonControl key)
         {
             Press(key);
             yield return null;
@@ -106,10 +109,36 @@ namespace Deckscent.Tests
             yield return LoadScene();
             var ended = 0;
             _player.TurnEnded += _ => ended++;
-            yield return Tap(_keyboard.spaceKey);
+            yield return Tap(_keyboard.enterKey); // Entrée
             Assert.That(_player.Turn, Is.EqualTo(1));
             Assert.That(ended, Is.EqualTo(1), "TurnEnded émis une fois");
             Assert.That(_player.Cell, Is.EqualTo(new Vector2Int(6, 3)));
+        }
+
+        [UnityTest]
+        public IEnumerator LaManetteDeplaceEtTourne()
+        {
+            yield return LoadScene();
+            yield return Tap(_gamepad.dpad.up); // croix haut : avancer vers l'est
+            Assert.That(_player.Cell, Is.EqualTo(new Vector2Int(7, 3)));
+            yield return Tap(_gamepad.leftShoulder); // LB : tourner à gauche
+            Assert.That(_player.Facing, Is.EqualTo(0));
+            yield return Tap(_gamepad.rightShoulder); // RB : tourner à droite
+            Assert.That(_player.Facing, Is.EqualTo(1));
+            yield return Tap(_gamepad.leftStickButton); // L3 : attendre
+            Assert.That(_player.Turn, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator LaLanterneSAllumeEtSEteintSansCouterDeTour()
+        {
+            yield return LoadScene();
+            Assert.That(_player.LanternOn, Is.True, "allumée au départ");
+            yield return Tap(_keyboard.tKey);
+            Assert.That(_player.LanternOn, Is.False);
+            yield return Tap(_gamepad.buttonEast); // Rond / B
+            Assert.That(_player.LanternOn, Is.True);
+            Assert.That(_player.Turn, Is.EqualTo(0), "la lanterne ne coûte pas de tour");
         }
     }
 }

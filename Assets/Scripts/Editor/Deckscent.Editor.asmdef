@@ -3,6 +3,7 @@
     "rootNamespace": "Deckscent.Editor",
     "references": [
         "Deckscent",
+        "Unity.InputSystem",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [

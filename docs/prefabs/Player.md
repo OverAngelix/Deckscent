@@ -26,13 +26,12 @@ Player  [PlayerController]
   - `turnTime` = 0.18 — Durée d'un quart de tour (secondes).
   - `waitTime` = 0.25 — Durée minimale d'un tour passé à attendre, pour ne pas enchaîner des dizaines de tours en gardant la touche enfoncée.
   - `turningTakesTurn` = non — Coché : tourner sur place coûte un tour.
-  - `moveForward` = touches `<Keyboard>/w`, `<Keyboard>/upArrow`
-  - `moveBack` = touches `<Keyboard>/s`, `<Keyboard>/downArrow`
-  - `strafeLeft` = touches `<Keyboard>/a`
-  - `strafeRight` = touches `<Keyboard>/d`
-  - `turnLeft` = touches `<Keyboard>/q`, `<Keyboard>/leftArrow`
-  - `turnRight` = touches `<Keyboard>/e`, `<Keyboard>/rightArrow`
-  - `waitTurn` = touches `<Keyboard>/space`
+  - `move` = `Player/Move` — Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté.
+  - `turn` = `Player/Turn` — Tourner d'un quart de tour : A / E, LB / RB.
+  - `wait` = `Player/Wait` — Attendre un tour : Entrée, L3.
+  - `torch` = `Player/Torch` — Allumer / éteindre la lanterne : T, bouton droit (Rond / B). Ne coûte pas de tour.
+  - `stickThreshold` = 0.5 — Seuil au-delà duquel un stick compte comme une direction.
+  - `lantern` = `Lanterne` — La lumière que l'action Torch allume et éteint.
 
 ### Player / Caméra
 

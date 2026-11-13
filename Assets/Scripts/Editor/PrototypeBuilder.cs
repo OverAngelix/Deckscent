@@ -205,7 +205,35 @@ namespace Deckscent.Editor
             light.intensity = 0.9f;
             light.range = 6f;
             light.shadows = LightShadows.None;
+            ConfigurePlayer(root);
             return root;
+        }
+
+        const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
+
+        /// <summary>
+        /// Branche le PlayerController sur les actions de la map Player d'InputSystem_Actions
+        /// et sur sa lanterne. Appelé à la construction du prefab, et à rappeler sur le prefab
+        /// existant si les actions changent (sans le reconstruire).
+        /// </summary>
+        public static void ConfigurePlayer(GameObject root)
+        {
+            var so = new SerializedObject(root.GetComponent<PlayerController>());
+            foreach (var (field, action) in new[] { ("move", "Move"), ("turn", "Turn"), ("wait", "Wait"), ("torch", "Torch") })
+                so.FindProperty(field).objectReferenceValue = ActionReference("Player", action);
+            var lantern = root.transform.Find("Caméra/Lanterne");
+            so.FindProperty("lantern").objectReferenceValue = lantern != null ? lantern.GetComponent<Light>() : null;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static UnityEngine.InputSystem.InputActionReference ActionReference(string map, string action)
+        {
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(InputActionsPath))
+                if (asset is UnityEngine.InputSystem.InputActionReference reference
+                    && reference.action != null && reference.action.actionMap.name == map && reference.action.name == action)
+                    return reference;
+            Debug.LogError($"Deckscent : action {map}/{action} introuvable dans {InputActionsPath}.");
+            return null;
         }
 
         /// <summary>Copie les maillages d'un prefab Synty (sans ses scripts ni collisions) sous une nouvelle racine.</summary>

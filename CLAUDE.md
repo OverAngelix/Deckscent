@@ -50,7 +50,8 @@ docs/                    Docs portées depuis le projet Godot, à tenir à jour
 Assets/Scripts/Maze/Grid.cs            Conventions de grille : Dirs (N, E, S, O), ToWorldDir, Yaw
 Assets/Scripts/Maze/Maze.cs            Labyrinthe [ExecuteAlways] : plan texte → instances de prefabs
 Assets/Scripts/Maze/TorchFlicker.cs    Vacillement des torches (en jeu)
-Assets/Scripts/Player/PlayerController.cs  Déplacement en grille, tours, touches (InputAction dans l'inspecteur)
+Assets/Scripts/Player/PlayerController.cs  Déplacement en grille, tours, lanterne (actions d'InputSystem_Actions)
+Assets/InputSystem_Actions.inputactions   Actions du projet (InputSystem.actions) : toutes les touches du jeu
 Assets/Scripts/Editor/PrototypeBuilder.cs  Menu Deckscent > Construire… : prefabs, scène Main, scène de test
 Assets/Scripts/Editor/TestCaptures.cs  Menu Deckscent > Captures de la scène de test (→ Captures/)
 Assets/Scripts/Editor/PrefabDocs.cs    Menu Deckscent > Documenter les prefabs (→ docs/prefabs/)
@@ -101,7 +102,18 @@ Voir `README.md` (packs, versions, réimport).
 
 - **Grille, sans physique** : collisions testées sur la grille (`maze.IsWalkable()`), mouvements en tweens, entrées bloquées pendant l'animation.
 - **Tour par tour** : après un pas, une attaque (avancer vers un ennemi droit devant) ou une attente, chaque acteur du tour (ennemis, pièges) joue l'un après l'autre (`TakeTurn(player)`, en coroutine / async). Tourner, se cogner et la carte ne coûtent pas de tour. Dégâts : la défense est retirée, minimum 1 par coup.
-- **Touches** en positions physiques (ZQSD en AZERTY = WASD en QWERTY) : avancer / reculer, pas de côté, A / E (← →) pour tourner, Espace pour attendre, la carte, R pour tourner une tuile, Suppr pour défausser. Utiliser l'Input System avec des bindings par position de touche.
+- **Touches** : toutes dans `Assets/InputSystem_Actions.inputactions` (fichier d'actions du projet, demande de l'utilisateur : partir des boutons de base). Bindings clavier par **position physique** (`<Keyboard>/w` = Z en AZERTY). Map `Player` (choix de l'utilisateur) :
+
+  | Action | Clavier AZERTY (chemin QWERTY) | Manette | Branchée |
+  |---|---|---|---|
+  | `Move` | ZQSD (`w a s d`), pas de flèches pour l'instant | stick gauche, croix | oui |
+  | `Turn` (axe 1D) | A / E (`q` / `e`) | LB / RB | oui |
+  | `Wait` | Entrée, Entrée du pavé | L3 | oui |
+  | `Torch` | T | bouton droit (Rond / B) | oui : lanterne, gratuit |
+  | `Interact` | F | bouton du bas (Croix / A) | coffres (étape 5) |
+  | `Map` | virgule (`m`) | bouton du haut (Triangle / Y) | carte (étape 4) |
+
+  Les autres actions de base (Attack, Jump, Crouch, Sprint, Look, Previous, Next) ne servent pas et certaines partagent des touches (Entrée = Attack, L3 = Sprint) : en tenir compte avant de les utiliser. Pour changer une touche, modifier le fichier d'actions (pas le code). Le joueur référence ses actions par `InputActionReference` (assignées par `PrototypeBuilder.ConfigurePlayer`, à rappeler sur le prefab si on ajoute une action). Carte (à venir) : R pour tourner une tuile, Suppr pour défausser, à ajouter au fichier.
 - **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit).
 - **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs.
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). La vitrine sert à les voir et les régler.

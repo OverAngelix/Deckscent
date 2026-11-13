@@ -13,8 +13,8 @@ namespace Deckscent
     /// Chaque pas ou attente est un tour (<see cref="TurnEnded"/>). Tourner et se cogner sont
     /// gratuits. Les ennemis et pièges joueront à la fin de chaque tour (étape 5 du portage).
     ///
-    /// Touches en position physique : ZQSD en AZERTY (WASD en QWERTY). Elles se changent dans
-    /// l'inspecteur du prefab Player.
+    /// Touches : actions Move, Turn, Wait, Torch de la map Player d'InputSystem_Actions (clavier
+    /// en position physique, ZQSD en AZERTY, et manette). Elles se règlent dans ce fichier.
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
@@ -31,14 +31,24 @@ namespace Deckscent
         [Tooltip("Coché : tourner sur place coûte un tour.")]
         [SerializeField] bool turningTakesTurn;
 
-        [Header("Touches (position physique, disposition QWERTY)")]
-        [SerializeField] InputAction moveForward = Keys("Avancer", "<Keyboard>/w", "<Keyboard>/upArrow");
-        [SerializeField] InputAction moveBack = Keys("Reculer", "<Keyboard>/s", "<Keyboard>/downArrow");
-        [SerializeField] InputAction strafeLeft = Keys("Pas à gauche", "<Keyboard>/a");
-        [SerializeField] InputAction strafeRight = Keys("Pas à droite", "<Keyboard>/d");
-        [SerializeField] InputAction turnLeft = Keys("Tourner à gauche", "<Keyboard>/q", "<Keyboard>/leftArrow");
-        [SerializeField] InputAction turnRight = Keys("Tourner à droite", "<Keyboard>/e", "<Keyboard>/rightArrow");
-        [SerializeField] InputAction waitTurn = Keys("Attendre", "<Keyboard>/space");
+        // Actions de la map Player d'InputSystem_Actions (Assets/InputSystem_Actions.inputactions),
+        // où se règlent les touches. Clavier en position physique (ZQSD en AZERTY) et manette.
+        // Vides : prises par leur nom dans les actions du projet.
+        [Header("Actions (InputSystem_Actions, map Player)")]
+        [Tooltip("Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté.")]
+        [SerializeField] InputActionReference move;
+        [Tooltip("Tourner d'un quart de tour : A / E, LB / RB.")]
+        [SerializeField] InputActionReference turn;
+        [Tooltip("Attendre un tour : Entrée, L3.")]
+        [SerializeField] InputActionReference wait;
+        [Tooltip("Allumer / éteindre la lanterne : T, bouton droit (Rond / B). Ne coûte pas de tour.")]
+        [SerializeField] InputActionReference torch;
+        [Tooltip("Seuil au-delà duquel un stick compte comme une direction.")]
+        [SerializeField, Range(0.1f, 0.9f)] float stickThreshold = 0.5f;
+
+        [Header("Lanterne")]
+        [Tooltip("La lumière que l'action Torch allume et éteint.")]
+        [SerializeField] Light lantern;
 
         /// <summary>Un tour complet vient de se terminer (le joueur, puis le monde).</summary>
         public event Action<int> TurnEnded;
@@ -51,31 +61,48 @@ namespace Deckscent
         public Maze Maze => maze;
         /// <summary>Vrai pendant une animation (pas, quart de tour, bump) : les touches sont ignorées.</summary>
         public bool IsBusy => _busy;
+        public bool LanternOn => lantern != null && lantern.enabled;
 
         bool _busy;
-
-        static InputAction Keys(string actionName, params string[] bindings)
-        {
-            var action = new InputAction(actionName, InputActionType.Button);
-            foreach (var binding in bindings)
-                action.AddBinding(binding);
-            return action;
-        }
-
-        InputAction[] AllActions => new[] { moveForward, moveBack, strafeLeft, strafeRight, turnLeft, turnRight, waitTurn };
+        InputAction _move, _turn, _wait, _torch;
 
         void OnEnable()
         {
-            foreach (var action in AllActions)
-                action.Enable();
+            _move = Resolve(move, "Player/Move");
+            _turn = Resolve(turn, "Player/Turn");
+            _wait = Resolve(wait, "Player/Wait");
+            _torch = Resolve(torch, "Player/Torch");
+            foreach (var action in new[] { _move, _turn, _wait, _torch })
+                action?.Enable();
+            if (_torch != null)
+                _torch.performed += OnTorch;
         }
 
         void OnDisable()
         {
-            foreach (var action in AllActions)
-                action.Disable();
+            if (_torch != null)
+                _torch.performed -= OnTorch;
+            foreach (var action in new[] { _move, _turn, _wait, _torch })
+                action?.Disable();
         }
 
+        /// <summary>L'action référencée, sinon celle du même nom dans les actions du projet.</summary>
+        InputAction Resolve(InputActionReference reference, string path)
+        {
+            var action = reference != null ? reference.action : InputSystem.actions?.FindAction(path);
+            if (action == null)
+                Debug.LogError($"Joueur : action {path} introuvable (InputSystem_Actions).", this);
+            return action;
+        }
+
+        void OnTorch(InputAction.CallbackContext _) => ToggleLantern();
+
+        /// <summary>Allume ou éteint la lanterne. Gratuit : ne coûte pas de tour.</summary>
+        public void ToggleLantern()
+        {
+            if (lantern != null)
+                lantern.enabled = !lantern.enabled;
+        }
         void Start()
         {
             if (maze == null)
@@ -102,24 +129,26 @@ namespace Deckscent
 
         void Update()
         {
-            if (_busy || maze == null)
+            if (_busy || maze == null || _move == null || _turn == null || _wait == null)
                 return;
             var forward = Grid.Dirs[Facing];
             var right = Grid.Dirs[(Facing + 1) % 4];
+            var turnAxis = _turn.ReadValue<float>();
+            var m = _move.ReadValue<Vector2>();
 
-            if (turnLeft.IsPressed())
+            if (turnAxis <= -stickThreshold)
                 StartCoroutine(TurnBy(-1));
-            else if (turnRight.IsPressed())
+            else if (turnAxis >= stickThreshold)
                 StartCoroutine(TurnBy(1));
-            else if (moveForward.IsPressed())
-                StartCoroutine(Step(forward));
-            else if (moveBack.IsPressed())
-                StartCoroutine(Step(-forward));
-            else if (strafeLeft.IsPressed())
-                StartCoroutine(Step(-right));
-            else if (strafeRight.IsPressed())
-                StartCoroutine(Step(right));
-            else if (waitTurn.IsPressed())
+            else if (m.sqrMagnitude >= stickThreshold * stickThreshold)
+            {
+                // Stick en diagonale : on garde l'axe dominant (pas de pas en biais).
+                if (Mathf.Abs(m.y) >= Mathf.Abs(m.x))
+                    StartCoroutine(Step(m.y > 0f ? forward : -forward));
+                else
+                    StartCoroutine(Step(m.x > 0f ? right : -right));
+            }
+            else if (_wait.IsPressed())
                 StartCoroutine(Wait());
         }
 
