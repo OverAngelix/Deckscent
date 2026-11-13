@@ -17,7 +17,7 @@ Dungeon crawler en vue à la première personne, déplacement case par case **au
 Dans l'ordre (chaque étape donne quelque chose de jouable ou de visible) :
 
 0. ✅ Ce fichier.
-1. **Labyrinthe + joueur** : `Maze` (plan texte → murs, sols, plafond, torches Synty), déplacement en grille, tourner, bump.
+1. ✅ **Labyrinthe + joueur** : `Maze` (plan texte → murs, sols, plafond, torches Synty), déplacement en grille, tourner, bump.
 2. **Rendu gravure** : shader toon + post-process Moebius (Renderer Feature URP), validé par captures.
 3. **Tuiles, plateau, pioche** en C# pur, avec tests EditMode.
 4. **Écran de carte** dessiné en gravure, pose à la souris.
@@ -44,6 +44,33 @@ Assets/Tests/            Tests EditMode / PlayMode (assembly Deckscent.Tests)
 docs/                    Docs portées depuis le projet Godot, à tenir à jour
 ```
 
+### Ce qui existe
+
+```
+Assets/Scripts/Maze/Grid.cs            Conventions de grille : Dirs (N, E, S, O), ToWorldDir, Yaw
+Assets/Scripts/Maze/Maze.cs            Labyrinthe [ExecuteAlways] : plan texte → instances de prefabs
+Assets/Scripts/Maze/TorchFlicker.cs    Vacillement des torches (en jeu)
+Assets/Scripts/Player/PlayerController.cs  Déplacement en grille, tours, touches (InputAction dans l'inspecteur)
+Assets/Scripts/Editor/PrototypeBuilder.cs  Menu Deckscent > Construire… : prefabs, scène Main, scène de test
+Assets/Scripts/Editor/TestCaptures.cs  Menu Deckscent > Captures de la scène de test
+Assets/Prefabs/Player.prefab           Joueur : PlayerController, Caméra (1,6 m, FOV 75), Lanterne
+Assets/Prefabs/Maze/                   Mur_01/03/04, Sol, Plafond (Synty), Mur_Gris, Sol_Gris, Plafond_Gris (secours), Torche
+Assets/Materials/                      M_Gris_* (secours), M_Flamme
+Assets/Scenes/Main.unity               Jeu (scène 0 du build)
+Assets/Scenes/Tests/Test_Labyrinthe.unity  Scène de test, plan figé (PrototypeBuilder.TestPlan)
+Assets/Tests/PlayMode/                 Tests PlayMode (assembly Deckscent.Tests.PlayMode), clavier virtuel via InputTestFixture
+```
+
+**Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
+
+**Labyrinthe** : chaque case de sol reçoit un `Sol`, un `Plafond` et un `Mur` par côté fermé (variante tirée d'après la position). Les prefabs sont faits pour des cases de 3 m et des murs de 3,5 m : racine d'un mur au milieu du bord, face (+Z) vers la case ; sol et plafond centrés sur la case. Les objets générés vont sous un enfant `Généré` en `HideFlags.DontSave` : **jamais enregistrés dans la scène**, seul le plan l'est. Si une pièce du décor n'a pas de maillage (pack absent), tout le labyrinthe passe au jeu `fallback` (blocs gris). Torche : sur une case `T`, accrochée au premier mur voisin (N, E, S, O), à `torchHeight`.
+
+**Prefabs construits par script** : `PrototypeBuilder` copie le maillage et les matériaux des pièces Synty (pas de prefab imbriqué : un prefab Synty manquant ne se détecterait pas). Relancer le menu **écrase** les prefabs : une fois réglés à la main dans l'éditeur, ne le relancer que pour repartir de zéro (ou reporter les réglages dans le script).
+
+**Scène de test** (`Test_Labyrinthe`, plan figé) : repère commun des captures et des tests. Ne pas changer son plan sans mettre à jour les poses de `TestCaptures` et les tests. Captures (`Captures/` à la racine, non versionné) : 5 vues joueur + 1 vue de dessus, rendues dans l'éditeur sans Play mode (torches figées, images comparables).
+
+**Tests** : `unity command test run --mode playmode --filter Deckscent.Tests.PlayMode --filter-type Assembly --async-tests true`, puis `unity command test status`. Les tests chargent la scène de test **au début de chaque test** (pas dans `[UnitySetUp]`, qui passe avant la remise à zéro de l'Input System par `InputTestFixture`). Le clavier réel est ignoré quand la vue Game n'a pas le focus : pour simuler des touches, toujours passer par un test avec `InputTestFixture`, pas par `script eval`.
+
 **Un prefab par objet** (demande de l'utilisateur, raison de la migration) : chaque slime, coffre, dalle, torche doit pouvoir s'ouvrir, se voir et se régler dans l'inspecteur. Le code instancie les prefabs, il ne construit pas les objets à la main. Les réglages sont des champs `[SerializeField]` avec `[Tooltip]` en français.
 
 ## Lancer / vérifier
@@ -51,7 +78,8 @@ docs/                    Docs portées depuis le projet Godot, à tenir à jour
 - **MCP Unity** : `.mcp.json` lance `unity mcp --tool-groups` (Unity CLI, package `com.unity.pipeline`). L'éditeur doit être **ouvert** sur ce projet. Groupes utiles : `scene`, `gameobject`, `prefab`, `component`, `material`, `script` (recompilation), `console` (erreurs), `editor.playmode`, `capture`, `test`.
 - **Sans éditeur ouvert** : `unity test`, `unity run`, `unity assets import` passent par le batch mode, qui refuse de tourner si l'éditeur a le projet ouvert (verrou `Temp/UnityLockfile`).
 - Après avoir écrit du C#, **vérifier la compilation** (`unity recompile` ou la console) avant de déclarer fini.
-- **Voir le rendu** : toujours vérifier un changement de shader ou d'éclairage par une **capture** (groupe `capture`) : l'absence d'erreur ne dit rien du rendu.
+- **Voir le rendu** : toujours vérifier un changement de shader ou d'éclairage par les **captures de la scène de test** (`unity command editor invoke_menu --path "Deckscent/Captures de la scène de test"`, images dans `Captures/`) : l'absence d'erreur ne dit rien du rendu. Pour une vue en jeu : `unity command capture game_view` en Play mode.
+- Menus de l'éditeur : `unity command editor invoke_menu --path "Deckscent/…"`. C# ponctuel : `unity command script eval --file <fichier.cs>` (le code finit par `return …`).
 - Scènes et prefabs (`.unity`, `.prefab`) : **ne pas les écrire à la main** (YAML plein de `fileID` / GUID). Passer par le MCP ou par un script d'éditeur.
 
 ## Assets Synty (`Assets/Synty/`)
