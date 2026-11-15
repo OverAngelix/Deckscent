@@ -155,7 +155,11 @@ namespace Deckscent.Editor
             if (dungeonMode != DungeonMode.None)
                 AddDungeon(maze, dungeonMode == DungeonMode.Demo);
             if (dungeonMode != DungeonMode.None)
+            {
                 AddMapToScene(scene);
+                ContentBuilder.AddSpawnerToScene(scene);
+            }
+            ContentBuilder.AddHudToScene(scene);
 
             var player = (GameObject)PrefabUtility.InstantiatePrefab(Load(PrefabDir + "/Player.prefab"), scene);
             var pso = new SerializedObject(player.GetComponent<PlayerController>());
@@ -302,7 +306,7 @@ namespace Deckscent.Editor
             PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(MapPrefabPath), scene);
         }
 
-        static void Stretch(RectTransform rt)
+        internal static void Stretch(RectTransform rt)
         {
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
@@ -318,14 +322,15 @@ namespace Deckscent.Editor
         public static void ConfigurePlayer(GameObject root)
         {
             var so = new SerializedObject(root.GetComponent<PlayerController>());
-            foreach (var (field, action) in new[] { ("move", "Move"), ("turn", "Turn"), ("wait", "Wait"), ("torch", "Torch") })
+            foreach (var (field, action) in new[] { ("move", "Move"), ("turn", "Turn"), ("wait", "Wait"), ("torch", "Torch"), ("interact", "Interact") })
                 so.FindProperty(field).objectReferenceValue = ActionReference("Player", action);
             var lantern = root.transform.Find("Caméra/Lanterne");
             so.FindProperty("lantern").objectReferenceValue = lantern != null ? lantern.GetComponent<Light>() : null;
+            so.FindProperty("cameraRig").objectReferenceValue = root.transform.Find("Caméra");
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static UnityEngine.InputSystem.InputActionReference ActionReference(string map, string action)
+        internal static UnityEngine.InputSystem.InputActionReference ActionReference(string map, string action)
         {
             foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(InputActionsPath))
                 if (asset is UnityEngine.InputSystem.InputActionReference reference
@@ -336,7 +341,7 @@ namespace Deckscent.Editor
         }
 
         /// <summary>Copie les maillages d'un prefab Synty (sans ses scripts ni collisions) sous une nouvelle racine.</summary>
-        static GameObject FromSynty(string name, string syntyPath, Vector3 offset, Quaternion rotation, Vector3 scale)
+        internal static GameObject FromSynty(string name, string syntyPath, Vector3 offset, Quaternion rotation, Vector3 scale)
         {
             var root = new GameObject(name);
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(syntyPath);
@@ -369,7 +374,7 @@ namespace Deckscent.Editor
         }
 
         /// <summary>Une primitive Unity sans collision, sous une racine vide.</summary>
-        static GameObject Primitive(string name, PrimitiveType type, Material material, Vector3 position, Quaternion rotation, Vector3 scale)
+        internal static GameObject Primitive(string name, PrimitiveType type, Material material, Vector3 position, Quaternion rotation, Vector3 scale)
         {
             var root = new GameObject(name);
             var shape = GameObject.CreatePrimitive(type);
@@ -383,7 +388,7 @@ namespace Deckscent.Editor
             return root;
         }
 
-        static void SavePrefab(GameObject go, string dir)
+        internal static void SavePrefab(GameObject go, string dir)
         {
             PrefabUtility.SaveAsPrefabAsset(go, dir + "/" + go.name + ".prefab");
             Object.DestroyImmediate(go);
@@ -399,7 +404,7 @@ namespace Deckscent.Editor
         static Material UnlitMaterial(string name, Color color) =>
             SaveMaterial(name, "Universal Render Pipeline/Unlit", m => m.SetColor("_BaseColor", color));
 
-        static Material SaveMaterial(string name, string shader, System.Action<Material> setup)
+        internal static Material SaveMaterial(string name, string shader, System.Action<Material> setup)
         {
             var path = MaterialDir + "/" + name + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -413,9 +418,9 @@ namespace Deckscent.Editor
             return material;
         }
 
-        static GameObject Load(string path) => AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        internal static GameObject Load(string path) => AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
-        static void EnsureFolder(string path)
+        internal static void EnsureFolder(string path)
         {
             if (AssetDatabase.IsValidFolder(path))
                 return;

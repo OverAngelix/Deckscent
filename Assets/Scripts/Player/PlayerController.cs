@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,11 +11,13 @@ namespace Deckscent
     /// Avancer / reculer / pas de côté d'une case, rotation par quart de tour, « bump » contre
     /// les murs. Pas de physique : les collisions sont testées sur la grille du labyrinthe.
     ///
-    /// Chaque pas ou attente est un tour (<see cref="TurnEnded"/>). Tourner et se cogner sont
-    /// gratuits. Les ennemis et pièges joueront à la fin de chaque tour (étape 5 du portage).
+    /// Chaque pas, attaque (avancer vers un ennemi droit devant) ou attente est un tour : une fois
+    /// l'animation du joueur finie, chaque objet de grille (<see cref="GridEntity.All"/> : ennemis,
+    /// pièges) joue à son tour, l'un après l'autre, puis <see cref="TurnEnded"/>. Tourner et se
+    /// cogner sont gratuits.
     ///
-    /// Touches : actions Move, Turn, Wait, Torch de la map Player d'InputSystem_Actions (clavier
-    /// en position physique, ZQSD en AZERTY, et manette). Elles se règlent dans ce fichier.
+    /// Touches : actions Move, Turn, Wait, Torch, Interact de la map Player d'InputSystem_Actions
+    /// (clavier en position physique, ZQSD en AZERTY, et manette). Elles se règlent dans ce fichier.
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
@@ -28,14 +31,22 @@ namespace Deckscent
         [SerializeField, Min(0.01f)] float turnTime = 0.18f;
         [Tooltip("Durée minimale d'un tour passé à attendre, pour ne pas enchaîner des dizaines de tours en gardant la touche enfoncée.")]
         [SerializeField, Min(0f)] float waitTime = 0.25f;
-        [Tooltip("Coché : tourner sur place coûte un tour.")]
+        [Tooltip("Coché : tourner sur place coûte un tour (les ennemis jouent après chaque quart de tour).")]
         [SerializeField] bool turningTakesTurn;
+
+        [Header("Combat")]
+        [Tooltip("Points de vie au départ (et maximum).")]
+        [SerializeField, Range(1, 99)] int maxHealth = 10;
+        [Tooltip("Dégâts d'une attaque (avancer vers un ennemi droit devant), avant sa défense.")]
+        [SerializeField, Range(0, 20)] int attack = 1;
+        [Tooltip("Retirée des dégâts reçus (coups, pièges). Un coup fait toujours au moins 1.")]
+        [SerializeField, Range(0, 20)] int defense;
 
         // Actions de la map Player d'InputSystem_Actions (Assets/InputSystem_Actions.inputactions),
         // où se règlent les touches. Clavier en position physique (ZQSD en AZERTY) et manette.
         // Vides : prises par leur nom dans les actions du projet.
         [Header("Actions (InputSystem_Actions, map Player)")]
-        [Tooltip("Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté.")]
+        [Tooltip("Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté. Avancer vers un ennemi l'attaque, vers un coffre l'ouvre.")]
         [SerializeField] InputActionReference move;
         [Tooltip("Tourner d'un quart de tour : A / E, LB / RB.")]
         [SerializeField] InputActionReference turn;
@@ -43,6 +54,8 @@ namespace Deckscent
         [SerializeField] InputActionReference wait;
         [Tooltip("Allumer / éteindre la lanterne : T, bouton droit (Rond / B). Ne coûte pas de tour.")]
         [SerializeField] InputActionReference torch;
+        [Tooltip("Ouvrir le coffre droit devant : F, bouton du bas (Croix / A). Un tour.")]
+        [SerializeField] InputActionReference interact;
         [Tooltip("Seuil au-delà duquel un stick compte comme une direction.")]
         [SerializeField, Range(0.1f, 0.9f)] float stickThreshold = 0.5f;
 
@@ -50,8 +63,19 @@ namespace Deckscent
         [Tooltip("La lumière que l'action Torch allume et éteint.")]
         [SerializeField] Light lantern;
 
+        [Header("Caméra")]
+        [Tooltip("La caméra du joueur : elle tremble quand on est touché et tombe au sol à la mort. Vide : la caméra enfant.")]
+        [SerializeField] Transform cameraRig;
+
         /// <summary>Un tour complet vient de se terminer (le joueur, puis le monde).</summary>
         public event Action<int> TurnEnded;
+        /// <summary>PV modifiés (PV, maximum).</summary>
+        public event Action<int, int> HealthChanged;
+        /// <summary>Le joueur vient d'être touché (dégâts subis, après défense).</summary>
+        public event Action<int> Hurt;
+        public event Action Died;
+        /// <summary>Un court message à afficher au HUD (piège franchi, butin…).</summary>
+        public event Action<string> Notified;
 
         public Vector2Int Cell { get; private set; }
         /// <summary>0 = nord, 1 = est, 2 = sud, 3 = ouest.</summary>
@@ -59,12 +83,32 @@ namespace Deckscent
         /// <summary>Nombre de tours joués depuis le début.</summary>
         public int Turn { get; private set; }
         public Maze Maze => maze;
-        /// <summary>Vrai pendant une animation (pas, quart de tour, bump) : les touches sont ignorées.</summary>
+        /// <summary>Vrai pendant une animation ou le tour du monde : les touches sont ignorées.</summary>
         public bool IsBusy => _busy;
         public bool LanternOn => lantern != null && lantern.enabled;
+        public int Health { get; private set; }
+        public int MaxHealth => maxHealth;
+        public int Attack => attack;
+        public int Defense => defense;
+        public bool IsDead { get; private set; }
 
         bool _busy;
-        InputAction _move, _turn, _wait, _torch;
+        InputAction _move, _turn, _wait, _torch, _interact;
+        Vector3 _cameraRest;
+        Coroutine _shake;
+
+        void Awake()
+        {
+            Health = maxHealth;
+            if (cameraRig == null)
+            {
+                var cam = GetComponentInChildren<Camera>(true);
+                if (cam != null)
+                    cameraRig = cam.transform;
+            }
+            if (cameraRig != null)
+                _cameraRest = cameraRig.localPosition;
+        }
 
         void OnEnable()
         {
@@ -72,7 +116,8 @@ namespace Deckscent
             _turn = Resolve(turn, "Player/Turn");
             _wait = Resolve(wait, "Player/Wait");
             _torch = Resolve(torch, "Player/Torch");
-            foreach (var action in new[] { _move, _turn, _wait, _torch })
+            _interact = Resolve(interact, "Player/Interact");
+            foreach (var action in Actions)
                 action?.Enable();
             if (_torch != null)
                 _torch.performed += OnTorch;
@@ -82,9 +127,11 @@ namespace Deckscent
         {
             if (_torch != null)
                 _torch.performed -= OnTorch;
-            foreach (var action in new[] { _move, _turn, _wait, _torch })
+            foreach (var action in Actions)
                 action?.Disable();
         }
+
+        IEnumerable<InputAction> Actions => new[] { _move, _turn, _wait, _torch, _interact };
 
         /// <summary>L'action référencée, sinon celle du même nom dans les actions du projet.</summary>
         InputAction Resolve(InputActionReference reference, string path)
@@ -98,7 +145,7 @@ namespace Deckscent
         void OnTorch(InputAction.CallbackContext _)
         {
             // Carte ouverte : son bouton « fermer » (Rond / B) est aussi celui de la lanterne.
-            if (Time.timeScale != 0f)
+            if (Time.timeScale != 0f && !IsDead)
                 ToggleLantern();
         }
 
@@ -108,11 +155,13 @@ namespace Deckscent
             if (lantern != null)
                 lantern.enabled = !lantern.enabled;
         }
+
         void Start()
         {
             if (maze == null)
                 maze = FindAnyObjectByType<Maze>();
             PlaceAtStart();
+            HealthChanged?.Invoke(Health, maxHealth);
         }
 
         /// <summary>Pose le joueur sur le départ du labyrinthe, tourné vers le premier couloir ouvert.</summary>
@@ -134,8 +183,8 @@ namespace Deckscent
 
         void Update()
         {
-            // Jeu en pause (carte ouverte) : le joueur ne bouge pas.
-            if (_busy || Time.timeScale == 0f || maze == null || _move == null || _turn == null || _wait == null)
+            // Jeu en pause (carte ouverte) ou joueur mort : le joueur ne bouge pas.
+            if (_busy || IsDead || Time.timeScale == 0f || maze == null || _move == null || _turn == null || _wait == null)
                 return;
             var forward = Grid.Dirs[Facing];
             var right = Grid.Dirs[(Facing + 1) % 4];
@@ -154,6 +203,8 @@ namespace Deckscent
                 else
                     StartCoroutine(Step(m.x > 0f ? right : -right));
             }
+            else if (_interact != null && _interact.WasPressedThisFrame())
+                StartCoroutine(InteractAhead());
             else if (_wait.IsPressed())
                 StartCoroutine(Wait());
         }
@@ -175,9 +226,29 @@ namespace Deckscent
         {
             _busy = true;
             var target = Cell + dir;
-            // Sol devant, et pas de mur fin (pourtour d'une salle) entre les deux cases.
-            if (maze.CanStep(Cell, System.Array.IndexOf(Grid.Dirs, dir)))
+            var dirIndex = Array.IndexOf(Grid.Dirs, dir);
+            var ahead = dir == Grid.Dirs[Facing];
+            var open = maze.CanStep(Cell, dirIndex);
+            var blocker = open ? Blocker(target) : null;
+            if (blocker is IDamageable enemy && ahead)
             {
+                // Avancer vers un ennemi droit devant : l'attaquer.
+                yield return Strike(enemy, dir);
+                yield return EndTurn();
+            }
+            else if (blocker is IInteractable thing && ahead && thing.CanInteract)
+            {
+                // Avancer vers un coffre : l'ouvrir.
+                yield return Lunge(dir, 0.35f, moveTime * 0.4f);
+                yield return thing.Interact(this);
+                yield return EndTurn();
+            }
+            else if (open && blocker == null)
+            {
+                // Pics sortis sur la case visée : ils rentrent dès le début du pas.
+                var trap = GridEntity.At<SpikeTrap>(target);
+                if (trap != null)
+                    trap.Anticipate(Turn + 1);
                 Cell = target;
                 var from = transform.position;
                 var to = maze.CellToWorld(Cell);
@@ -187,9 +258,22 @@ namespace Deckscent
             }
             else
             {
-                // Petit « bump » contre le mur : ne coûte pas de tour.
+                // Petit « bump » contre le mur (ou un ennemi de côté) : ne coûte pas de tour.
                 yield return Lunge(dir, 0.25f, moveTime * 0.4f);
             }
+            _busy = false;
+        }
+
+        /// <summary>Action Interact : ouvre ce qui est droit devant (un tour), sinon rien.</summary>
+        IEnumerator InteractAhead()
+        {
+            var dir = Grid.Dirs[Facing];
+            if (!maze.CanStep(Cell, Facing) || !(Blocker(Cell + dir) is IInteractable thing) || !thing.CanInteract)
+                yield break;
+            _busy = true;
+            yield return Lunge(dir, 0.35f, moveTime * 0.4f);
+            yield return thing.Interact(this);
+            yield return EndTurn();
             _busy = false;
         }
 
@@ -199,6 +283,34 @@ namespace Deckscent
             yield return new WaitForSeconds(waitTime);
             yield return EndTurn();
             _busy = false;
+        }
+
+        /// <summary>Ce qui bloque cette case pour le joueur (ennemi, coffre fermé), ou null.</summary>
+        static GridEntity Blocker(Vector2Int cell)
+        {
+            // Les ennemis d'abord : un monstre posé sur un coffre se fait attaquer.
+            GridEntity found = null;
+            foreach (var entity in GridEntity.All)
+            {
+                if (!entity.IsActive || entity.Cell != cell || !entity.BlocksPlayer)
+                    continue;
+                if (entity is IDamageable)
+                    return entity;
+                found ??= entity;
+            }
+            return found;
+        }
+
+        /// <summary>Coup porté : élan vers l'ennemi, dégâts au bout de l'élan, retour.</summary>
+        IEnumerator Strike(IDamageable enemy, Vector2Int dir)
+        {
+            var start = transform.position;
+            var end = start + Grid.ToWorldDir(dir) * 0.6f;
+            yield return Animate(moveTime * 0.45f, t => transform.position = Vector3.Lerp(start, end, t));
+            if (enemy is UnityEngine.Object o && o != null)
+                enemy.TakeDamage(attack);
+            yield return Animate(moveTime * 0.55f, t => transform.position = Vector3.Lerp(end, start, t));
+            transform.position = start;
         }
 
         /// <summary>Aller-retour de `distance` mètres dans la direction `dir`.</summary>
@@ -211,12 +323,162 @@ namespace Deckscent
             transform.position = start;
         }
 
-        /// <summary>Fin du tour du joueur. Les acteurs du tour (ennemis, pièges) joueront ici.</summary>
+        /// <summary>
+        /// Fin du tour du joueur, en deux temps :
+        /// 1. **déplacements** : chaque objet de grille choisit sa case (<see cref="GridEntity.PlanMove"/>),
+        ///    les plus proches du joueur d'abord, chacun réservant la sienne (personne ne se marche
+        ///    dessus), puis tous les bonds sont joués en même temps ;
+        /// 2. **tours** : ceux qui ne se sont pas déplacés jouent l'un après l'autre (attaques, pièges),
+        ///    en attendant la fin de leur animation. S'arrête net si le joueur meurt.
+        /// Un objet qui n'a rien à animer ne coûte aucune image.
+        /// </summary>
         IEnumerator EndTurn()
         {
             Turn++;
+            var entities = new List<GridEntity>(GridEntity.All);
+
+            // 1. Déplacements simultanés.
+            var occupied = new HashSet<Vector2Int> { Cell };
+            foreach (var entity in entities)
+                if (entity.IsActive && entity.BlocksPlayer)
+                    occupied.Add(entity.Cell);
+            var order = new List<GridEntity>(entities);
+            order.Sort((a, b) => Distance(a.Cell).CompareTo(Distance(b.Cell)));
+            var moved = new List<GridEntity>();
+            var running = 0;
+            foreach (var entity in order)
+            {
+                if (entity == null || !entity.IsActive)
+                    continue;
+                var own = entity.BlocksPlayer && occupied.Remove(entity.Cell);
+                var target = entity.PlanMove(this, occupied);
+                if (target.HasValue && !occupied.Contains(target.Value))
+                {
+                    if (entity.BlocksPlayer)
+                        occupied.Add(target.Value);
+                    moved.Add(entity);
+                    running++;
+                    entity.StartCoroutine(RunThenCount(entity.Move(target.Value), () => running--));
+                }
+                else if (own)
+                    occupied.Add(entity.Cell);
+            }
+            // (un objet détruit en plein bond ne doit pas bloquer le tour)
+            while (running > 0 && moved.Exists(e => e != null && e.isActiveAndEnabled))
+                yield return null;
+
+            // 2. Les tours, l'un après l'autre.
+            foreach (var entity in entities)
+            {
+                if (IsDead)
+                    yield break;
+                if (entity == null || !entity.IsActive || moved.Contains(entity))
+                    continue;
+                var run = Flatten(entity.TakeTurn(this));
+                while (run.MoveNext())
+                    yield return run.Current;
+            }
             TurnEnded?.Invoke(Turn);
-            yield break;
+        }
+
+        int Distance(Vector2Int cell) => Mathf.Abs(cell.x - Cell.x) + Mathf.Abs(cell.y - Cell.y);
+
+        static IEnumerator RunThenCount(IEnumerator routine, System.Action done)
+        {
+            var run = Flatten(routine);
+            while (run.MoveNext())
+                yield return run.Current;
+            done();
+        }
+
+        /// <summary>
+        /// Déroule une coroutine et ses coroutines imbriquées sans passer par Unity : seules les vraies
+        /// attentes (une image, des secondes) sont rendues. `yield return` d'une coroutine imbriquée
+        /// coûte sinon une image, même quand elle n'a rien à faire.
+        /// </summary>
+        static IEnumerator Flatten(IEnumerator root)
+        {
+            var stack = new Stack<IEnumerator>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var top = stack.Peek();
+                if (!top.MoveNext())
+                {
+                    stack.Pop();
+                    continue;
+                }
+                if (top.Current is IEnumerator inner)
+                    stack.Push(inner);
+                else
+                    yield return top.Current;
+            }
+        }
+
+        // --- PV ------------------------------------------------------------------
+
+        /// <summary>Appelé par les ennemis et les pièges. La défense est appliquée ici.</summary>
+        public void TakeDamage(int amount)
+        {
+            if (IsDead || amount <= 0)
+                return;
+            var dealt = Combat.DamageAfterDefense(amount, defense);
+            Health = Mathf.Max(0, Health - dealt);
+            HealthChanged?.Invoke(Health, maxHealth);
+            Hurt?.Invoke(dealt);
+            if (Health == 0)
+                Die();
+            else if (cameraRig != null)
+            {
+                if (_shake != null)
+                    StopCoroutine(_shake);
+                _shake = StartCoroutine(Shake());
+            }
+        }
+
+        /// <summary>Rend des PV, sans dépasser le maximum.</summary>
+        public void Heal(int amount)
+        {
+            if (IsDead || amount <= 0)
+                return;
+            Health = Mathf.Min(maxHealth, Health + amount);
+            HealthChanged?.Invoke(Health, maxHealth);
+        }
+
+        /// <summary>Affiche un court message au HUD (pièges, coffres…).</summary>
+        public void Notify(string text) => Notified?.Invoke(text);
+
+        /// <summary>Petite secousse latérale de la caméra.</summary>
+        IEnumerator Shake()
+        {
+            foreach (var offset in new[] { 0.12f, -0.09f, 0.05f, 0f })
+            {
+                var from = cameraRig.localPosition;
+                var to = _cameraRest + Vector3.right * offset;
+                yield return Animate(0.04f, t => cameraRig.localPosition = Vector3.Lerp(from, to, t));
+            }
+            cameraRig.localPosition = _cameraRest;
+            _shake = null;
+        }
+
+        /// <summary>La caméra tombe au sol en basculant sur le côté.</summary>
+        void Die()
+        {
+            IsDead = true;
+            Died?.Invoke();
+            if (cameraRig == null)
+                return;
+            if (_shake != null)
+                StopCoroutine(_shake);
+            var fromPos = cameraRig.localPosition;
+            var toPos = new Vector3(_cameraRest.x, 0.35f, _cameraRest.z);
+            var fromRot = cameraRig.localRotation;
+            var toRot = fromRot * Quaternion.Euler(0f, 0f, 70f);
+            StartCoroutine(Animate(0.6f, t =>
+            {
+                cameraRig.localPosition = Vector3.Lerp(fromPos, toPos, t * t);
+                cameraRig.localRotation = Quaternion.Slerp(fromRot, toRot, t * t);
+            }));
         }
 
         /// <summary>Appelle `apply` avec t de 0 à 1 (sinusoïde entrée-sortie) pendant `duration` secondes.</summary>

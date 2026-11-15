@@ -37,7 +37,8 @@ CarteDuDonjon  [Canvas, CanvasScaler, MapScreen]
   - `cursor` = `Map/Cursor`
   - `paperColor` = (0.97, 0.96, 0.93)
   - `inkColor` = (0.06, 0.06, 0.07)
-  - `wallHatchSpacing` = 3 — Écartement des hachures de la roche et des murs (plus petit = plus sombre). Tout ce qui n'est pas du sol est hachuré pareil : la carte est d'un seul tenant.
+  - `wallHatchSpacing` = 6 — Écartement des hachures de la roche et des murs (plus petit = plus sombre). Tout ce qui n'est pas du sol est hachuré pareil : la carte est d'un seul tenant.
+  - `hatchColor` = (0.42, 0.42, 0.43) — Couleur des hachures du plateau : un gris encre, plus doux que l'encre pleine (des traits noirs serrés sur toute la carte papillotent).
   - `validColor` = (0.15, 0.6, 0.25)
   - `invalidColor` = (0.85, 0.12, 0.1)
   - `playerColor` = (0.85, 0.1, 0.1) — Flèche du joueur et carte choisie (rouge d'accent, comme en jeu).

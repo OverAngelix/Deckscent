@@ -63,7 +63,7 @@ La salle **garde sa forme** quoi qu'on pose autour : un couloir qui arrive face 
 
 ## Le contenu
 
-Chaque carte porte un **contenu**. Seul son **danger** (0 à 3 crânes) sera affiché sur la carte : le joueur fait un pari. Le contenu apparaîtra à l'étape 5 du portage (monstres, pièges, coffres).
+Chaque carte porte un **contenu**. Seul son **danger** (0 à 3 crânes) est affiché sur la carte : le joueur fait un pari. À la pose, le contenu **apparaît dans la tuile** (voir « Ce qui apparaît » plus bas) : monstre = un [slime](monstres/slime.md), piège = une [dalle à pics](pieges.md), trésor = un [coffre](coffres.md).
 
 **Couloir** : un élément au plus, et le plus souvent rien.
 
@@ -86,6 +86,18 @@ Chaque carte porte un **contenu**. Seul son **danger** (0 à 3 crânes) sera aff
 | Repaire | 3 | 3 monstres | 4 monstres, 1 trésor | 6 monstres, 1 trésor |
 
 Le boss viendra avec la recette d'étage.
+
+### Ce qui apparaît
+
+Le **Spawner** (`Assets/Scripts/Tiles/Spawner.cs`, objet *Contenu* des scènes Main et Test_Donjon) suit les poses du plateau (`DungeonBoard.TilePlaced`) et fait apparaître la liste de la carte (`TileCard.SpawnList()`) :
+
+- un élément par case de sol de la tuile, cases tirées au hasard, **jamais sur une porte** de salle (`DungeonBoard.TileFloorCells`) ;
+- monstre : un slime vert, rouge ou bleu, à chances égales ; piège : une dalle, et les dalles d'une même tuile sont décalées (elles ne sortent pas au même tour) ; trésor : un coffre (son butin « carte » pioche dans la main du Donjon) ; boss : rien pour l'instant (avertissement) ;
+- chaque élément est une **instance de son prefab** (`Prefabs/Enemies/Slime`, `Prefabs/Traps/DallePics`, `Prefabs/Props/Coffre`), enfant de l'objet *Contenu* ;
+- au lancement, les tuiles déjà posées sont remplies aussi : le **donjon de démo** (`Test_Donjon`) a du contenu sur ses tuiles (`DemoDungeon.Contents` : une dalle au nord du départ, un slime au sud, des salles de chaque thème) pour essayer combat, pièges et coffres sans rien poser ;
+- tirages (cases, sorte de slime, décalage des dalles) avec un générateur à part (`seed` du Spawner, 0 = au hasard) : la pioche n'en dépend pas.
+
+Aucun ennemi ni piège n'est posé à la main dans la scène de jeu. Réglages du Spawner : les trois prefabs, `Spawn On Place` (décoché : plus rien n'apparaît), `Seed`.
 
 ## Règles de pose
 

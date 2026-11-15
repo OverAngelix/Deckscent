@@ -30,6 +30,8 @@ namespace Deckscent
         public DungeonBoard Board { get; private set; }
         public TileDeck Deck { get; private set; }
         public Maze Maze => maze;
+        /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées).</summary>
+        public event System.Action GameStarted;
 
 #if UNITY_EDITOR
         bool _refreshQueued;
@@ -104,6 +106,7 @@ namespace Deckscent
                     Deck.RoomsPlaced++;
             };
             Apply();
+            GameStarted?.Invoke();
         }
 
         /// <summary>Pose une carte de la main sur le plateau (ancre sur `pos`). Vrai si posée.</summary>

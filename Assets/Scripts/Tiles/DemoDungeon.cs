@@ -52,6 +52,24 @@ namespace Deckscent
             new Entry(5, 7, "salle_t", 0, true, D(1, 0, N)),
         };
 
+        /// <summary>
+        /// Contenu de chaque tuile de démo (par emplacement) : le Spawner le fait apparaître en jeu,
+        /// pour essayer combat, pièges et coffres sans rien poser. Les autres tuiles restent vides.
+        /// </summary>
+        static readonly Dictionary<Vector2Int, string> Contents = new Dictionary<Vector2Int, string>
+        {
+            [new Vector2Int(4, 3)] = "piege",          // juste au nord du départ
+            [new Vector2Int(4, 5)] = "monstre",        // juste au sud du départ
+            [new Vector2Int(7, 3)] = "tresor",
+            [new Vector2Int(5, 4)] = "salle_tresor",
+            [new Vector2Int(5, 5)] = "salle_pieges",
+            [new Vector2Int(2, 4)] = "salle_piegee",
+            [new Vector2Int(2, 5)] = "salle_gardee",
+            [new Vector2Int(3, 1)] = "salle_monstres",
+            [new Vector2Int(5, 1)] = "salle_tresor",
+            [new Vector2Int(5, 7)] = "salle_monstres",
+        };
+
         /// <summary>Pose les tuiles de démo sur un plateau déjà au départ 0. Renvoie les refus (vide si tout passe).</summary>
         public static List<string> Build(DungeonBoard board)
         {
@@ -59,6 +77,8 @@ namespace Deckscent
             foreach (var entry in Tiles)
             {
                 var card = new TileCard(entry.Shape, entry.Turns, entry.Torch);
+                if (Contents.TryGetValue(entry.Pos, out var content))
+                    card.Content = content;
                 if (card.IsRoom)
                     card.SetDoors(entry.Doors);
                 if (!board.Place(entry.Pos, card))

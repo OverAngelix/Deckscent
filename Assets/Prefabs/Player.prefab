@@ -285,9 +285,14 @@ MonoBehaviour:
   turnTime: 0.18
   waitTime: 0.25
   turningTakesTurn: 0
+  maxHealth: 10
+  attack: 1
+  defense: 0
   move: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   turn: {fileID: -7292351504740441788, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   wait: {fileID: -5288339530577984877, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   torch: {fileID: 2246638816550691261, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  interact: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   stickThreshold: 0.5
   lantern: {fileID: 3519297687164057684}
+  cameraRig: {fileID: 5282752796084112380}

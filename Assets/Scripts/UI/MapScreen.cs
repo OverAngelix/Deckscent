@@ -146,7 +146,8 @@ namespace Deckscent
         void Update()
         {
             TrackDungeon();
-            if (_toggle != null && _toggle.WasPressedThisFrame())
+            // Mort : la carte ne s'ouvre plus (l'écran de mort attend « recommencer »).
+            if (_toggle != null && _toggle.WasPressedThisFrame() && (IsOpen || player == null || !player.IsDead))
             {
                 SetOpen(!IsOpen);
                 if (!IsOpen)

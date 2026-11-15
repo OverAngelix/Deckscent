@@ -33,6 +33,10 @@ namespace Deckscent.Editor
             ["Sol_Gris"] = "Sol de secours (bloc gris).",
             ["Plafond_Gris"] = "Plafond de secours (quad gris tourné vers le bas).",
             ["CarteDuDonjon"] = "Écran de carte : le plateau et la main de cartes-tuiles, dessinés en gravure (InkCanvas + TextPool), pour poser les tuiles. Canvas en surimpression, au-dessus du jeu et hors du post-process. Met le jeu en pause quand il est ouvert. Voir docs/carte.md.",
+            ["Slime"] = "Ennemi simple, en formes simples (aucun slime dans les packs) : un dôme de gelée qui rebondit, deux yeux tournés vers le joueur. Trois sortes (vert 3 PV, rouge 6 PV, bleu 2 d'attaque) réglées par `variant` ; couleur saturée, donc gardée par le post-process (accent). Au tour par tour : attaque le joueur à côté, sinon s'en approche s'il est à moins de `aggroRange` pas. Posé par le Spawner (contenu « monstre »). Voir docs/monstres/slime.md.",
+            ["DallePics"] = "Piège : dalle à pics (grille et piques Synty `SM_Trap_Spears_Grate_01` / `SM_Trap_Spears_01`, ou plaque grise et cônes si le pack manque). Pics sortis 1 tour sur 3, pointes visibles le tour d'avant, 2 dégâts au joueur comme aux ennemis. Posé par le Spawner (contenu « piege »). Voir docs/pieges.md.",
+            ["Coffre"] = "Coffre doré (Synty `SM_Prop_Chest_03`, ou blocs si le pack manque), couvercle sur charnière. S'ouvre en avançant dessus ou avec Interact (un tour) : une carte de plus dans la main ou +3 PV, puis il s'enfonce dans le sol. Posé par le Spawner (contenu « tresor »). Voir docs/coffres.md.",
+            ["Hud"] = "Interface en jeu, dessinée en gravure (InkCanvas + TextPool) : PV, Tour / ATQ / DÉF, messages, voile rouge quand on est touché, écran de mort. Canvas en surimpression sous la carte. Voir docs/tour-par-tour.md.",
             ["Torche"] ="Torche murale, posée sur les cases `T`, accrochée au premier mur voisin. Sa racine est sur le mur, +Z vers la case.",
         };
 

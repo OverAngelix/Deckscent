@@ -21,7 +21,7 @@ Dans l'ordre (chaque étape donne quelque chose de jouable ou de visible) :
 2. ✅ **Rendu gravure** : shader toon + post-process gravure (Renderer Feature URP), validé par captures (en attente du feu vert de l'utilisateur).
 3. ✅ **Tuiles, plateau, pioche** en C# pur, avec tests EditMode (plus de salles, vraies pièces à murs fins).
 4. ✅ **Écran de carte** dessiné en gravure, pose à la souris, au clavier et à la manette.
-5. **Tour par tour et contenu** : PV / ATQ / DÉF, slimes, dalle à pics, coffre, Spawner, HUD.
+5. ✅ **Tour par tour et contenu** : PV / ATQ / DÉF, slimes, dalle à pics, coffre, Spawner, HUD.
 6. **Menu, options, musique synthétisée, FR / EN.**
 7. Reprise de `docs/todo.md` (tâche 5 : salles nettoyées).
 
@@ -78,6 +78,16 @@ Assets/Scripts/UI/TextPool.cs          Textes de l'UI gravure (police à empatte
 Assets/Scripts/UI/Engraving.cs         Primitives gravure partagées : cadres, bandeaux, cartes, crânes, flamme, rose des vents
 docs/carte.md                          Doc de l'écran de carte (commandes, ce qu'on voit, technique)
 Assets/Scripts/Editor/TilePlate.cs     Menu Deckscent > Planche des tuiles (→ docs/images/tuiles.png, dessin par Tools/planche_tuiles.ps1)
+Assets/Scripts/Maze/GridEntity.cs      Base de ce qui occupe une case et joue après le joueur (GridEntity.All, TakeTurn, Place)
+Assets/Scripts/Player/Combat.cs        Combat.DamageAfterDefense, interfaces IDamageable / IInteractable
+Assets/Scripts/Enemies/Enemy.cs        Base des ennemis (PV, attaque, défense, mort) ; Slime.cs ; GridPath.cs (chemin, murs fins compris)
+Assets/Scripts/Traps/SpikeTrap.cs      Dalle à pics (cycle 1 tour sur 3, alerte, nettoyée)
+Assets/Scripts/Props/Chest.cs          Coffre (butin carte ou PV) ; DecorFallback.cs (décor Synty ou formes de secours)
+Assets/Scripts/Tiles/Spawner.cs        Contenu des tuiles posées → instances des prefabs (objet « Contenu » des scènes)
+Assets/Scripts/UI/Hud.cs               HUD gravure : PV, Tour / ATQ / DÉF, messages, voile rouge, écran de mort
+Assets/Scripts/Editor/ContentBuilder.cs  Menus Deckscent > Construire les prefabs du contenu / Ajouter le contenu aux scènes
+Assets/Prefabs/Enemies/Slime, Traps/DallePics, Props/Coffre, UI/Hud
+docs/tour-par-tour.md, docs/monstres/slime.md, docs/pieges.md, docs/coffres.md
 ```
 
 **Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
@@ -126,7 +136,7 @@ Voir `README.md` (packs, versions, réimport).
   | `Turn` (axe 1D) | A / E (`q` / `e`) | LB / RB | oui |
   | `Wait` | Entrée, Entrée du pavé | L3 | oui |
   | `Torch` | T | bouton droit (Rond / B) | oui : lanterne, gratuit |
-  | `Interact` | F | bouton du bas (Croix / A) | coffres (étape 5) |
+  | `Interact` | F | bouton du bas (Croix / A) | oui : ouvre le coffre droit devant (un tour) ; recommencer après la mort |
   | `Map` | virgule (`m`) | bouton du haut (Triangle / Y) | oui : ouvre / ferme la carte |
 
   Map **`Map`** (carte ouverte, voir `docs/carte.md`) : `Close` (Échap / Rond-B), `Rotate` (R / Carré-X), `Discard` (Suppr, Retour arrière / Select), `Place` (Entrée, Espace / Croix-A), `NextCard` (Tab / RB), `PreviousCard` (LB), `Cursor` (flèches / croix, stick gauche). Chiffres 1-6 et souris lus directement.
@@ -139,7 +149,8 @@ Voir `README.md` (packs, versions, réimport).
 - **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs. Doc : `docs/tuiles.md`.
 - **Salles = vraies pièces** (demande de l'utilisateur, 2026-11-15 : « plus de salles, et variées ») : tout l'emplacement est du sol (3 × 3 cases), le pourtour est fermé par des **murs fins** sur les bords des cases (`TileCard.EdgeWalls`, `DungeonBoard.EdgeWalls`, `Maze.SetPlan(plan, murs)`), troués aux portes. Dans Godot, les salles étaient faites de cases de roche (branches d'une case de large) : abandonné. Le déplacement passe par `Maze.CanStep(case, direction)`, jamais par `IsWalkable` seul. 16 formes, dont 11 salles (salle, galerie, longue galerie, L, T, Z, U, croix, grande salle, salle à piliers, crypte).
 - **Rythme façon donjon mystère** (choix de l'utilisateur) : beaucoup de couloirs étroits (la pression), des salles rares mais **denses et dangereuses**. Pioche : `roomChance` 20 % (1 sur 5), **6 salles au plus par étage** (`maxRoomsPerFloor`, posées + en main, `TileDeck.RoomsPlaced` tenu par le Donjon). Couloirs : un élément au plus, surtout vides. Salles : 2 à 7 éléments selon la taille (petite ≤ 2 emplacements, moyenne 3-4, grande ≥ 5 : `ContentDef.Small / Medium / Large`), presque jamais vides. Planche des formes : `docs/images/tuiles.png`, *Deckscent > Planche des tuiles*. Piliers : coins au milieu d'un bloc 2 × 2 d'emplacements (salle à piliers, crypte).
-- **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). La vitrine sert à les voir et les régler.
+- **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). Le donjon de démo (`Test_Donjon`) a du contenu sur ses tuiles (`DemoDungeon.Contents`) pour essayer le combat sans rien poser.
+- **Tour par tour** (`docs/tour-par-tour.md`) : ce qui joue après le joueur hérite de `GridEntity` (liste `GridEntity.All`, dans l'ordre d'apparition) ; un ennemi qui meurt appelle `Retire()` avant son animation. Prefabs du contenu construits par `ContentBuilder` (relancer écrase les réglages faits à la main).
 
 ## Rendu gravure
 
@@ -157,6 +168,7 @@ Deux étages, mis en place par *Deckscent > Installer le rendu gravure* (`Render
 - **Version sombre, choisie par l'utilisateur** (entre plusieurs essais, le 2026-11-15) : ambiante unie 0,2 (Main et scène de test), lanterne du joueur 0,9 / 6 m, torches 2,5 / 9 m, ombres dures (`m_SoftShadowsSupported` 0). Beaucoup de hachures croisées, noir plein dans les recoins, seuls les murs près d'une torche restent blancs. Un essai plus clair (ambiante 0,3, lanterne 2 / 10 m) a été écarté. Ne pas éclaircir sans lui demander.
 - Après un changement de shader, Unity ne réimporte pas toujours tout de suite : forcer `AssetDatabase.ImportAsset(…, ForceUpdate)` avant de refaire les captures, sinon elles montrent l'ancien shader.
 - Pour mettre un objet en valeur : `albedo` **saturé**. Le décor reste en niveaux de gris. **Lumières blanches** uniquement. Ombres à bords durs.
+- **Lueur propre** (`_Glow` du shader toon, 0 par défaut) : ajoutée à la lumière reçue, seulement sur les slimes (0,25, yeux compris) et les coffres (0,2), réglée dans `ContentBuilder`. Sans elle, dans la version sombre, un slime à deux cases se perdait dans les hachures. Le décor reste à 0 (captures inchangées).
 - La densité des hachures dépend de la luminosité de la scène : après un changement d'éclairage, recaler les seuils.
 - L'UI n'est pas touchée par le post-process : couleurs libres.
 

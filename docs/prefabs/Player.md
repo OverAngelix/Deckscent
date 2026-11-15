@@ -25,13 +25,18 @@ Player  [PlayerController]
   - `moveTime` = 0.22 — Durée d'un pas (secondes).
   - `turnTime` = 0.18 — Durée d'un quart de tour (secondes).
   - `waitTime` = 0.25 — Durée minimale d'un tour passé à attendre, pour ne pas enchaîner des dizaines de tours en gardant la touche enfoncée.
-  - `turningTakesTurn` = non — Coché : tourner sur place coûte un tour.
-  - `move` = `Player/Move` — Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté.
+  - `turningTakesTurn` = non — Coché : tourner sur place coûte un tour (les ennemis jouent après chaque quart de tour).
+  - `maxHealth` = 10 — Points de vie au départ (et maximum).
+  - `attack` = 1 — Dégâts d'une attaque (avancer vers un ennemi droit devant), avant sa défense.
+  - `defense` = 0 — Retirée des dégâts reçus (coups, pièges). Un coup fait toujours au moins 1.
+  - `move` = `Player/Move` — Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté. Avancer vers un ennemi l'attaque, vers un coffre l'ouvre.
   - `turn` = `Player/Turn` — Tourner d'un quart de tour : A / E, LB / RB.
   - `wait` = `Player/Wait` — Attendre un tour : Entrée, L3.
   - `torch` = `Player/Torch` — Allumer / éteindre la lanterne : T, bouton droit (Rond / B). Ne coûte pas de tour.
+  - `interact` = `Player/Interact` — Ouvrir le coffre droit devant : F, bouton du bas (Croix / A). Un tour.
   - `stickThreshold` = 0.5 — Seuil au-delà duquel un stick compte comme une direction.
   - `lantern` = `Lanterne` — La lumière que l'action Torch allume et éteint.
+  - `cameraRig` = `Caméra` — La caméra du joueur : elle tremble quand on est touché et tombe au sol à la mort. Vide : la caméra enfant.
 
 ### Player / Caméra
 
