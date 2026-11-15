@@ -92,7 +92,7 @@ namespace Deckscent.Tests
         {
             var call = new System.Text.RegularExpressions.Regex(@"Loc\.[TF]\(""([^""]+)""");
             var literal = new System.Text.RegularExpressions.Regex(
-                @"""((?:menu|options|commandes|carte|biome|legende|refus|forme|hud|message)\.[a-z0-9_.]+)""");
+                @"""((?:menu|options|commandes|carte|biome|legende|refus|forme|hud|message|aide|touche)\.[a-z0-9_.]+)""");
             var root = System.IO.Path.Combine(UnityEngine.Application.dataPath, "Scripts");
             var checkedKeys = 0;
             foreach (var file in System.IO.Directory.GetFiles(root, "*.cs", System.IO.SearchOption.AllDirectories))

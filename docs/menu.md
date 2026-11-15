@@ -22,7 +22,7 @@ Présentés comme une **main de cartes**, dessinées comme les cartes-tuiles de 
 |---|---|
 | Descendre | Fondu au noir (la musique s'éteint avec), puis la scène Main : nouvelle partie. |
 | Options | Volumes (général, musique, effets sonores) et langue (voir plus bas). |
-| Commandes | Liste des touches, lues dans `InputSystem_Actions` et affichées selon le clavier (Z Q S D en AZERTY). |
+| Commandes | Liste des touches, lues dans `InputSystem_Actions` et affichées selon l'appareil utilisé (voir « Touches affichées selon l'appareil ») : noms du clavier (Z Q S D en AZERTY) ou pictos de la manette. |
 | Quitter | Ferme le jeu (arrête le Play mode dans l'éditeur). |
 
 | | Souris | Clavier | Manette |
@@ -34,6 +34,16 @@ Présentés comme une **main de cartes**, dessinées comme les cartes-tuiles de 
 Touches de la map **UI** d'`InputSystem_Actions` (`Navigate`, `Submit`, `Cancel`) ; la souris et les chiffres sont lus directement.
 
 ![La liste des commandes](images/menu_commandes.png)
+
+## Touches affichées selon l'appareil
+
+Toutes les aides (sous les cartes du menu, panneaux Options et Commandes, pied de l'écran de carte, écran de mort) et la liste des commandes montrent les touches **de l'appareil avec lequel on joue** :
+
+- **`ControlDevice`** (`Assets/Scripts/UI/ControlDevice.cs`) retient le dernier appareil utilisé : une manette dès qu'elle déclenche une action (`InputSystem.onActionChange`, les zones mortes évitent les bascules dues à un stick qui dérive), le clavier-souris dès qu'une touche, un clic, la molette ou un mouvement de souris arrive (`InputSystem.onAfterUpdate` : la carte et le menu lisent la souris et les chiffres hors actions). Familles : **clavier-souris**, **PlayStation** (`DualShockGamepad`, DualSense compris), **Switch** (manette Pro, Joy-Con), et **Xbox** pour toute autre manette. Événement `Changed` : le HUD et la carte se redessinent.
+- **`KeyPrompts`** (`Assets/Scripts/UI/KeyPrompts.cs`) lit les touches d'une action dans le groupe de contrôle de l'appareil (`InputBinding.MaskByGroup("Gamepad")` ou `"Keyboard&Mouse"`, `GetBindingDisplayString`) : changer une touche dans `InputSystem_Actions` change ce qui s'affiche. Au clavier, le nom de la touche ; à la manette, un **picto gravé** dessiné avec `InkCanvas`, sans sprites : bouton rond à ombre hachurée avec ✕ ○ △ □ (PlayStation, tracés à l'encre) ou A B X Y (Xbox ; Switch avec ses lettres inversées : B en bas, A à droite), gâchettes LB / RB, L1 / R1, L / R (et LT, L2, ZL), stick (champignon hachuré, flèches du sens), croix, L3 / LS, Select / Start (Affichage / Menu, Create / Options, − / +).
+- Les liaisons « par usage » de la map UI (`*/{Submit}`, `*/{Cancel}`) n'ont pas de touche lisible : `KeyPrompts.Confirm()`, `Back()` et `Navigate(axe)` les donnent (Entrée / bouton du bas, Échap / bouton de droite, flèches / croix).
+- À la manette, la carte **Commandes** du menu montre une croix au lieu des touches Z Q S D.
+- Captures : `ControlDevice.Hold = true` puis `ControlDevice.Set(DeviceFamily.PlayStation)` dans le `script eval` (sinon la souris de l'éditeur ramène au clavier), `Hold = false` à la fin.
 
 ## Options
 
@@ -68,7 +78,7 @@ Sont traduits : le menu, l'**écran de carte** (titre, étage, main, légende, a
 
 Tests (`LocTests`) : `Fr` et `En` ont exactement les mêmes clés, les `{0}` se correspondent, les clés sont bien formées, et **toute clé écrite dans le code** (`Loc.T("…")` ou un texte `"domaine.nom"`) existe : une faute de frappe dans une clé fait échouer les tests.
 
-**Pour un nouveau texte** : choisir une clé, ajouter sa ligne dans `Loc.Fr` **et** dans `Loc.En` (même section), et afficher `Loc.T("la.cle")`. **Pour une nouvelle langue** : un dictionnaire de plus (mêmes clés), une ligne dans `Loc.Table` et dans `LocaleName`, et la langue dans `GameSettings.Locales`. Les noms de touches restent ceux du clavier du système (« Entree », « Suppr » sur un Windows français) ; en français, quelques-uns sont réécrits (Entrée, Espace, Échap…).
+**Pour un nouveau texte** : choisir une clé, ajouter sa ligne dans `Loc.Fr` **et** dans `Loc.En` (même section), et afficher `Loc.T("la.cle")`. **Pour une nouvelle langue** : un dictionnaire de plus (mêmes clés), une ligne dans `Loc.Table` et dans `LocaleName`, et la langue dans `GameSettings.Locales`. Les noms de touches viennent du clavier du système ; ceux qui sont des mots (Entrée, Espace, Échap, Suppr, Retour, Tab, Clic…) sont des clés `touche.…`, traduites quelle que soit la langue du système (Windows en AZERTY les donne « Entree », « Echap »). Les libellés des aides (« choisir », « poser »…) sont des clés `aide.…`.
 
 ## Musique
 

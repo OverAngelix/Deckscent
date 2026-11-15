@@ -66,6 +66,8 @@ namespace Deckscent
         void OnEnable()
         {
             GameSettings.Changed += MarkDirty;
+            ControlDevice.Listen();
+            ControlDevice.Changed += MarkDirty;
             if (player == null)
                 return;
             player.HealthChanged += OnHealthChanged;
@@ -78,6 +80,7 @@ namespace Deckscent
         void OnDisable()
         {
             GameSettings.Changed -= MarkDirty;
+            ControlDevice.Changed -= MarkDirty;
             if (player == null)
                 return;
             player.HealthChanged -= OnHealthChanged;
@@ -222,7 +225,10 @@ namespace Deckscent
             if (_deadTime >= restartDelay)
             {
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
-                texts.Label(Loc.T("hud.mort.aide"), 0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), TextAnchor.UpperCenter);
+                // Recommencer : Entrée au clavier (Player/Wait), le bouton du bas à la manette (Player/Interact, L3 est peu parlant).
+                var restartKeys = KeyPrompts.Of(ControlDevice.IsGamepad ? "Player/Interact" : "Player/Wait");
+                KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.recommencer"), new Hint(KeyPrompts.Back(), "aide.menu") },
+                    0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
             }
         }
 

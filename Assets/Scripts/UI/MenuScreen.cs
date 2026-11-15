@@ -56,8 +56,6 @@ namespace Deckscent
 
         const string Title = "DECKSCENT";
         const string Tagline = "menu.accroche";
-        const string Hint = "menu.aide";
-        const string OptionsHint = "options.aide";
         const float CardGap = 20f, Lift = 12f, FadeInTime = 1.2f, FadeOutTime = 0.6f;
         const float RepeatDelay = 0.4f, RepeatRate = 0.12f;
         /// <summary>Lignes du panneau Options : les volumes (0 général, 1 musique, 2 effets), puis la langue.</summary>
@@ -78,14 +76,6 @@ namespace Deckscent
             ("Player/Map", null, "commandes.carte"),
             ("Map/Rotate", null, "commandes.carte_tourner"),
             ("Map/Discard", null, "commandes.carte_defausser"),
-        };
-
-        /// <summary>Noms de touches en français (Unity les donne en anglais).</summary>
-        static readonly Dictionary<string, string> KeyNamesFr = new Dictionary<string, string>
-        {
-            { "Space", "Espace" }, { "Enter", "Entrée" }, { "Entree", "Entrée" }, { "Delete", "Suppr" }, { "Backspace", "Retour" },
-            { "Escape", "Échap" }, { "Tab", "Tab" }, { "Up Arrow", "↑" }, { "Down Arrow", "↓" },
-            { "Left Arrow", "←" }, { "Right Arrow", "→" }, { "Numpad Enter", "Entrée" },
         };
 
         public int Selected { get; private set; }
@@ -125,6 +115,7 @@ namespace Deckscent
         {
             foreach (var action in new[] { _navigate, _submit, _cancel })
                 action?.Enable();
+            ControlDevice.Listen();
             Time.timeScale = 1f;
         }
 
@@ -359,7 +350,7 @@ namespace Deckscent
             DrawVignette(screen);
             DrawTitle(screen);
             if (OpenPanel == Panel.None)
-                InkedLabel(back.texts, Loc.T(Hint), 0f, screen.y - 34f, screen.x, 15, FontStyle.Italic);
+                KeyPrompts.DrawHints(back.ink, back.texts, MainHints(), 0f, screen.y - 34f, screen.x, 15, paperColor, paperColor, inkColor, inkColor);
             End(back);
 
             DrawCards(screen);
@@ -537,6 +528,14 @@ namespace Deckscent
                 }
                 case Entry.Controls:
                 {
+                    if (ControlDevice.IsGamepad)
+                    {
+                        // À la manette : la croix, en grand.
+                        var side = r.width * 0.78f;
+                        KeyPrompts.DrawGlyph(ink, layer.texts, PadGlyph.Dpad, PromptAxis.None,
+                            new Rect(r.center - new Vector2(side, side) * 0.5f, new Vector2(side, side)), inkColor, paperColor);
+                        break;
+                    }
                     // Les quatre touches de déplacement, avec leur nom sur ce clavier.
                     var k = r.width * 0.3f;
                     var c = r.center + new Vector2(0f, k * 0.3f);
@@ -547,7 +546,7 @@ namespace Deckscent
                         ink.Hatch(new Rect(box.x + 3f, box.y + 3f, box.width, box.height), h, inkColor);
                         ink.Rect(box, paperColor);
                         ink.RectOutline(box, inkColor, w);
-                        layer.texts.Label(KeyLabel("Player/Move", key.part), box.x - 4f, box.center.y - 8.4f, box.width + 8f, 12, inkColor, TextAnchor.UpperCenter, FontStyle.Bold);
+                        layer.texts.Label(KeyPrompts.Describe(KeyPrompts.Of("Player/Move", false, key.part)), box.x - 4f, box.center.y - 8.4f, box.width + 8f, 12, inkColor, TextAnchor.UpperCenter, FontStyle.Bold);
                     }
                     break;
                 }
@@ -610,14 +609,12 @@ namespace Deckscent
             var y = box.y + 84f;
             foreach (var row in Controls)
             {
-                var keys = row.parts == null
-                    ? KeyLabel(row.action, null)
-                    : string.Join(" ", System.Array.ConvertAll(row.parts, part => KeyLabel(row.action, part)));
-                front.texts.Label(keys, box.x + 40f, y, 190f, 17, accentColor, TextAnchor.UpperLeft, FontStyle.Bold);
+                KeyPrompts.Draw(front.ink, front.texts, KeyPrompts.Of(row.action, row.parts), box.x + 40f, y, 17, accentColor, paperColor);
                 front.texts.Label(Loc.T(row.label), box.x + 240f, y, box.width - 270f, 17, inkColor);
                 y += rowH;
             }
-            front.texts.Label(Loc.T("menu.retour"), box.x, box.yMax - 44f, box.width, 14, WithAlpha(inkColor, 0.6f), TextAnchor.UpperCenter, FontStyle.Italic);
+            KeyPrompts.DrawHints(front.ink, front.texts, new[] { new Hint(KeyPrompts.Back(), "aide.retour") },
+                box.x, box.yMax - 46f, box.width, 14, inkColor, WithAlpha(inkColor, 0.6f), paperColor);
         }
 
         void DrawOptions(Vector2 screen)
@@ -659,8 +656,20 @@ namespace Deckscent
             }
             texts.Label(Loc.LocaleName(GameSettings.Locale), x, y1 - 20f, 150f, 16, inkColor);
 
-            texts.Label(Loc.T(OptionsHint), box.x, box.yMax - 44f, box.width, 14, WithAlpha(inkColor, 0.6f), TextAnchor.UpperCenter, FontStyle.Italic);
+            KeyPrompts.DrawHints(ink, texts, new[]
+            {
+                new Hint(KeyPrompts.Navigate(PromptAxis.Vertical), "aide.choisir"),
+                new Hint(KeyPrompts.Navigate(PromptAxis.Horizontal), "aide.regler"),
+                new Hint(KeyPrompts.Back(), "aide.retour"),
+            }, box.x, box.yMax - 46f, box.width, 14, inkColor, WithAlpha(inkColor, 0.6f), paperColor);
         }
+
+        /// <summary>Aide sous les cartes de l'écran titre.</summary>
+        static Hint[] MainHints() => new[]
+        {
+            new Hint(KeyPrompts.Navigate(PromptAxis.Horizontal), "aide.choisir"),
+            new Hint(KeyPrompts.Confirm(), "aide.valider"),
+        };
 
         /// <summary>Ligne de base de la ligne `row` du panneau Options.</summary>
         static float OptionY(Rect box, int row) => box.y + 118f + row * 56f;
@@ -714,34 +723,6 @@ namespace Deckscent
                 ink.Rect(new Rect(c.x - 3f, r.y, 6f, r.height), red);
             }
             ink.RectOutline(r, inkColor, 2f);
-        }
-
-        /// <summary>
-        /// Nom de la touche clavier d'une action, selon la disposition du clavier (les touches sont
-        /// liées par position : W QWERTY s'affiche Z en AZERTY). `part` : partie d'un composite
-        /// (« up », « negative »…), null pour une touche simple.
-        /// </summary>
-        public static string KeyLabel(string actionPath, string part)
-        {
-            var action = InputSystem.actions?.FindAction(actionPath);
-            if (action == null)
-                return "?";
-            var bindings = action.bindings;
-            for (var i = 0; i < bindings.Count; i++)
-            {
-                var b = bindings[i];
-                if (b.isComposite || !b.effectivePath.StartsWith("<Keyboard>"))
-                    continue;
-                if (part == null ? b.isPartOfComposite : !(b.isPartOfComposite && string.Equals(b.name, part, System.StringComparison.OrdinalIgnoreCase)))
-                    continue;
-                var name = action.GetBindingDisplayString(i, InputBinding.DisplayStringOptions.DontIncludeInteractions);
-                if (string.IsNullOrEmpty(name))
-                    continue;
-                if (GameSettings.Locale == "fr" && KeyNamesFr.TryGetValue(name, out var fr))
-                    return fr;
-                return name.Length == 1 ? name.ToUpperInvariant() : name;
-            }
-            return "?";
         }
 
         static Rect Shrink(Rect r, float by) => new Rect(r.x + by, r.y + by, r.width - by * 2f, r.height - by * 2f);

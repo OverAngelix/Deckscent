@@ -62,7 +62,6 @@ namespace Deckscent
         const float LegendWidth = 130f;
         const int CardsPerRow = 3;
         const float CursorRepeat = 0.18f;
-        const string Hint = "carte.aide";
         static readonly Vector2Int NoSlot = new Vector2Int(-1, -1);
         static readonly Vector2[] DirVectors = { new Vector2(0, -1), new Vector2(1, 0), new Vector2(0, 1), new Vector2(-1, 0) };
 
@@ -104,10 +103,18 @@ namespace Deckscent
             SetOpen(false);
         }
 
-        void OnEnable() => _toggle?.Enable();
+        void OnEnable()
+        {
+            _toggle?.Enable();
+            ControlDevice.Listen();
+            ControlDevice.Changed += MarkDirty;
+        }
+
+        void MarkDirty() => _dirty = true;
 
         void OnDisable()
         {
+            ControlDevice.Changed -= MarkDirty;
             if (IsOpen)
                 SetOpen(false);
         }
@@ -400,7 +407,32 @@ namespace Deckscent
                     DrawLegend(legend, 2);
             }
 
-            texts.Label(Loc.T(Hint), panel.x, panel.yMax - Pad - 14f, panel.width, 14, Faded(0.45f), TextAnchor.UpperCenter, FontStyle.Italic);
+            KeyPrompts.DrawHints(ink, texts, Hints(), panel.x, panel.yMax - Pad - 16f, panel.width, 14, Faded(0.2f), Faded(0.45f), paperColor);
+        }
+
+        /// <summary>Aide en pied de carte, selon l'appareil : souris et clavier, ou manette.</summary>
+        static Hint[] Hints()
+        {
+            if (ControlDevice.IsGamepad)
+                return new[]
+                {
+                    new Hint(KeyPrompts.Of("Map/Cursor"), "aide.deplacer"),
+                    new Hint(KeyPrompts.Of("Map/Place"), "aide.poser"),
+                    new Hint(KeyPrompts.Of("Map/Rotate"), "aide.tourner"),
+                    new Hint(KeyPrompts.Of("Map/Discard"), "aide.defausser"),
+                    new Hint(KeyPrompts.Either(KeyPrompts.Of("Map/PreviousCard"), KeyPrompts.Of("Map/NextCard")), "aide.choisir"),
+                    // Fermer : le bouton qui ouvre la carte (△ / Y / X) ; ○ / B ferme aussi, sans l'afficher.
+                    new Hint(KeyPrompts.Of("Player/Map"), "aide.fermer"),
+                };
+            return new[]
+            {
+                new Hint(new[] { Prompt.Key(Loc.T("touche.clic")) }, "aide.poser"),
+                new Hint(KeyPrompts.Either(new[] { Prompt.Key(Loc.T("touche.clic_droit")) }, KeyPrompts.Of("Map/Rotate"),
+                    new[] { Prompt.Key(Loc.T("touche.molette")) }), "aide.tourner"),
+                new Hint(KeyPrompts.Of("Map/Discard"), "aide.defausser"),
+                new Hint(new[] { Prompt.Key(Loc.T("touche.chiffres_main")) }, "aide.choisir"),
+                new Hint(KeyPrompts.Either(KeyPrompts.Of("Player/Map"), KeyPrompts.Of("Map/Close")), "aide.fermer"),
+            };
         }
 
         /// <summary>Message en haut à droite : raison du refus sous le curseur, ou dernier message.</summary>

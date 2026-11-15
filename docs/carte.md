@@ -22,7 +22,7 @@ C'est là que le joueur **pose ses tuiles**. Code : `Assets/Scripts/UI/MapScreen
 | Tourner | clic droit, molette | R | Carré / X |
 | Défausser | | Suppr, Retour arrière | Select |
 
-Les touches sont dans la map **Map** d'`InputSystem_Actions` (sauf l'ouverture : `Player/Map`), la souris est lue directement.
+Les touches sont dans la map **Map** d'`InputSystem_Actions` (sauf l'ouverture : `Player/Map`), la souris est lue directement. L'aide en pied d'écran suit l'appareil utilisé (`KeyPrompts`, voir `docs/menu.md`) : souris et clavier (« Clic poser · Clic droit / R / Molette tourner… »), ou pictos de la manette (croix / stick déplacer, ✕ / A poser, □ / X tourner, Select défausser, L1 R1 choisir, △ / Y / X fermer : le bouton qui ouvre la carte ; ○ / B ferme aussi, sans être affiché).
 
 ## Ce qu'on voit
 

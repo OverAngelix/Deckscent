@@ -53,8 +53,31 @@ namespace Deckscent
             { "menu.options.note",   "son · langue" },
             { "menu.commandes.note", "les touches" },
             { "menu.quitter.note",   "fermer le jeu" },
-            { "menu.aide",           "← →  choisir   ·   Entrée  valider" },
-            { "menu.retour",         "Échap : retour" },
+
+            // --- Aides « touches + action » (KeyPrompts, selon l'appareil) ---
+            { "aide.choisir",     "choisir" },
+            { "aide.valider",     "valider" },
+            { "aide.regler",      "régler" },
+            { "aide.retour",      "retour" },
+            { "aide.deplacer",    "déplacer" },
+            { "aide.poser",       "poser" },
+            { "aide.tourner",     "tourner" },
+            { "aide.defausser",   "défausser" },
+            { "aide.fermer",      "fermer" },
+            { "aide.recommencer", "recommencer" },
+            { "aide.menu",        "menu" },
+
+            // --- Noms de touches (KeyPrompts ; les lettres viennent du clavier) ---
+            { "touche.entree",         "Entrée" },
+            { "touche.espace",         "Espace" },
+            { "touche.echap",          "Échap" },
+            { "touche.suppr",          "Suppr" },
+            { "touche.retour_arriere", "Retour" },
+            { "touche.tab",            "Tab" },
+            { "touche.clic",           "Clic" },
+            { "touche.clic_droit",     "Clic droit" },
+            { "touche.molette",        "Molette" },
+            { "touche.chiffres_main",  "1-6" },
 
             // --- Liste des commandes (MenuScreen) ---
             { "commandes.avancer",         "Avancer / reculer" },
@@ -73,14 +96,12 @@ namespace Deckscent
             { "options.effets",  "Effets sonores" },
             { "options.langue",  "Langue" },
             { "options.muet",    "Muet" },
-            { "options.aide",    "↑ ↓  choisir   ·   ← →  régler   ·   Échap  retour" },
 
             // --- Écran de carte (MapScreen) ---
             { "carte.titre",         "Carte du donjon" },
             { "carte.main",          "La main" },
             { "carte.nb_cartes",     "{0} cartes" },
             { "carte.aucune_place",  "aucune place" },
-            { "carte.aide",          "Clic : poser   ·   Clic droit / R / molette : tourner   ·   Suppr : défausser   ·   1-6 : choisir   ·   , / Échap : fermer" },
             { "carte.pose_possible", "Pose possible" },
             { "carte.donjon_ferme",  "Plus aucun passage libre : le donjon est fermé" },
             { "carte.defaussee",     "Carte défaussée" },
@@ -130,7 +151,6 @@ namespace Deckscent
             { "hud.atq",       "ATQ {0}" },
             { "hud.def",       "DÉF {0}" },
             { "hud.mort",      "Vous êtes mort" },
-            { "hud.mort.aide", "Entrée : recommencer   ·   Échap : menu" },
 
             // --- Messages du jeu ---
             { "message.piege_franchi", "Piège franchi" },
@@ -151,8 +171,31 @@ namespace Deckscent
             { "menu.options.note",   "sound · language" },
             { "menu.commandes.note", "key bindings" },
             { "menu.quitter.note",   "close the game" },
-            { "menu.aide",           "← →  choose   ·   Enter  confirm" },
-            { "menu.retour",         "Esc: back" },
+
+            // --- Aides « touches + action » (KeyPrompts, selon l'appareil) ---
+            { "aide.choisir",     "choose" },
+            { "aide.valider",     "confirm" },
+            { "aide.regler",      "adjust" },
+            { "aide.retour",      "back" },
+            { "aide.deplacer",    "move" },
+            { "aide.poser",       "place" },
+            { "aide.tourner",     "rotate" },
+            { "aide.defausser",   "discard" },
+            { "aide.fermer",      "close" },
+            { "aide.recommencer", "restart" },
+            { "aide.menu",        "menu" },
+
+            // --- Noms de touches (KeyPrompts ; les lettres viennent du clavier) ---
+            { "touche.entree",         "Enter" },
+            { "touche.espace",         "Space" },
+            { "touche.echap",          "Esc" },
+            { "touche.suppr",          "Del" },
+            { "touche.retour_arriere", "Backspace" },
+            { "touche.tab",            "Tab" },
+            { "touche.clic",           "Click" },
+            { "touche.clic_droit",     "Right click" },
+            { "touche.molette",        "Wheel" },
+            { "touche.chiffres_main",  "1-6" },
 
             // --- Liste des commandes (MenuScreen) ---
             { "commandes.avancer",         "Move forward / back" },
@@ -171,14 +214,12 @@ namespace Deckscent
             { "options.effets",  "Sound effects" },
             { "options.langue",  "Language" },
             { "options.muet",    "Muted" },
-            { "options.aide",    "↑ ↓  choose   ·   ← →  adjust   ·   Esc  back" },
 
             // --- Écran de carte (MapScreen) ---
             { "carte.titre",         "Dungeon map" },
             { "carte.main",          "Hand" },
             { "carte.nb_cartes",     "{0} cards" },
             { "carte.aucune_place",  "no room" },
-            { "carte.aide",          "Click: place   ·   Right click / R / wheel: rotate   ·   Del: discard   ·   1-6: choose   ·   , / Esc: close" },
             { "carte.pose_possible", "Can be placed here" },
             { "carte.donjon_ferme",  "No open passage left: the dungeon is sealed" },
             { "carte.defaussee",     "Card discarded" },
@@ -228,7 +269,6 @@ namespace Deckscent
             { "hud.atq",       "ATK {0}" },
             { "hud.def",       "DEF {0}" },
             { "hud.mort",      "You are dead" },
-            { "hud.mort.aide", "Enter: restart   ·   Esc: menu" },
 
             // --- Messages du jeu ---
             { "message.piege_franchi", "Trap crossed" },
