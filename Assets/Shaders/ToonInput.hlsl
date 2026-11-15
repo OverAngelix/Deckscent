@@ -16,6 +16,7 @@ CBUFFER_START(UnityPerMaterial)
     half _TextureSaturation;
     half _ShadeThreshold;
     half _ShadeSoftness;
+    half _Glow;
 CBUFFER_END
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"

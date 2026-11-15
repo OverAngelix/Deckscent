@@ -17,6 +17,7 @@ Shader "Deckscent/Toon"
         _TextureSaturation("Saturation gardée (0 = gris)", Range(0, 1)) = 0
         _ShadeThreshold("Frontière éclairé / ombre (-1 à 1)", Range(-1, 1)) = 0
         _ShadeSoftness("Douceur de la frontière", Range(0, 0.5)) = 0.03
+        _Glow("Lueur propre, ajoutée à la lumière reçue (0 = aucune ; ennemis et trésors, pour qu'on les voie dans le noir)", Range(0, 1)) = 0
         [HideInInspector] _Cutoff("Seuil alpha", Range(0, 1)) = 0.5
     }
 
@@ -131,7 +132,8 @@ Shader "Deckscent/Toon"
 
                 // Lumière ambiante (Environment > Ambient, couleur unie).
                 half3 ambient = SampleSH(normalWS);
-                half3 color = albedo * (lighting + ambient);
+                // Lueur propre : les accents (slimes, coffres) restent lisibles dans le noir.
+                half3 color = albedo * (lighting + ambient + _Glow);
                 color = MixFog(color, input.fogFactor);
                 return half4(color, 1);
             }
