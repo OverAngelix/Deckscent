@@ -24,6 +24,12 @@ Shader "Deckscent/Gravure"
         [Header(Tons)]
         _WhitePoint("Au-dessus : papier blanc", Range(0, 1)) = 0.55
         _BlackPoint("En dessous : noir plein", Range(0, 1)) = 0.12
+        _SolidInk("Ton en dessous duquel l'encre est pleine (aplat)", Range(0, 0.5)) = 0.08
+
+        [Header(Obscurite)]
+        _DarkStart("Distance où l'obscurité commence (m)", Range(0, 60)) = 8
+        _DarkEnd("Distance du noir complet, sans hachures (m)", Range(0, 80)) = 16
+        _LitKeep("Luminosité à partir de laquelle une zone éclairée échappe à l'obscurité", Range(0, 1)) = 0.6
 
         [Header(Hachures)]
         _HatchSpacingPx("Écartement visé entre deux traits (px)", Range(3, 30)) = 5
@@ -62,10 +68,14 @@ Shader "Deckscent/Gravure"
 
             float4 _InkColor;
             float _LineThickness, _DepthSensitivity, _NormalSensitivity, _LumSensitivity, _LineWobble;
-            float _WhitePoint, _BlackPoint;
+            float _WhitePoint, _BlackPoint, _SolidInk;
+            float _DarkStart, _DarkEnd, _LitKeep;
             float _HatchSpacingPx, _HatchMinSpacing, _ThresholdFirst, _ThresholdCross, _HatchAngle, _HatchMinWidthPx, _HatchWobble;
             float4 _PaperColor;
             float _AccentSaturation, _AccentBoost, _Grain;
+            // Global (hors Properties, pour que Shader.SetGlobalFloat s'applique) : 0 = image non
+            // touchée. Mis à 0 pour la vue Scène de l'éditeur par GravureSceneView.cs.
+            float _GravureOff;
 
             float3 SceneColor(float2 uv)
             {
@@ -142,6 +152,8 @@ Shader "Deckscent/Gravure"
                 float2 uv = input.texcoord;
                 float2 texel = 1.0 / _ScreenParams.xy;
                 float3 col = SceneColor(uv);
+                if (_GravureOff > 0.5)
+                    return half4(col, 1);
 
                 float rawDepth = SampleSceneDepth(uv);
                 float d0 = LinearEyeDepth(rawDepth, _ZBufferParams);
@@ -191,6 +203,15 @@ Shader "Deckscent/Gravure"
                 float toneLum = lerp(PerceivedLum(col), pow(max(cMax, 0.0), 1.0 / 2.2), keep);
 
                 float tone = smoothstep(_BlackPoint, _WhitePoint, toneLum);
+                // Obscurité avec la distance : la lumière ambiante est la même partout, un couloir
+                // lointain resterait sinon à mi-ton (quadrillé). Le ton descend vers le noir entre
+                // _DarkStart et _DarkEnd.
+                // Là où rien n'est dessiné (au-delà de tout), le noir complet.
+                float darkness = geoMask > 0.0 ? smoothstep(_DarkStart, max(_DarkEnd, _DarkStart + 0.01), d0) : 1.0;
+                // Ce qu'une vraie lumière éclaire (torche au loin) échappe à l'obscurité : un point
+                // lumineux dans le noir. Seul ce qui n'a que la lumière ambiante s'y perd.
+                darkness *= 1.0 - smoothstep(_LitKeep, _LitKeep + 0.25, toneLum) * geoMask;
+                tone *= 1.0 - darkness;
                 float a = radians(_HatchAngle);
                 float2 n1 = float2(cos(a), sin(a));
                 float2 n2 = float2(-n1.y, n1.x);
@@ -198,6 +219,10 @@ Shader "Deckscent/Gravure"
                 float h2 = HatchLines(surf, n2, LayerFill(tone, _ThresholdCross));
                 // Deux séries croisées : chacune couvre une part de ce que l'autre laisse.
                 float hatch = (1.0 - (1.0 - h1) * (1.0 - h2)) * geoMask;
+                // Tout en bas, un aplat d'encre : même des traits qui se rejoignent laissent un peu
+                // de papier entre eux, d'où un quadrillage gris au lieu du noir.
+                float solid = 1.0 - smoothstep(0.0, max(_SolidInk, 1e-3), tone);
+                hatch = max(hatch, solid);
 
                 // --- Couleur : papier, accents, grain ---
                 float3 accent = saturate(col * _AccentBoost / max(cMax, 0.25));

@@ -28,6 +28,8 @@ Material:
     - _AccentBoost: 1.1
     - _AccentSaturation: 0.45
     - _BlackPoint: 0.1
+    - _DarkEnd: 16
+    - _DarkStart: 8
     - _DepthSensitivity: 0.05
     - _Grain: 0.025
     - _HatchAngle: 45
@@ -37,13 +39,15 @@ Material:
     - _HatchWobble: 0.006
     - _LineThickness: 1.6
     - _LineWobble: 0.8
+    - _LitKeep: 0.6
     - _LumSensitivity: 0.12
     - _NormalSensitivity: 0.3
+    - _SolidInk: 0.08
     - _ThresholdCross: 0.55
     - _ThresholdFirst: 0.85
     - _WhitePoint: 0.6
     m_Colors:
     - _InkColor: {r: 0.03, g: 0.03, b: 0.035, a: 1}
-    - _PaperColor: {r: 0.96999997, g: 0.965, b: 0.95, a: 1}
+    - _PaperColor: {r: 0.97, g: 0.965, b: 0.95, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
