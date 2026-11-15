@@ -102,6 +102,8 @@ namespace Deckscent
 
         readonly List<string> _rows = new List<string>();
         string _planOverride = "";
+        /// <summary>Murs fins entre deux cases (case, indice de direction), dans les deux sens.</summary>
+        readonly HashSet<(Vector2Int, int)> _edgeWalls = new HashSet<(Vector2Int, int)>();
         Transform _generated;
 #if UNITY_EDITOR
         bool _rebuildQueued;
@@ -128,14 +130,34 @@ namespace Deckscent
         }
 #endif
 
-        /// <summary>Remplace le plan (sans toucher à `layout`) et reconstruit. Vide = revenir à `layout`.</summary>
-        public void SetPlan(string plan)
+        /// <summary>
+        /// Remplace le plan (sans toucher à `layout`) et reconstruit. Vide = revenir à `layout`.
+        /// `edgeWalls` : murs fins entre deux cases de sol (pourtour des salles), en (case, indice de
+        /// direction dans <see cref="Grid.Dirs"/>) ; le mur bloque dans les deux sens.
+        /// </summary>
+        public void SetPlan(string plan, IEnumerable<(Vector2Int cell, int dir)> edgeWalls = null)
         {
             _planOverride = plan ?? "";
+            _edgeWalls.Clear();
+            if (edgeWalls != null)
+                foreach (var (cell, dir) in edgeWalls)
+                {
+                    _edgeWalls.Add((cell, dir));
+                    _edgeWalls.Add((cell + Grid.Dirs[dir], (dir + 2) % 4));
+                }
             Build();
         }
 
         public bool IsWalkable(Vector2Int cell) => GetCell(cell) != '#';
+
+        /// <summary>Vrai si un mur fin ferme ce bord de la case (direction : indice dans Grid.Dirs).</summary>
+        public bool HasEdgeWall(Vector2Int cell, int dir) => _edgeWalls.Contains((cell, dir));
+
+        /// <summary>
+        /// Vrai si l'on peut passer de `cell` à sa voisine dans la direction `dir` (indice dans
+        /// Grid.Dirs) : la voisine est du sol et aucun mur fin ne les sépare.
+        /// </summary>
+        public bool CanStep(Vector2Int cell, int dir) => !HasEdgeWall(cell, dir) && IsWalkable(cell + Grid.Dirs[dir]);
 
         /// <summary>Caractère du plan pour une case (« # » hors du plan).</summary>
         public char GetCell(Vector2Int cell)
@@ -241,7 +263,9 @@ namespace Deckscent
             for (var i = 0; i < Grid.Dirs.Length; i++)
             {
                 var d = Grid.Dirs[i];
-                if (IsWalkable(cell + d))
+                // Mur vers la roche, ou mur fin vers une case de sol (pourtour d'une salle : chaque
+                // case pose son pan, tourné vers elle).
+                if (CanStep(cell, i))
                     continue;
                 var outward = Grid.ToWorldDir(d);
                 // Le prefab de mur est posé au milieu du bord, sa face (+Z) tournée vers la case.
@@ -256,11 +280,11 @@ namespace Deckscent
         {
             if (torchPrefab == null)
                 return;
-            // Accrochée au premier mur voisin trouvé.
+            // Accrochée au premier mur voisin trouvé (roche ou mur fin).
             for (var i = 0; i < Grid.Dirs.Length; i++)
             {
                 var d = Grid.Dirs[i];
-                if (IsWalkable(cell + d))
+                if (CanStep(cell, i))
                     continue;
                 var outward = Grid.ToWorldDir(d);
                 var position = CellToLocal(cell) + outward * (cellSize * 0.5f) + Vector3.up * torchHeight;

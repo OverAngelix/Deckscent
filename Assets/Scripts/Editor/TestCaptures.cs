@@ -29,49 +29,76 @@ namespace Deckscent.Editor
             ("5_grand_couloir_sud", new Vector2Int(13, 7), 3), // couloir sud, torche (6, 7) au loin
         };
 
+        /// <summary>
+        /// Points de vue dans le donjon de démo (DemoDungeon), en cases du labyrinthe : l'emplacement
+        /// (x, y) du plateau a son centre en (3x + 1, 3y + 1).
+        /// </summary>
+        static readonly (string name, Vector2Int cell, int facing)[] DemoPoses =
+        {
+            ("donjon_1_depart_vers_grande_salle", new Vector2Int(13, 13), 0), // carrefour, couloir puis grande salle 2 × 2
+            ("donjon_2_salle_piliers", new Vector2Int(16, 16), 1),            // salle à piliers 3 × 2, vers l'est
+            ("donjon_3_salle_croix", new Vector2Int(7, 19), 3),               // centre de la salle en croix, vers l'ouest
+            ("donjon_4_longue_galerie", new Vector2Int(7, 10), 0),            // bas de la longue galerie, vers le nord
+            ("donjon_5_salle_u", new Vector2Int(16, 7), 1),                   // fond de la salle en U, vers l'est
+            ("donjon_6_grande_salle", new Vector2Int(10, 4), 1),              // coin de la grande salle, vers l'est
+        };
+
         [MenuItem("Deckscent/Captures de la scène de test")]
         public static void Capture()
         {
+            if (!CaptureScene(PrototypeBuilder.TestScenePath, PrototypeBuilder.BuildTestScene, Poses, "6_vue_dessus"))
+                return;
+            CaptureScene(PrototypeBuilder.DemoScenePath, PrototypeBuilder.BuildDemoScene, DemoPoses, "donjon_0_vue_dessus");
+        }
+
+        static bool CaptureScene(string scenePath, System.Action build, (string name, Vector2Int cell, int facing)[] poses, string topName)
+        {
             var active = EditorSceneManager.GetActiveScene();
-            if (active.path != PrototypeBuilder.TestScenePath)
+            if (active.path != scenePath)
             {
                 if (active.isDirty)
                 {
                     Debug.LogError("Captures : la scène ouverte a des modifications non enregistrées. Enregistre-la d'abord.");
-                    return;
+                    return false;
                 }
-                if (!File.Exists(PrototypeBuilder.TestScenePath))
-                    PrototypeBuilder.BuildTestScene();
-                EditorSceneManager.OpenScene(PrototypeBuilder.TestScenePath, OpenSceneMode.Single);
+                if (!File.Exists(scenePath))
+                    build();
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             }
 
             var maze = Object.FindAnyObjectByType<Maze>();
             var player = Object.FindAnyObjectByType<PlayerController>();
             if (maze == null || player == null)
             {
-                Debug.LogError("Captures : labyrinthe ou joueur introuvable dans la scène de test.");
-                return;
+                Debug.LogError("Captures : labyrinthe ou joueur introuvable dans " + scenePath);
+                return false;
             }
-            maze.Build();
+            // Le donjon (s'il y en a un) réécrit le plan ; sinon, le plan du labyrinthe.
+            var dungeon = Object.FindAnyObjectByType<Dungeon>();
+            if (dungeon != null)
+                dungeon.NewGame();
+            else
+                maze.Build();
             var cam = player.GetComponentInChildren<Camera>();
             Directory.CreateDirectory(OutputDir);
 
             var saved = (player.transform.position, player.transform.rotation);
-            foreach (var (name, cell, facing) in Poses)
+            foreach (var (name, cell, facing) in poses)
             {
                 player.transform.SetPositionAndRotation(maze.CellToWorld(cell), Quaternion.Euler(0f, Grid.Yaw(facing), 0f));
                 Save(cam, name);
             }
             player.transform.SetPositionAndRotation(saved.Item1, saved.Item2);
 
-            SaveTopView(maze);
+            SaveTopView(maze, topName);
             // La pose du joueur a été remise : on enregistre pour ne pas laisser la scène « modifiée ».
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-            Debug.Log("Captures : " + (Poses.Length + 1) + " images dans " + Path.GetFullPath(OutputDir));
+            Debug.Log($"Captures : {poses.Length + 1} images de {scenePath} dans {Path.GetFullPath(OutputDir)}");
+            return true;
         }
 
         /// <summary>Vue de dessus orthogonale, éclairée par un soleil temporaire.</summary>
-        static void SaveTopView(Maze maze)
+        static void SaveTopView(Maze maze, string name)
         {
             var size = maze.GridSize;
             var camGo = new GameObject("VueDessus (temporaire)") { hideFlags = HideFlags.HideAndDontSave };
@@ -91,7 +118,7 @@ namespace Deckscent.Editor
                 sun.type = LightType.Directional;
                 sun.intensity = 1.2f;
                 sunGo.transform.rotation = Quaternion.Euler(60f, 30f, 0f);
-                Save(cam, "6_vue_dessus");
+                Save(cam, name);
             }
             finally
             {

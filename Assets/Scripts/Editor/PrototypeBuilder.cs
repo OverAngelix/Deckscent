@@ -4,6 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 namespace Deckscent.Editor
 {
@@ -84,11 +85,16 @@ namespace Deckscent.Editor
             "###############";
 
         public const string TestScenePath = "Assets/Scenes/Tests/Test_Labyrinthe.unity";
+        /// <summary>Scène du donjon de démo (DemoDungeon : toutes les sortes de salles), graine fixe.</summary>
+        public const string DemoScenePath = "Assets/Scenes/Tests/Test_Donjon.unity";
+        const int DemoSeed = 7;
+
+        enum DungeonMode { None, Random, Demo }
 
         [MenuItem("Deckscent/Construire la scène Main")]
         public static void BuildMainScene()
         {
-            BuildScene(ScenePath, null);
+            BuildScene(ScenePath, null, DungeonMode.Random);
             // Main en tête des scènes du build.
             var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
             foreach (var other in EditorBuildSettings.scenes)
@@ -98,10 +104,32 @@ namespace Deckscent.Editor
         }
 
         [MenuItem("Deckscent/Construire la scène de test")]
-        public static void BuildTestScene() => BuildScene(TestScenePath, TestPlan);
+        public static void BuildTestScene() => BuildScene(TestScenePath, TestPlan, DungeonMode.None);
+
+        [MenuItem("Deckscent/Construire la scène du donjon de démo")]
+        public static void BuildDemoScene() => BuildScene(DemoScenePath, null, DungeonMode.Demo);
+
+        /// <summary>
+        /// Ajoute l'objet « Donjon » (plateau + pioche) qui écrit le plan du labyrinthe. `demo` : donjon
+        /// de démo à graine fixe ; sinon départ au hasard (les 10 départs côte à côte dans l'éditeur).
+        /// </summary>
+        public static Dungeon AddDungeon(Maze maze, bool demo)
+        {
+            var go = new GameObject("Donjon");
+            SceneManager.MoveGameObjectToScene(go, maze.gameObject.scene);
+            go.SetActive(false); // réglé avant son premier OnEnable
+            var dungeon = go.AddComponent<Dungeon>();
+            var so = new SerializedObject(dungeon);
+            so.FindProperty("maze").objectReferenceValue = maze;
+            so.FindProperty("demo").boolValue = demo;
+            so.FindProperty("seed").intValue = demo ? DemoSeed : 0;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            go.SetActive(true);
+            return dungeon;
+        }
 
         /// <summary>Une scène labyrinthe + joueur. `plan` null = plan par défaut du labyrinthe.</summary>
-        static void BuildScene(string scenePath, string plan)
+        static void BuildScene(string scenePath, string plan, DungeonMode dungeonMode)
         {
             if (AssetDatabase.LoadAssetAtPath<GameObject>(MazeDir + "/Mur_Gris.prefab") == null)
                 BuildMazePrefabs();
@@ -124,6 +152,8 @@ namespace Deckscent.Editor
                 so.FindProperty("layout").stringValue = plan;
             so.ApplyModifiedPropertiesWithoutUndo();
             maze.Build();
+            if (dungeonMode != DungeonMode.None)
+                AddDungeon(maze, dungeonMode == DungeonMode.Demo);
 
             var player = (GameObject)PrefabUtility.InstantiatePrefab(Load(PrefabDir + "/Player.prefab"), scene);
             var pso = new SerializedObject(player.GetComponent<PlayerController>());

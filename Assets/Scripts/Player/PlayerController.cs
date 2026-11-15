@@ -118,7 +118,7 @@ namespace Deckscent
             Facing = 0;
             for (var i = 0; i < Grid.Dirs.Length; i++)
             {
-                if (maze.IsWalkable(Cell + Grid.Dirs[i]))
+                if (maze.CanStep(Cell, i))
                 {
                     Facing = i;
                     break;
@@ -169,7 +169,8 @@ namespace Deckscent
         {
             _busy = true;
             var target = Cell + dir;
-            if (maze.IsWalkable(target))
+            // Sol devant, et pas de mur fin (pourtour d'une salle) entre les deux cases.
+            if (maze.CanStep(Cell, System.Array.IndexOf(Grid.Dirs, dir)))
             {
                 Cell = target;
                 var from = transform.position;

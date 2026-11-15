@@ -197,6 +197,116 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1045930990
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1045930992}
+  - component: {fileID: 1045930991}
+  m_Layer: 0
+  m_Name: Donjon
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1045930991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045930990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d1b343c80cd9b14385fcf6fa6ccb313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Deckscent::Deckscent.Dungeon
+  maze: {fileID: 712320485}
+  boardSize: {x: 9, y: 9}
+  starterIndex: -1
+  seed: 0
+  demo: 0
+  deck:
+    handSize: 5
+    maxHandSize: 6
+    torchChance: 0.3
+    shapeWeights:
+    - key: impasse
+      weight: 1
+    - key: couloir
+      weight: 2.5
+    - key: virage
+      weight: 2.5
+    - key: t
+      weight: 2
+    - key: carrefour
+      weight: 1
+    - key: salle
+      weight: 1.5
+    - key: galerie
+      weight: 1
+    - key: longue_galerie
+      weight: 0.5
+    - key: salle_l
+      weight: 1
+    - key: salle_t
+      weight: 0.8
+    - key: salle_z
+      weight: 0.7
+    - key: salle_u
+      weight: 0.7
+    - key: salle_croix
+      weight: 0.6
+    - key: grande_salle
+      weight: 1
+    - key: salle_piliers
+      weight: 0.6
+    - key: crypte
+      weight: 0.3
+    contentWeights:
+    - key: vide
+      weight: 4
+    - key: monstre
+      weight: 3
+    - key: piege
+      weight: 2
+    - key: tresor
+      weight: 1
+    - key: boss
+      weight: 0
+    roomThemeWeights:
+    - key: salle_vide
+      weight: 2
+    - key: salle_tresor
+      weight: 1
+    - key: salle_pieges
+      weight: 1.5
+    - key: salle_piegee
+      weight: 1
+    - key: salle_gardee
+      weight: 1.5
+    - key: salle_monstres
+      weight: 1.5
+--- !u!4 &1045930992
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045930990}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1387969060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -264,3 +374,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 712320486}
   - {fileID: 1387969060}
+  - {fileID: 1045930992}

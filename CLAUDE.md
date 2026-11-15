@@ -19,7 +19,7 @@ Dans l'ordre (chaque étape donne quelque chose de jouable ou de visible) :
 0. ✅ Ce fichier.
 1. ✅ **Labyrinthe + joueur** : `Maze` (plan texte → murs, sols, plafond, torches Synty), déplacement en grille, tourner, bump.
 2. ✅ **Rendu gravure** : shader toon + post-process gravure (Renderer Feature URP), validé par captures (en attente du feu vert de l'utilisateur).
-3. **Tuiles, plateau, pioche** en C# pur, avec tests EditMode.
+3. ✅ **Tuiles, plateau, pioche** en C# pur, avec tests EditMode (plus de salles, vraies pièces à murs fins).
 4. **Écran de carte** dessiné en gravure, pose à la souris.
 5. **Tour par tour et contenu** : PV / ATQ / DÉF, slimes, dalle à pics, coffre, Spawner, HUD.
 6. **Menu, options, musique synthétisée, FR / EN.**
@@ -63,7 +63,16 @@ Assets/Prefabs/Maze/                   Mur_01/03/04, Sol, Plafond (Synty), Mur_G
 Assets/Materials/                      M_Gris_* (secours), M_Flamme
 Assets/Scenes/Main.unity               Jeu (scène 0 du build)
 Assets/Scenes/Tests/Test_Labyrinthe.unity  Scène de test, plan figé (PrototypeBuilder.TestPlan)
+Assets/Scenes/Tests/Test_Donjon.unity  Donjon de démo (DemoDungeon, graine 7) : une salle de chaque sorte
+Assets/Scripts/Tiles/TileCard.cs       Carte-tuile : formes (ShapeList), contenus, rotation, portes, cases, murs fins
+Assets/Scripts/Tiles/TileDeck.cs       Main de 5 cartes, tirage pondéré (DeckSettings, réglable dans l'inspecteur du Donjon)
+Assets/Scripts/Tiles/DungeonBoard.cs   Plateau 9 × 9, 10 départs, règles de pose, plan texte + murs fins
+Assets/Scripts/Tiles/Dungeon.cs        Objet « Donjon » de la scène : plateau + pioche → Maze.SetPlan (aussi dans l'éditeur)
+Assets/Scripts/Tiles/DemoDungeon.cs    Donjon de démo posé avec les vraies règles (captures, tests)
 Assets/Tests/PlayMode/                 Tests PlayMode (assembly Deckscent.Tests.PlayMode), clavier virtuel via InputTestFixture
+Assets/Tests/EditMode/                 Tests EditMode (assembly Deckscent.Tests.EditMode) : tuiles, pioche, plateau
+docs/tuiles.md                         Doc des tuiles, salles, pioche, contenus et règles de pose
+Assets/Scripts/Editor/TilePlate.cs     Menu Deckscent > Planche des tuiles (→ docs/images/tuiles.png, dessin par Tools/planche_tuiles.ps1)
 ```
 
 **Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
@@ -117,7 +126,9 @@ Voir `README.md` (packs, versions, réimport).
 
   Les autres actions de base (Attack, Jump, Crouch, Sprint, Look, Previous, Next) ne servent pas et certaines partagent des touches (Entrée = Attack, L3 = Sprint) : en tenir compte avant de les utiliser. Pour changer une touche, modifier le fichier d'actions (pas le code). Le joueur référence ses actions par `InputActionReference` (assignées par `PrototypeBuilder.ConfigurePlayer`, à rappeler sur le prefab si on ajoute une action). Carte (à venir) : R pour tourner une tuile, Suppr pour défausser, à ajouter au fichier.
 - **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit).
-- **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs.
+- **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs. Doc : `docs/tuiles.md`.
+- **Salles = vraies pièces** (demande de l'utilisateur, 2026-11-15 : « plus de salles, et variées ») : tout l'emplacement est du sol (3 × 3 cases), le pourtour est fermé par des **murs fins** sur les bords des cases (`TileCard.EdgeWalls`, `DungeonBoard.EdgeWalls`, `Maze.SetPlan(plan, murs)`), troués aux portes. Dans Godot, les salles étaient faites de cases de roche (branches d'une case de large) : abandonné. Le déplacement passe par `Maze.CanStep(case, direction)`, jamais par `IsWalkable` seul. 16 formes, dont 11 salles (salle, galerie, longue galerie, L, T, Z, U, croix, grande salle, salle à piliers, crypte).
+- **Rythme façon donjon mystère** (choix de l'utilisateur) : beaucoup de couloirs étroits (la pression), des salles rares mais **denses et dangereuses**. Pioche : `roomChance` 15 %, **6 salles au plus par étage** (`maxRoomsPerFloor`, posées + en main, `TileDeck.RoomsPlaced` tenu par le Donjon). Couloirs : un élément au plus, surtout vides. Salles : 2 à 7 éléments selon la taille (petite ≤ 2 emplacements, moyenne 3-4, grande ≥ 5 : `ContentDef.Small / Medium / Large`), presque jamais vides. Planche des formes : `docs/images/tuiles.png`, *Deckscent > Planche des tuiles*. Piliers : coins au milieu d'un bloc 2 × 2 d'emplacements (salle à piliers, crypte).
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). La vitrine sert à les voir et les régler.
 
 ## Rendu gravure
