@@ -232,4 +232,4 @@ MonoBehaviour:
   playerColor: {r: 0.85, g: 0.1, b: 0.1, a: 1}
   backdropColor: {r: 0.02, g: 0.02, b: 0.025, a: 0.7}
   screenFill: 0.95
-  biomeName: Sous-sols
+  biomeKey: biome.sous_sols

@@ -38,5 +38,5 @@ Les touches sont dans la map **Map** d'`InputSystem_Actions` (sauf l'ouverture :
 - Canvas en **surimpression** (Screen Space Overlay) : dessiné par-dessus le jeu, il n'est pas touché par le post-process gravure, couleurs libres.
 - Surface de référence **1152 × 648** (celle de l'écran Godot), mise à l'échelle de l'écran : mêmes proportions que la version Godot (cartes de la main, plateau, légende).
 - Le dessin n'est refait que quand quelque chose change (curseur, carte choisie, pose).
-- **Traduit** (option Langue du menu) : tous les textes passent par `Loc.T` au moment du dessin, y compris les noms de formes (`TileCard`) et les raisons de refus (`DungeonBoard.CheckPlacement`), qui restent des clés françaises dans le code. Voir [menu.md](menu.md#traduction).
+- **Traduit** (option Langue du menu) : tous les textes sont des codes clés traduits par `Loc.T` au moment du dessin, y compris les noms de formes (`TileCard.DisplayName`, clé `forme.<identifiant>`) et les raisons de refus (`DungeonBoard.CheckPlacement` renvoie une clé `refus.…`, ou "" si la pose est permise). Le nom de l'étage est le champ `Biome Key` du prefab (`biome.sous_sols`). Voir [menu.md](menu.md#traduction).
 - Réglages dans l'inspecteur du prefab : couleurs (papier, encre, vert, rouge, accent du joueur), écart des hachures (roche et murs), part de l'écran, voile derrière.

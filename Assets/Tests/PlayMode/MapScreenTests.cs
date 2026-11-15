@@ -126,7 +126,7 @@ namespace Deckscent.Tests
             yield return null;
             var start = _dungeon.Board.StartTile;
             Assert.That(_map.TryPlace(start), Is.False, "emplacement déjà occupé");
-            Assert.That(_dungeon.Board.CheckPlacement(start, _map.SelectedCard), Is.EqualTo("Emplacement déjà occupé"));
+            Assert.That(_dungeon.Board.CheckPlacement(start, _map.SelectedCard), Is.EqualTo("refus.occupe"));
         }
 
         [UnityTest]

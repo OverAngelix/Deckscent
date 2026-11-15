@@ -180,7 +180,7 @@ namespace Deckscent
             Engraving.DoubleFrame(ink, box, 4f, inkColor);
             var x = box.x + 10f;
             var y = box.y + 9f;
-            texts.Label(Loc.T("PV"), x, y - 1f, LabelW, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.T("hud.pv"), x, y - 1f, LabelW, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             for (var i = 0; i < max; i++)
             {
                 var pip = new Rect(x + LabelW + i * (PipW + PipGap), y, PipW, PipH);
@@ -188,7 +188,7 @@ namespace Deckscent
                     ink.Rect(pip, healthColor);
                 ink.RectOutline(pip, inkColor, 1.5f);
             }
-            var stats = $"{Loc.F("Tour {0}", player.Turn)}   ·   {Loc.F("ATQ {0}", player.Attack)}   ·   {Loc.F("DÉF {0}", player.Defense)}";
+            var stats = $"{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
         }
 
@@ -217,12 +217,12 @@ namespace Deckscent
             var a = Mathf.Clamp01(_deadTime / 0.8f);
             ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, 0.75f * a));
             var cy = screen.y * 0.5f;
-            texts.Label(Loc.T("Vous êtes mort"), 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
-            texts.Label(Loc.F("Tour {0}", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            texts.Label(Loc.T("hud.mort"), 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
+            texts.Label(Loc.F("hud.tour", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
             if (_deadTime >= restartDelay)
             {
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
-                texts.Label(Loc.T("Entrée : recommencer   ·   Échap : menu"), 0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), TextAnchor.UpperCenter);
+                texts.Label(Loc.T("hud.mort.aide"), 0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), TextAnchor.UpperCenter);
             }
         }
 

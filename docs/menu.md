@@ -52,11 +52,23 @@ Les volumes règlent les trois pistes du mixer `Assets/Resources/Mixage.mixer` (
 
 ![Le menu en anglais](images/menu_en.png)
 
-Les textes sont écrits **en français** dans le code et passent par `Loc.T("texte")` (ou `Loc.F("Tour {0}", n)` s'ils ont des valeurs) au moment de l'affichage. La table anglaise est le dictionnaire `Loc.En` (clé = texte français exact) ; un texte absent de la table reste en français.
+Le code n'écrit jamais un texte affiché, mais son **code clé**, traduit au moment de l'affichage par `Loc.T("menu.descendre")` (ou `Loc.F("hud.tour", n)` s'il a des valeurs, `{0}`). Chaque langue a son dictionnaire dans `Assets/Scripts/Settings/Loc.cs` : **`Loc.Fr`** (la référence) et **`Loc.En`**, rangés par sections, avec les mêmes clés.
 
-Sont traduits : le menu, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (piège franchi, coffre). Les noms de formes (`TileCard`) et les raisons de refus (`DungeonBoard.CheckPlacement`) restent des clés françaises dans le code : c'est l'écran de carte qui les traduit. Un test (`LocTests`) vérifie que toutes les formes et tous les refus ont leur traduction.
+```csharp
+// Loc.Fr                                    // Loc.En
+{ "menu.descendre", "Descendre" },           { "menu.descendre", "Descend" },
+{ "hud.tour",       "Tour {0}" },            { "hud.tour",       "Turn {0}" },
+```
 
-**Pour traduire un nouveau texte** : l'entourer de `Loc.T(…)` et ajouter sa ligne dans `Loc.En`. Les noms de touches restent ceux du clavier du système (« Entree », « Suppr » sur un Windows français) ; en français, quelques-uns sont réécrits (Entrée, Espace, Échap…).
+- **Clé** = `domaine.nom`, en minuscules, sans accents, mots séparés par `_`. Le domaine dit où le texte s'affiche : `menu`, `commandes`, `options`, `carte`, `biome`, `legende`, `refus`, `forme`, `hud`, `message`.
+- Une clé absente de la langue en cours retombe sur le **français** ; absente partout, la **clé elle-même** s'affiche (on la repère tout de suite à l'écran).
+- `Loc.In("fr", clé)` donne le texte dans une langue précise sans toucher à l'option (la planche des tuiles l'utilise).
+
+Sont traduits : le menu, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (piège franchi, coffre). Les noms de formes ont pour clé `forme.` + l'identifiant de la forme (`TileCard.DisplayName` les traduit) ; les raisons de refus sont des clés `refus.…` renvoyées par `DungeonBoard.CheckPlacement`.
+
+Tests (`LocTests`) : `Fr` et `En` ont exactement les mêmes clés, les `{0}` se correspondent, les clés sont bien formées, et **toute clé écrite dans le code** (`Loc.T("…")` ou un texte `"domaine.nom"`) existe : une faute de frappe dans une clé fait échouer les tests.
+
+**Pour un nouveau texte** : choisir une clé, ajouter sa ligne dans `Loc.Fr` **et** dans `Loc.En` (même section), et afficher `Loc.T("la.cle")`. **Pour une nouvelle langue** : un dictionnaire de plus (mêmes clés), une ligne dans `Loc.Table` et dans `LocaleName`, et la langue dans `GameSettings.Locales`. Les noms de touches restent ceux du clavier du système (« Entree », « Suppr » sur un Windows français) ; en français, quelques-uns sont réécrits (Entrée, Espace, Échap…).
 
 ## Musique
 

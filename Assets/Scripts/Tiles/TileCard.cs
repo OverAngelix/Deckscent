@@ -39,7 +39,8 @@ namespace Deckscent
 
         public sealed class ShapeDef
         {
-            public string Name;
+            /// <summary>Clé de traduction du nom (« forme. » + identifiant), voir Loc.</summary>
+            public string NameKey;
             public bool Room;
             /// <summary>Couloir : ouvertures avant rotation.</summary>
             public int Openings;
@@ -57,25 +58,29 @@ namespace Deckscent
         /// </summary>
         public static readonly IReadOnlyList<KeyValuePair<string, ShapeDef>> ShapeList = new List<KeyValuePair<string, ShapeDef>>
         {
-            Shape("impasse", new ShapeDef { Name = "Impasse", Openings = S }),
-            Shape("couloir", new ShapeDef { Name = "Couloir", Openings = N | S }),
-            Shape("virage", new ShapeDef { Name = "Virage", Openings = E | S }),
-            Shape("t", new ShapeDef { Name = "Fourche", Openings = E | S | W }),
-            Shape("carrefour", new ShapeDef { Name = "Carrefour", Openings = N | E | S | W }),
-            Shape("salle", new ShapeDef { Name = "Salle", Room = true, Slots = new[] { V(0, 0), V(1, 0) } }),
-            Shape("galerie", new ShapeDef { Name = "Galerie", Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0) } }),
-            Shape("longue_galerie", new ShapeDef { Name = "Longue galerie", Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(3, 0) } }),
-            Shape("salle_l", new ShapeDef { Name = "Salle en L", Room = true, Slots = new[] { V(0, 0), V(0, 1), V(1, 1) } }),
-            Shape("salle_t", new ShapeDef { Name = "Salle en T", Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(1, 1) } }),
-            Shape("salle_z", new ShapeDef { Name = "Salle en Z", Room = true, Slots = new[] { V(0, 0), V(1, 0), V(1, 1), V(2, 1) } }),
-            Shape("salle_u", new ShapeDef { Name = "Salle en U", Room = true, Slots = new[] { V(0, 0), V(0, 1), V(1, 1), V(2, 1), V(2, 0) } }),
-            Shape("salle_croix", new ShapeDef { Name = "Salle en croix", Room = true, Slots = new[] { V(0, 0), V(0, 1), V(-1, 1), V(1, 1), V(0, 2) } }),
-            Shape("grande_salle", new ShapeDef { Name = "Grande salle", Room = true, Slots = new[] { V(0, 0), V(1, 0), V(0, 1), V(1, 1) } }),
-            Shape("salle_piliers", new ShapeDef { Name = "Salle à piliers", Room = true, Pillars = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(0, 1), V(1, 1), V(2, 1) } }),
-            Shape("crypte", new ShapeDef { Name = "Crypte", Room = true, Pillars = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(0, 1), V(1, 1), V(2, 1), V(0, 2), V(1, 2), V(2, 2) } }),
+            Shape("impasse", new ShapeDef { Openings = S }),
+            Shape("couloir", new ShapeDef { Openings = N | S }),
+            Shape("virage", new ShapeDef { Openings = E | S }),
+            Shape("t", new ShapeDef { Openings = E | S | W }),
+            Shape("carrefour", new ShapeDef { Openings = N | E | S | W }),
+            Shape("salle", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0) } }),
+            Shape("galerie", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0) } }),
+            Shape("longue_galerie", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(3, 0) } }),
+            Shape("salle_l", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(0, 1), V(1, 1) } }),
+            Shape("salle_t", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(1, 1) } }),
+            Shape("salle_z", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0), V(1, 1), V(2, 1) } }),
+            Shape("salle_u", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(0, 1), V(1, 1), V(2, 1), V(2, 0) } }),
+            Shape("salle_croix", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(0, 1), V(-1, 1), V(1, 1), V(0, 2) } }),
+            Shape("grande_salle", new ShapeDef { Room = true, Slots = new[] { V(0, 0), V(1, 0), V(0, 1), V(1, 1) } }),
+            Shape("salle_piliers", new ShapeDef { Room = true, Pillars = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(0, 1), V(1, 1), V(2, 1) } }),
+            Shape("crypte", new ShapeDef { Room = true, Pillars = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(0, 1), V(1, 1), V(2, 1), V(0, 2), V(1, 2), V(2, 2) } }),
         };
 
-        static KeyValuePair<string, ShapeDef> Shape(string id, ShapeDef def) => new KeyValuePair<string, ShapeDef>(id, def);
+        static KeyValuePair<string, ShapeDef> Shape(string id, ShapeDef def)
+        {
+            def.NameKey = "forme." + id;
+            return new KeyValuePair<string, ShapeDef>(id, def);
+        }
         static readonly Dictionary<string, ShapeDef> Shapes = ShapeList.ToDictionary(kv => kv.Key, kv => kv.Value);
 
         public static bool HasShape(string id) => Shapes.ContainsKey(id);
@@ -140,7 +145,8 @@ namespace Deckscent
         /// <summary>Masque d'ouvertures de l'ancre (pratique pour un couloir).</summary>
         public int Openings => Doors.TryGetValue(Vector2Int.zero, out var m) ? m : 0;
         public bool IsRoom => Def.Room;
-        public string DisplayName => Def.Name;
+        /// <summary>Nom de la forme dans la langue en cours (clé Def.NameKey).</summary>
+        public string DisplayName => Loc.T(Def.NameKey);
         public ShapeDef Def => Shapes[ShapeId];
 
         public TileCard(string shape = "couloir", int quarterTurns = 0, bool torch = false)

@@ -257,10 +257,10 @@ namespace Deckscent.Tests
         {
             var board = new DungeonBoard(new Vector2Int(9, 9));
             board.NewGame(0); // carrefour en (4, 4)
-            Assert.That(board.CheckPlacement(new Vector2Int(4, 4), new TileCard("couloir")), Is.EqualTo("Emplacement déjà occupé"));
-            Assert.That(board.CheckPlacement(new Vector2Int(8, 8), new TileCard("couloir")), Is.EqualTo("Doit toucher le labyrinthe"));
-            Assert.That(board.CheckPlacement(new Vector2Int(4, 3), new TileCard("couloir", 1)), Is.EqualTo("Doit se raccorder par un passage"));
-            Assert.That(board.CheckPlacement(new Vector2Int(8, 4), new TileCard("galerie")), Is.EqualTo("Hors du plateau"));
+            Assert.That(board.CheckPlacement(new Vector2Int(4, 4), new TileCard("couloir")), Is.EqualTo("refus.occupe"));
+            Assert.That(board.CheckPlacement(new Vector2Int(8, 8), new TileCard("couloir")), Is.EqualTo("refus.isole"));
+            Assert.That(board.CheckPlacement(new Vector2Int(4, 3), new TileCard("couloir", 1)), Is.EqualTo("refus.sans_passage"));
+            Assert.That(board.CheckPlacement(new Vector2Int(8, 4), new TileCard("galerie")), Is.EqualTo("refus.hors_plateau"));
             Assert.That(board.CheckPlacement(new Vector2Int(4, 3), new TileCard("couloir")), Is.Empty);
         }
 

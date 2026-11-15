@@ -53,8 +53,8 @@ namespace Deckscent
         [SerializeField] Color backdropColor = new Color(0.02f, 0.02f, 0.025f, 0.7f);
         [Tooltip("Part de l'écran occupée par la carte.")]
         [SerializeField, Range(0.5f, 1f)] float screenFill = 0.95f;
-        [Tooltip("Nom du sous-biome affiché à côté du titre (provisoire, viendra avec les étages).")]
-        [SerializeField] string biomeName = "Sous-sols";
+        [Tooltip("Clé de traduction (voir Loc) du nom du sous-biome affiché à côté du titre (provisoire, viendra avec les étages).")]
+        [SerializeField] string biomeKey = "biome.sous_sols";
 
         const float Pad = 18f, TitleHeight = 40f, HintHeight = 24f, Coord = 16f;
         const float CardGap = 16f, CardNote = 16f;
@@ -62,7 +62,7 @@ namespace Deckscent
         const float LegendWidth = 130f;
         const int CardsPerRow = 3;
         const float CursorRepeat = 0.18f;
-        const string Hint = "Clic : poser   ·   Clic droit / R / molette : tourner   ·   Suppr : défausser   ·   1-6 : choisir   ·   , / Échap : fermer";
+        const string Hint = "carte.aide";
         static readonly Vector2Int NoSlot = new Vector2Int(-1, -1);
         static readonly Vector2[] DirVectors = { new Vector2(0, -1), new Vector2(1, 0), new Vector2(0, 1), new Vector2(-1, 0) };
 
@@ -305,7 +305,7 @@ namespace Deckscent
             if (SelectedCard == null)
                 return;
             _deck.Replace(Selected);
-            ShowMessage(Loc.T("Carte défaussée"), false);
+            ShowMessage(Loc.T("carte.defaussee"), false);
         }
 
         /// <summary>Essaie de poser la carte choisie (ancre sur `slot`). Vrai si posée.</summary>
@@ -322,7 +322,7 @@ namespace Deckscent
             }
             dungeon.Place(slot, card);
             _deck.Replace(Selected);
-            ShowMessage(Loc.F("Tuile posée : {0}", Loc.T(card.DisplayName)), false);
+            ShowMessage(Loc.F("carte.tuile_posee", card.DisplayName), false);
             return true;
         }
 
@@ -370,10 +370,10 @@ namespace Deckscent
 
             // En-tête : titre, étage, état, filet.
             var headTop = panel.y + Pad + 2f;
-            var title = Loc.T("Carte du donjon").ToUpperInvariant();
+            var title = Loc.T("carte.titre").ToUpperInvariant();
             texts.Label(title, panel.x + Pad + 4f, headTop, 600f, 26, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             var titleW = TextPool.Width(title, 26, FontStyle.Bold);
-            texts.Label($"{Loc.T(biomeName)} 1", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
+            texts.Label($"{Loc.T(biomeKey)} 1", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
             DrawStatus(panel, headTop + 6f);
             Engraving.Rule(ink, new Vector2(panel.x + Pad, panel.y + Pad + TitleHeight), panel.width - Pad * 2f, inkColor);
 
@@ -412,12 +412,12 @@ namespace Deckscent
             if (card != null && _board.IsInside(_hover) && !_board.HasTile(_hover))
             {
                 var reason = _board.CheckPlacement(_hover, card);
-                text = reason != "" ? Loc.T(reason) : Loc.T("Pose possible");
+                text = reason != "" ? Loc.T(reason) : Loc.T("carte.pose_possible");
                 isError = reason != "";
             }
             if (string.IsNullOrEmpty(text) && _board.OpenExits().Count == 0)
             {
-                text = Loc.T("Plus aucun passage libre : le donjon est fermé");
+                text = Loc.T("carte.donjon_ferme");
                 isError = true;
             }
             if (string.IsNullOrEmpty(text))
@@ -568,8 +568,8 @@ namespace Deckscent
         {
             var count = _deck.Hand.Count;
             _cardRects.Clear();
-            texts.Label(Loc.T("La main").ToUpperInvariant(), area.x, area.y, area.width, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
-            texts.Label(Loc.F("{0} cartes", count), area.x, area.y + 1f, area.width, 14, Faded(0.4f), TextAnchor.UpperRight, FontStyle.Italic);
+            texts.Label(Loc.T("carte.main").ToUpperInvariant(), area.x, area.y, area.width, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.F("carte.nb_cartes", count), area.x, area.y + 1f, area.width, 14, Faded(0.4f), TextAnchor.UpperRight, FontStyle.Italic);
             var top = area.y + 32f;
             var cardW = Engraving.CardSize.x;
             var cardH = Engraving.CardSize.y;
@@ -592,7 +592,7 @@ namespace Deckscent
                         _placeable[card] = placeable = _board.HasAnyPlacement(card);
                     DrawCard(card, rect, i, isSelected, placeable, lift);
                     if (!placeable)
-                        texts.Label(Loc.T("aucune place"), rect.x, y + cardH + 2f, cardW, 13, invalidColor, TextAnchor.UpperCenter, FontStyle.Italic);
+                        texts.Label(Loc.T("carte.aucune_place"), rect.x, y + cardH + 2f, cardW, 13, invalidColor, TextAnchor.UpperCenter, FontStyle.Italic);
                 }
             }
             return top + rows * (cardH + CardGap + CardNote) - CardGap;
@@ -632,7 +632,7 @@ namespace Deckscent
 
             // Bandeau du nom, en capitales.
             var band = Engraving.CardBandRect(inner, area);
-            Engraving.Banner(ink, texts, band, Loc.T(card.DisplayName).ToUpperInvariant(), paperColor, inkColor);
+            Engraving.Banner(ink, texts, band, card.DisplayName.ToUpperInvariant(), paperColor, inkColor);
 
             // Pied : flamme si la carte porte une torche, danger de 0 à 3 crânes.
             var footY = band.yMax + 12f;
@@ -677,10 +677,10 @@ namespace Deckscent
         void DrawLegend(Rect area, int columns)
         {
             Engraving.Rule(ink, area.position, area.width, inkColor);
-            texts.Label(Loc.T("Légende").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.T("legende.titre").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             const float sw = 14f;
             string[] keys = { "mur", "sol", "salle", "sortie", "torche", "depart", "joueur", "danger" };
-            string[] names = { "Mur, roche", "Sol", "Mur de salle", "Sortie libre", "Torche", "Départ", "Vous", "Danger" };
+            string[] names = { "legende.roche", "legende.sol", "legende.mur_salle", "legende.sortie", "legende.torche", "legende.depart", "legende.vous", "legende.danger" };
             var colW = area.width / columns;
             for (var i = 0; i < keys.Length; i++)
             {

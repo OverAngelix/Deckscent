@@ -44,7 +44,7 @@ CarteDuDonjon  [Canvas, CanvasScaler, MapScreen]
   - `playerColor` = (0.85, 0.1, 0.1) — Flèche du joueur et carte choisie (rouge d'accent, comme en jeu).
   - `backdropColor` = (0.02, 0.02, 0.03) — Voile sombre derrière la carte.
   - `screenFill` = 0.95 — Part de l'écran occupée par la carte.
-  - `biomeName` = `Sous-sols` — Nom du sous-biome affiché à côté du titre (provisoire, viendra avec les étages).
+  - `biomeKey` = `biome.sous_sols` — Clé de traduction (voir Loc) du nom du sous-biome affiché à côté du titre (provisoire, viendra avec les étages).
 
 ### CarteDuDonjon / Encre
 

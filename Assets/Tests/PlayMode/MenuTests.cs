@@ -113,7 +113,7 @@ namespace Deckscent.Tests
             Assert.That(_menu.OptionRow, Is.EqualTo(3), "ligne Langue");
             yield return Tap(_keyboard.rightArrowKey);
             Assert.That(GameSettings.Locale, Is.EqualTo("en"));
-            Assert.That(Loc.T("Descendre"), Is.EqualTo("Descend"));
+            Assert.That(Loc.T("menu.descendre"), Is.EqualTo("Descend"));
             yield return Tap(_keyboard.enterKey);
             Assert.That(GameSettings.Locale, Is.EqualTo("fr"), "Entrée change aussi de langue");
             yield return Tap(_keyboard.escapeKey);

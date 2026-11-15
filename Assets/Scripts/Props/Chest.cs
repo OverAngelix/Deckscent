@@ -94,11 +94,11 @@ namespace Deckscent
         {
             var wantCard = UnityEngine.Random.value < cardChance || player.Health >= player.MaxHealth;
             if (wantCard && Deck != null && Deck.AddCard())
-                player.Notify(Loc.T("Coffre : une carte de plus dans la main"));
+                player.Notify(Loc.T("message.coffre_carte"));
             else
             {
                 player.Heal(healAmount);
-                player.Notify(Loc.F("Coffre : +{0} PV", healAmount));
+                player.Notify(Loc.F("message.coffre_pv", healAmount));
             }
         }
 

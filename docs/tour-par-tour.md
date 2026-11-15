@@ -45,7 +45,7 @@ Prefab `Assets/Prefabs/UI/Hud.prefab` ([doc](prefabs/Hud.md)), dessiné en gravu
 - en haut au centre, un **message** de 2 secondes quand il se passe quelque chose (« Piège franchi », « Coffre : +3 PV »…). N'importe quel script l'affiche avec `player.Notify(texte)` ;
 - le voile rouge, l'écran de mort.
 
-Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s). Textes traduits (`Loc`, option Langue du menu) : les messages aussi, traduits par le script qui appelle `Notify` (`Loc.T("Piège franchi")`).
+Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s). Textes traduits (`Loc`, option Langue du menu) : les messages aussi, traduits par le script qui appelle `Notify` (`Loc.T("message.piege_franchi")`).
 
 ## Réglages du joueur (prefab `Player`)
 

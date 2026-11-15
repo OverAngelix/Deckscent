@@ -55,29 +55,29 @@ namespace Deckscent
         enum Entry { Play, Options, Controls, Quit }
 
         const string Title = "DECKSCENT";
-        const string Tagline = "Construisez le donjon. Survivez-y.";
-        const string Hint = "← →  choisir   ·   Entrée  valider";
-        const string OptionsHint = "↑ ↓  choisir   ·   ← →  régler   ·   Échap  retour";
+        const string Tagline = "menu.accroche";
+        const string Hint = "menu.aide";
+        const string OptionsHint = "options.aide";
         const float CardGap = 20f, Lift = 12f, FadeInTime = 1.2f, FadeOutTime = 0.6f;
         const float RepeatDelay = 0.4f, RepeatRate = 0.12f;
         /// <summary>Lignes du panneau Options : les volumes (0 général, 1 musique, 2 effets), puis la langue.</summary>
         const int VolumeRows = 3, LanguageRow = 3, OptionCount = 4;
-        static readonly string[] VolumeLabels = { "Général", "Musique", "Effets sonores" };
-        static readonly string[] Labels = { "Descendre", "Options", "Commandes", "Quitter" };
-        static readonly string[] Notes = { "nouvelle partie", "son · langue", "les touches", "fermer le jeu" };
+        static readonly string[] VolumeLabels = { "options.general", "options.musique", "options.effets" };
+        static readonly string[] Labels = { "menu.descendre", "menu.options", "menu.commandes", "menu.quitter" };
+        static readonly string[] Notes = { "menu.descendre.note", "menu.options.note", "menu.commandes.note", "menu.quitter.note" };
 
         /// <summary>Lignes de la liste des commandes : action, parties du composite (null = touche simple), description.</summary>
         static readonly (string action, string[] parts, string label)[] Controls =
         {
-            ("Player/Move", new[] { "up", "down" }, "Avancer / reculer"),
-            ("Player/Move", new[] { "left", "right" }, "Pas de côté"),
-            ("Player/Turn", new[] { "negative", "positive" }, "Tourner"),
-            ("Player/Wait", null, "Attendre un tour"),
-            ("Player/Interact", null, "Ouvrir un coffre"),
-            ("Player/Torch", null, "Lanterne"),
-            ("Player/Map", null, "Carte (poser des tuiles)"),
-            ("Map/Rotate", null, "Carte : tourner la tuile"),
-            ("Map/Discard", null, "Carte : défausser"),
+            ("Player/Move", new[] { "up", "down" }, "commandes.avancer"),
+            ("Player/Move", new[] { "left", "right" }, "commandes.pas_de_cote"),
+            ("Player/Turn", new[] { "negative", "positive" }, "commandes.tourner"),
+            ("Player/Wait", null, "commandes.attendre"),
+            ("Player/Interact", null, "commandes.coffre"),
+            ("Player/Torch", null, "commandes.lanterne"),
+            ("Player/Map", null, "commandes.carte"),
+            ("Map/Rotate", null, "commandes.carte_tourner"),
+            ("Map/Discard", null, "commandes.carte_defausser"),
         };
 
         /// <summary>Noms de touches en français (Unity les donne en anglais).</summary>
@@ -606,7 +606,7 @@ namespace Deckscent
         void DrawControls(Vector2 screen)
         {
             const float rowH = 30f;
-            var box = DrawPanel(screen, new Vector2(560f, 140f + Controls.Length * rowH), "Commandes");
+            var box = DrawPanel(screen, new Vector2(560f, 140f + Controls.Length * rowH), "menu.commandes");
             var y = box.y + 84f;
             foreach (var row in Controls)
             {
@@ -617,14 +617,14 @@ namespace Deckscent
                 front.texts.Label(Loc.T(row.label), box.x + 240f, y, box.width - 270f, 17, inkColor);
                 y += rowH;
             }
-            front.texts.Label(Loc.T("Échap : retour"), box.x, box.yMax - 44f, box.width, 14, WithAlpha(inkColor, 0.6f), TextAnchor.UpperCenter, FontStyle.Italic);
+            front.texts.Label(Loc.T("menu.retour"), box.x, box.yMax - 44f, box.width, 14, WithAlpha(inkColor, 0.6f), TextAnchor.UpperCenter, FontStyle.Italic);
         }
 
         void DrawOptions(Vector2 screen)
         {
             var ink = front.ink;
             var texts = front.texts;
-            var box = DrawPanel(screen, new Vector2(540f, 410f), "Options");
+            var box = DrawPanel(screen, new Vector2(540f, 410f), "menu.options");
             _panelRect = box;
             var labelX = box.x + 48f;
             var valueX = box.x + 220f;
@@ -635,7 +635,7 @@ namespace Deckscent
                 var active = row == OptionRow;
                 if (active)
                     ink.Triangle(new Vector2(labelX - 22f, y - 13f), new Vector2(labelX - 12f, y - 7f), new Vector2(labelX - 22f, y - 1f), accentColor);
-                var label = row < VolumeRows ? VolumeLabels[row] : "Langue";
+                var label = row < VolumeRows ? VolumeLabels[row] : "options.langue";
                 texts.Label(Loc.T(label), labelX, y - 21f, valueX - labelX - 8f, 19, active ? accentColor : inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
                 if (row < VolumeRows)
                     DrawGauge(row, y, valueX);
@@ -683,7 +683,7 @@ namespace Deckscent
                     ink.Rect(pip, OptionRow == row ? accentColor : inkColor);
                 ink.RectOutline(pip, inkColor, 1.5f);
             }
-            var text = filled == 0 ? Loc.T("Muet") : Mathf.RoundToInt(volume * 100f) + " %";
+            var text = filled == 0 ? Loc.T("options.muet") : Mathf.RoundToInt(volume * 100f) + " %";
             front.texts.Label(text, rect.xMax + 14f, y - 19f, 100f, 16, inkColor);
         }
 

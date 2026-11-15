@@ -194,10 +194,10 @@ namespace Deckscent
         {
             foreach (var offset in card.Slots)
                 if (!IsInside(pos + offset))
-                    return "Hors du plateau";
+                    return "refus.hors_plateau";
             foreach (var offset in card.Slots)
                 if (HasTile(pos + offset))
-                    return "Emplacement déjà occupé";
+                    return "refus.occupe";
             var touches = false;
             var connected = false;
             foreach (var offset in card.Slots)
@@ -217,9 +217,9 @@ namespace Deckscent
                 }
             }
             if (!touches)
-                return "Doit toucher le labyrinthe";
+                return "refus.isole";
             if (!connected)
-                return "Doit se raccorder par un passage";
+                return "refus.sans_passage";
             return "";
         }
 

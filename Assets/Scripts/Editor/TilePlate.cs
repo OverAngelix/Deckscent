@@ -62,7 +62,7 @@ namespace Deckscent.Editor
                 if (card.IsRoom)
                     card.RandomDoors(rng);
                 var b = card.Bounds();
-                sb.Append($"@{kv.Key}|{kv.Value.Name}|{(kv.Value.Room ? "salle" : "couloir")}|{card.Slots.Count}\n");
+                sb.Append($"@{kv.Key}|{Loc.In("fr", kv.Value.NameKey)}|{(kv.Value.Room ? "salle" : "couloir")}|{card.Slots.Count}\n");
                 foreach (var row in card.FullRows())
                     sb.Append(row.Replace(' ', '_')).Append('\n');
                 sb.Append('W');
