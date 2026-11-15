@@ -2,7 +2,8 @@
     "name": "Deckscent",
     "rootNamespace": "Deckscent",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

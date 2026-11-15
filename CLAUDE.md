@@ -20,7 +20,7 @@ Dans l'ordre (chaque étape donne quelque chose de jouable ou de visible) :
 1. ✅ **Labyrinthe + joueur** : `Maze` (plan texte → murs, sols, plafond, torches Synty), déplacement en grille, tourner, bump.
 2. ✅ **Rendu gravure** : shader toon + post-process gravure (Renderer Feature URP), validé par captures (en attente du feu vert de l'utilisateur).
 3. ✅ **Tuiles, plateau, pioche** en C# pur, avec tests EditMode (plus de salles, vraies pièces à murs fins).
-4. **Écran de carte** dessiné en gravure, pose à la souris.
+4. ✅ **Écran de carte** dessiné en gravure, pose à la souris, au clavier et à la manette.
 5. **Tour par tour et contenu** : PV / ATQ / DÉF, slimes, dalle à pics, coffre, Spawner, HUD.
 6. **Menu, options, musique synthétisée, FR / EN.**
 7. Reprise de `docs/todo.md` (tâche 5 : salles nettoyées).
@@ -72,6 +72,11 @@ Assets/Scripts/Tiles/DemoDungeon.cs    Donjon de démo posé avec les vraies rè
 Assets/Tests/PlayMode/                 Tests PlayMode (assembly Deckscent.Tests.PlayMode), clavier virtuel via InputTestFixture
 Assets/Tests/EditMode/                 Tests EditMode (assembly Deckscent.Tests.EditMode) : tuiles, pioche, plateau
 docs/tuiles.md                         Doc des tuiles, salles, pioche, contenus et règles de pose
+Assets/Scripts/UI/MapScreen.cs         Écran de carte : plateau + main, pose, pause (prefab Prefabs/UI/CarteDuDonjon)
+Assets/Scripts/UI/InkCanvas.cs         Toile de dessin 2D (Graphic uGUI) : rectangles, traits, pointillés, polygones, hachures
+Assets/Scripts/UI/TextPool.cs          Textes de l'UI gravure (police à empattements du système), réutilisés d'une image à l'autre
+Assets/Scripts/UI/Engraving.cs         Primitives gravure partagées : cadres, bandeaux, cartes, crânes, flamme, rose des vents
+docs/carte.md                          Doc de l'écran de carte (commandes, ce qu'on voit, technique)
 Assets/Scripts/Editor/TilePlate.cs     Menu Deckscent > Planche des tuiles (→ docs/images/tuiles.png, dessin par Tools/planche_tuiles.ps1)
 ```
 
@@ -122,13 +127,18 @@ Voir `README.md` (packs, versions, réimport).
   | `Wait` | Entrée, Entrée du pavé | L3 | oui |
   | `Torch` | T | bouton droit (Rond / B) | oui : lanterne, gratuit |
   | `Interact` | F | bouton du bas (Croix / A) | coffres (étape 5) |
-  | `Map` | virgule (`m`) | bouton du haut (Triangle / Y) | carte (étape 4) |
+  | `Map` | virgule (`m`) | bouton du haut (Triangle / Y) | oui : ouvre / ferme la carte |
+
+  Map **`Map`** (carte ouverte, voir `docs/carte.md`) : `Close` (Échap / Rond-B), `Rotate` (R / Carré-X), `Discard` (Suppr, Retour arrière / Select), `Place` (Entrée, Espace / Croix-A), `NextCard` (Tab / RB), `PreviousCard` (LB), `Cursor` (flèches / croix, stick gauche). Chiffres 1-6 et souris lus directement.
 
   Les autres actions de base (Attack, Jump, Crouch, Sprint, Look, Previous, Next) ne servent pas et certaines partagent des touches (Entrée = Attack, L3 = Sprint) : en tenir compte avant de les utiliser. Pour changer une touche, modifier le fichier d'actions (pas le code). Le joueur référence ses actions par `InputActionReference` (assignées par `PrototypeBuilder.ConfigurePlayer`, à rappeler sur le prefab si on ajoute une action). Carte (à venir) : R pour tourner une tuile, Suppr pour défausser, à ajouter au fichier.
-- **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit).
+- **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit) : `Time.timeScale = 0`. Le joueur ne lit pas ses touches en pause (et la lanterne ignore Rond / B, qui ferme la carte). Tout ce qui doit tourner carte ouverte utilise `Time.unscaledTime`.
+- **Écran de carte, retours de l'utilisateur** : tout ce qui n'est pas du sol est hachuré pareil (roche non construite = murs, carte d'un seul tenant ; pas de roche pâle) ; proportions de l'écran Godot (CanvasScaler référence 1152 × 648) ; légende en colonne étroite ; pas de rose des vents ; l'aperçu de pose montre une flèche sur chaque entrée.
+- **Les cartes gardent le style Godot** (demande de l'utilisateur) : carte à jouer gravée 112 × 172 (double filet à losanges, numéro, emprise, plan fléché, bandeau à queues d'aronde, flamme, crânes). L'UI gravure se dessine avec `InkCanvas` + `TextPool` + `Engraving`, pas avec des sprites.
+- **Capturer la carte** : Play mode dans `Test_Donjon`, `script eval` qui appelle `MapScreen.Open()` (et `PreviewSlot`), puis `capture game_view` (le canvas en surimpression n'est pas rendu par `Camera.Render`, donc pas par le menu de captures). Image de la doc : `docs/images/carte.png`.
 - **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs. Doc : `docs/tuiles.md`.
 - **Salles = vraies pièces** (demande de l'utilisateur, 2026-11-15 : « plus de salles, et variées ») : tout l'emplacement est du sol (3 × 3 cases), le pourtour est fermé par des **murs fins** sur les bords des cases (`TileCard.EdgeWalls`, `DungeonBoard.EdgeWalls`, `Maze.SetPlan(plan, murs)`), troués aux portes. Dans Godot, les salles étaient faites de cases de roche (branches d'une case de large) : abandonné. Le déplacement passe par `Maze.CanStep(case, direction)`, jamais par `IsWalkable` seul. 16 formes, dont 11 salles (salle, galerie, longue galerie, L, T, Z, U, croix, grande salle, salle à piliers, crypte).
-- **Rythme façon donjon mystère** (choix de l'utilisateur) : beaucoup de couloirs étroits (la pression), des salles rares mais **denses et dangereuses**. Pioche : `roomChance` 15 %, **6 salles au plus par étage** (`maxRoomsPerFloor`, posées + en main, `TileDeck.RoomsPlaced` tenu par le Donjon). Couloirs : un élément au plus, surtout vides. Salles : 2 à 7 éléments selon la taille (petite ≤ 2 emplacements, moyenne 3-4, grande ≥ 5 : `ContentDef.Small / Medium / Large`), presque jamais vides. Planche des formes : `docs/images/tuiles.png`, *Deckscent > Planche des tuiles*. Piliers : coins au milieu d'un bloc 2 × 2 d'emplacements (salle à piliers, crypte).
+- **Rythme façon donjon mystère** (choix de l'utilisateur) : beaucoup de couloirs étroits (la pression), des salles rares mais **denses et dangereuses**. Pioche : `roomChance` 20 % (1 sur 5), **6 salles au plus par étage** (`maxRoomsPerFloor`, posées + en main, `TileDeck.RoomsPlaced` tenu par le Donjon). Couloirs : un élément au plus, surtout vides. Salles : 2 à 7 éléments selon la taille (petite ≤ 2 emplacements, moyenne 3-4, grande ≥ 5 : `ContentDef.Small / Medium / Large`), presque jamais vides. Planche des formes : `docs/images/tuiles.png`, *Deckscent > Planche des tuiles*. Piliers : coins au milieu d'un bloc 2 × 2 d'emplacements (salle à piliers, crypte).
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). La vitrine sert à les voir et les régler.
 
 ## Rendu gravure

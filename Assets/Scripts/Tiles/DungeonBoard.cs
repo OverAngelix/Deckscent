@@ -141,7 +141,44 @@ namespace Deckscent
             var card = GetTile(pos);
             if (card == null)
                 return new[] { "###", "###", "###" };
-            return card.CellsForSlot(pos - TileOrigin(pos), pos == StartTile ? 'P' : '\0');
+            var rows = card.CellsForSlot(pos - TileOrigin(pos), pos == StartTile ? 'P' : '\0');
+            if (card.IsRoom)
+                return rows;
+            // Un passage tourné vers l'extérieur du plateau ne mène nulle part : c'est un mur.
+            for (var i = 0; i < TileCard.Dirs.Length; i++)
+            {
+                if (IsInside(pos + TileCard.Offset(TileCard.Dirs[i])))
+                    continue;
+                var c = Vector2Int.one + TileCard.Offset(TileCard.Dirs[i]);
+                var row = rows[c.y].ToCharArray();
+                row[c.x] = '#';
+                rows[c.y] = new string(row);
+            }
+            return rows;
+        }
+
+        /// <summary>
+        /// Vrai si la tuile sur `pos` a un passage ou une porte côté `dir` qui mène dans le plateau
+        /// (une ouverture tournée vers l'extérieur ne compte pas : c'est un mur).
+        /// </summary>
+        public bool HasOpening(Vector2Int pos, int dir)
+        {
+            var card = GetTile(pos);
+            return card != null && IsInside(pos + TileCard.Offset(dir)) && card.HasDoor(pos - TileOrigin(pos), dir);
+        }
+
+        /// <summary>
+        /// Sorties encore libres : (emplacement, direction) d'une ouverture qui mène à un emplacement
+        /// vide du plateau. Une sortie raccordée ou tournée vers l'extérieur n'y est pas.
+        /// </summary>
+        public List<(Vector2Int slot, int dir)> FreeOpenings()
+        {
+            var free = new List<(Vector2Int, int)>();
+            foreach (var pos in _tiles.Keys)
+                foreach (var dir in TileCard.Dirs)
+                    if (HasOpening(pos, dir) && !HasTile(pos + TileCard.Offset(dir)))
+                        free.Add((pos, dir));
+            return free;
         }
 
         /// <summary>
@@ -270,6 +307,11 @@ namespace Deckscent
                 var offset = kv.Key - TileOrigin(kv.Key);
                 foreach (var (cell, dir) in kv.Value.EdgeWalls(offset))
                     walls.Add((kv.Key * TileCells + cell, Array.IndexOf(TileCard.Dirs, dir)));
+                // Une porte tournée vers l'extérieur du plateau ne mène nulle part : on la mure.
+                foreach (var dir in TileCard.Dirs)
+                    if (kv.Value.HasDoor(offset, dir) && !kv.Value.HasSlot(offset + TileCard.Offset(dir))
+                        && !IsInside(kv.Key + TileCard.Offset(dir)))
+                        walls.Add((kv.Key * TileCells + Vector2Int.one + TileCard.Offset(dir), Array.IndexOf(TileCard.Dirs, dir)));
             }
             return walls;
         }

@@ -95,7 +95,12 @@ namespace Deckscent
             return action;
         }
 
-        void OnTorch(InputAction.CallbackContext _) => ToggleLantern();
+        void OnTorch(InputAction.CallbackContext _)
+        {
+            // Carte ouverte : son bouton « fermer » (Rond / B) est aussi celui de la lanterne.
+            if (Time.timeScale != 0f)
+                ToggleLantern();
+        }
 
         /// <summary>Allume ou éteint la lanterne. Gratuit : ne coûte pas de tour.</summary>
         public void ToggleLantern()
@@ -129,7 +134,8 @@ namespace Deckscent
 
         void Update()
         {
-            if (_busy || maze == null || _move == null || _turn == null || _wait == null)
+            // Jeu en pause (carte ouverte) : le joueur ne bouge pas.
+            if (_busy || Time.timeScale == 0f || maze == null || _move == null || _turn == null || _wait == null)
                 return;
             var forward = Grid.Dirs[Facing];
             var right = Grid.Dirs[(Facing + 1) % 4];

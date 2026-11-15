@@ -154,6 +154,8 @@ namespace Deckscent.Editor
             maze.Build();
             if (dungeonMode != DungeonMode.None)
                 AddDungeon(maze, dungeonMode == DungeonMode.Demo);
+            if (dungeonMode != DungeonMode.None)
+                AddMapToScene(scene);
 
             var player = (GameObject)PrefabUtility.InstantiatePrefab(Load(PrefabDir + "/Player.prefab"), scene);
             var pso = new SerializedObject(player.GetComponent<PlayerController>());
@@ -242,6 +244,71 @@ namespace Deckscent.Editor
         }
 
         const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
+        public const string MapPrefabPath = PrefabDir + "/UI/CarteDuDonjon.prefab";
+
+        /// <summary>
+        /// Prefab de l'écran de carte : canvas en surimpression (au-dessus du jeu, hors du
+        /// post-process), toile d'encre et textes, actions branchées. Le donjon et le joueur sont
+        /// cherchés dans la scène au lancement.
+        /// </summary>
+        [MenuItem("Deckscent/Construire le prefab de la carte")]
+        public static void BuildMapPrefab()
+        {
+            EnsureFolder(PrefabDir + "/UI");
+            var root = new GameObject("CarteDuDonjon", typeof(RectTransform));
+            var canvas = root.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = root.AddComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            // Même surface de référence que l'écran de carte Godot : mêmes proportions (cartes de la
+            // main, plateau, légende), mis à l'échelle de l'écran.
+            scaler.referenceResolution = new Vector2(1152f, 648f);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var inkGo = new GameObject("Encre", typeof(RectTransform));
+            inkGo.transform.SetParent(root.transform, false);
+            Stretch((RectTransform)inkGo.transform);
+            var ink = inkGo.AddComponent<InkCanvas>();
+            ink.raycastTarget = false;
+
+            var textsGo = new GameObject("Textes", typeof(RectTransform));
+            textsGo.transform.SetParent(root.transform, false);
+            Stretch((RectTransform)textsGo.transform);
+            var texts = textsGo.AddComponent<TextPool>();
+
+            var map = root.AddComponent<MapScreen>();
+            var so = new SerializedObject(map);
+            so.FindProperty("ink").objectReferenceValue = ink;
+            so.FindProperty("texts").objectReferenceValue = texts;
+            so.FindProperty("toggle").objectReferenceValue = ActionReference("Player", "Map");
+            foreach (var (field, action) in new[] { ("close", "Close"), ("rotate", "Rotate"), ("discard", "Discard"), ("place", "Place"),
+                         ("nextCard", "NextCard"), ("previousCard", "PreviousCard"), ("cursor", "Cursor") })
+                so.FindProperty(field).objectReferenceValue = ActionReference("Map", action);
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            PrefabUtility.SaveAsPrefabAsset(root, MapPrefabPath);
+            Object.DestroyImmediate(root);
+            Debug.Log("Deckscent : prefab de la carte construit, " + MapPrefabPath);
+        }
+
+        /// <summary>Ajoute la carte du donjon à la scène ouverte (si elle n'y est pas).</summary>
+        public static void AddMapToScene(Scene scene)
+        {
+            if (Object.FindAnyObjectByType<MapScreen>() != null)
+                return;
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(MapPrefabPath) == null)
+                BuildMapPrefab();
+            PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(MapPrefabPath), scene);
+        }
+
+        static void Stretch(RectTransform rt)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
 
         /// <summary>
         /// Branche le PlayerController sur les actions de la map Player d'InputSystem_Actions

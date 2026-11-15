@@ -34,7 +34,7 @@ namespace Deckscent
         // des couloirs étroits et calmes, et de loin en loin une salle, dense et dangereuse.
         [Header("Salles : rares et dangereuses")]
         [Tooltip("Chance qu'une carte tirée soit une salle, tant que le plafond n'est pas atteint.")]
-        [Range(0f, 1f)] public float roomChance = 0.15f;
+        [Range(0f, 1f)] public float roomChance = 0.2f;
         [Tooltip("Nombre maximal de salles par étage (posées + en main). Au-delà, la pioche ne donne plus que des couloirs.")]
         [Min(0)] public int maxRoomsPerFloor = 6;
 
@@ -153,7 +153,10 @@ namespace Deckscent
         {
             if (index < 0 || index >= Hand.Count)
                 return;
-            Hand[index] = DrawCard();
+            // La carte sort de la main avant le tirage : une salle posée ne compte pas deux fois
+            // dans le plafond de l'étage (posées + en main).
+            Hand.RemoveAt(index);
+            Hand.Insert(index, DrawCard());
             HandChanged?.Invoke();
         }
 

@@ -32,7 +32,8 @@ namespace Deckscent.Editor
             ["Mur_Gris"] = "Pan de mur de secours (bloc gris), utilisé si le pack Synty manque.",
             ["Sol_Gris"] = "Sol de secours (bloc gris).",
             ["Plafond_Gris"] = "Plafond de secours (quad gris tourné vers le bas).",
-            ["Torche"] = "Torche murale, posée sur les cases `T`, accrochée au premier mur voisin. Sa racine est sur le mur, +Z vers la case.",
+            ["CarteDuDonjon"] = "Écran de carte : le plateau et la main de cartes-tuiles, dessinés en gravure (InkCanvas + TextPool), pour poser les tuiles. Canvas en surimpression, au-dessus du jeu et hors du post-process. Met le jeu en pause quand il est ouvert. Voir docs/carte.md.",
+            ["Torche"] ="Torche murale, posée sur les cases `T`, accrochée au premier mur voisin. Sa racine est sur le mur, +Z vers la case.",
         };
 
         [MenuItem("Deckscent/Documenter les prefabs")]

@@ -57,7 +57,7 @@ La salle **garde sa forme** quoi qu'on pose autour : un couloir qui arrive face 
 ## La pioche
 
 - **5 cartes en main** (6 au plus avec le butin d'un coffre). Une carte posée ou défaussée est remplacée.
-- **Surtout des couloirs** : une carte tirée est une salle avec une chance de **15 %** (environ 1 sur 7), et **6 salles au plus par étage** (posées + en main). Une fois le plafond atteint, la pioche ne donne plus que des couloirs : un étage a ainsi presque toujours 5 ou 6 salles.
+- **Surtout des couloirs** : une carte tirée est une salle avec une chance de **20 %** (1 sur 5), et **6 salles au plus par étage** (posées + en main). Une fois le plafond atteint, la pioche ne donne plus que des couloirs : un étage a ainsi presque toujours 5 ou 6 salles.
 - Parmi les salles, les grandes (U, croix, piliers, crypte) sont plus rares que les petites.
 - Tout se règle dans l'inspecteur de l'objet *Donjon* (`Deck`) : `Room Chance`, `Max Rooms Per Floor`, poids des couloirs, des salles et des contenus.
 

@@ -150,6 +150,31 @@ namespace Deckscent.Tests
             Assert.That(Reachable(rows, new Vector2Int(13, 13), walls).Contains(new Vector2Int(16, 13)), "on entre par la porte");
         }
 
+        [Test]
+        public void UneOuvertureSurLeBordDuPlateauEstUnMur()
+        {
+            var board = new DungeonBoard(new Vector2Int(9, 9));
+            board.NewGame(9); // « Bord ouest » : fourche en (0, 4), ouverte vers le nord, le sud et l'est
+            board.Place(new Vector2Int(0, 3), new TileCard("t", 0)); // fourche est-sud-ouest : son passage ouest sort du plateau
+            var rows = board.CellsAt(new Vector2Int(0, 3));
+            Assert.That(rows[1][0], Is.EqualTo('#'), "le passage vers l'extérieur est muré");
+            Assert.That(board.HasOpening(new Vector2Int(0, 3), W), Is.False);
+            Assert.That(board.FreeOpenings(), Has.No.Member((new Vector2Int(0, 3), W)));
+            Assert.That(board.FreeOpenings(), Has.Member((new Vector2Int(0, 3), E)), "sortie libre vers (1, 3)");
+            Assert.That(board.FreeOpenings(), Has.No.Member((new Vector2Int(0, 3), S)), "raccordée à la fourche du départ");
+
+            // Une salle au bord nord : sa porte nord donne hors du plateau.
+            var board2 = new DungeonBoard(new Vector2Int(9, 9));
+            board2.NewGame(0); // carrefour en (4, 4)
+            for (var y = 3; y >= 1; y--)
+                Assert.That(board2.Place(new Vector2Int(4, y), new TileCard("couloir")), Is.True);
+            var room = new TileCard("salle"); // (4, 0) et (5, 0)
+            room.SetDoors(new[] { (new Vector2Int(0, 0), S), (new Vector2Int(0, 0), N) });
+            Assert.That(board2.Place(new Vector2Int(4, 0), room), Is.True, board2.CheckPlacement(new Vector2Int(4, 0), room));
+            Assert.That(WallSet(board2).Contains((new Vector2Int(13, 0), 0)), "la porte nord, au bord, est murée");
+            Assert.That(board2.FreeOpenings(), Has.No.Member((new Vector2Int(4, 0), N)));
+        }
+
         /// <summary>Murs fins du plateau, dans les deux sens, comme le labyrinthe les voit.</summary>
         static HashSet<(Vector2Int, int)> WallSet(DungeonBoard board)
         {
@@ -165,7 +190,7 @@ namespace Deckscent.Tests
         [Test]
         public void LaPiocheDonneSurtoutDesCouloirs()
         {
-            // Sans plafond, pour mesurer la part de salles : environ 1 carte sur 7.
+            // Sans plafond, pour mesurer la part de salles : 1 carte sur 5.
             var settings = new DeckSettings { maxRoomsPerFloor = int.MaxValue };
             var deck = new TileDeck(settings, 42);
             var rooms = 0;
@@ -183,7 +208,7 @@ namespace Deckscent.Tests
                 Assert.That(card.DoorCount, Is.GreaterThanOrEqualTo(1));
                 Assert.That(card.Content, Does.StartWith("salle_"));
             }
-            Assert.That(rooms / 4000f, Is.InRange(0.11f, 0.19f));
+            Assert.That(rooms / 4000f, Is.InRange(0.16f, 0.24f));
             Assert.That(shapes, Is.SupersetOf(AllShapes), "toutes les formes sortent");
         }
 
@@ -191,16 +216,18 @@ namespace Deckscent.Tests
         public void PasPlusDeSixSallesParEtage([Values(1, 2, 3)] int seed)
         {
             var deck = new TileDeck(new DeckSettings(), seed);
-            // On pose la première carte de la main, encore et encore.
+            // On pose les cartes de la main tour à tour (toutes finissent par être posées).
             for (var i = 0; i < 300; i++)
             {
-                if (deck.Hand[0].IsRoom)
+                var index = i % deck.Hand.Count;
+                if (deck.Hand[index].IsRoom)
                     deck.RoomsPlaced++;
-                deck.Replace(0);
+                deck.Replace(index);
                 Assert.That(deck.RoomsOnFloor, Is.LessThanOrEqualTo(6));
             }
-            Assert.That(deck.RoomsPlaced, Is.InRange(5, 6), "on finit par avoir 5 ou 6 salles posées");
-            Assert.That(deck.Hand.Count(c => c.IsRoom), Is.LessThanOrEqualTo(6 - deck.RoomsPlaced));
+            Assert.That(deck.RoomsOnFloor, Is.EqualTo(6), "le plafond de 6 salles est atteint");
+            Assert.That(deck.RoomsPlaced, Is.EqualTo(6), "et toutes ont été posées");
+            Assert.That(deck.Hand.Count(c => c.IsRoom), Is.Zero, "plus que des couloirs en main");
         }
 
         [Test]
