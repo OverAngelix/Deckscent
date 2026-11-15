@@ -166,5 +166,41 @@ namespace Deckscent
                     Line(new Vector2(x0, c - x0), new Vector2(x1, c - x1), color, width);
             }
         }
+
+        /// <summary>Hachures « / » à 45° dans un polygone convexe (même calage que <see cref="Hatch"/>).</summary>
+        public void HatchPolygon(IList<Vector2> points, float spacing, Color color, float width = 1f)
+        {
+            if (points.Count < 3)
+                return;
+            float min = float.MaxValue, max = float.MinValue;
+            foreach (var p in points)
+            {
+                min = Mathf.Min(min, p.x + p.y);
+                max = Mathf.Max(max, p.x + p.y);
+            }
+            for (var c = Mathf.Ceil(min / spacing) * spacing; c <= max; c += spacing)
+            {
+                // Points où le trait x + y = c coupe les bords ; on garde les deux extrêmes.
+                Vector2 from = default, to = default;
+                var found = 0;
+                for (var k = 0; k < points.Count; k++)
+                {
+                    var a = points[k];
+                    var b = points[(k + 1) % points.Count];
+                    var fa = a.x + a.y - c;
+                    var fb = b.x + b.y - c;
+                    if ((fa > 0f) == (fb > 0f) || Mathf.Approximately(fa, fb))
+                        continue;
+                    var hit = Vector2.Lerp(a, b, fa / (fa - fb));
+                    if (found == 0 || hit.x < from.x)
+                        from = hit;
+                    if (found == 0 || hit.x > to.x)
+                        to = hit;
+                    found++;
+                }
+                if (found >= 2 && to.x - from.x > 0.01f)
+                    Line(from, to, color, width);
+            }
+        }
     }
 }

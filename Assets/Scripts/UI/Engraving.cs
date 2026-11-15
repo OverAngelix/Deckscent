@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Deckscent
 {
     /// <summary>
-    /// Primitives de dessin « gravure » partagées par l'UI (écran de carte, plus tard le menu) :
+    /// Primitives de dessin « gravure » partagées par l'UI (écran de carte, menu) :
     /// cadres, filets, losanges, bandeaux, cartes à jouer, crânes, flamme, étoile, rose des vents.
     /// Elles dessinent sur une <see cref="InkCanvas"/> (et un <see cref="TextPool"/> pour le texte).
     /// </summary>
@@ -42,9 +42,9 @@ namespace Deckscent
         /// Cadre d'une carte : ombre portée (plus longue si la carte est soulevée), fond papier,
         /// bordure, filet intérieur à losanges. Renvoie le rectangle intérieur.
         /// </summary>
-        public static Rect CardFrame(InkCanvas c, Rect r, Color paper, Color border, float borderWidth, Color accent, Color ink, float lift)
+        public static Rect CardFrame(InkCanvas c, Rect r, Color paper, Color border, float borderWidth, Color accent, Color ink, float lift, float shadow = 0.22f)
         {
-            c.Rect(new Rect(r.x + 3f, r.y + 3f + lift * 0.5f, r.width, r.height), new Color(ink.r, ink.g, ink.b, 0.22f));
+            c.Rect(new Rect(r.x + 3f, r.y + 3f + lift * 0.5f, r.width, r.height), new Color(ink.r, ink.g, ink.b, shadow));
             c.Rect(r, paper);
             c.RectOutline(r, border, borderWidth);
             var inner = new Rect(r.x + 6f, r.y + 6f, r.width - 12f, r.height - 12f);

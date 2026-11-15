@@ -168,6 +168,7 @@ MonoBehaviour:
   texts: {fileID: 139133923639738600}
   restart: {fileID: -5288339530577984877, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   restartAlt: {fileID: 1781555164194001046, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  toMenu: {fileID: -1967631576421560919, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   paperColor: {r: 0.97, g: 0.96, b: 0.93, a: 1}
   inkColor: {r: 0.06, g: 0.06, b: 0.07, a: 1}
   healthColor: {r: 0.85, g: 0.1, b: 0.1, a: 1}

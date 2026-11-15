@@ -28,6 +28,7 @@ Hud  [Canvas, CanvasScaler, Hud]
   - `texts` = `Textes`
   - `restart` = `Player/Wait` — Recommencer après la mort (Player/Wait : Entrée, L3).
   - `restartAlt` = `Player/Interact` — Recommencer après la mort, autre bouton (Player/Interact : F, bouton du bas).
+  - `toMenu` = `UI/Cancel` — Retour au menu depuis l'écran de mort (UI/Cancel : Échap, bouton droit).
   - `paperColor` = (0.97, 0.96, 0.93)
   - `inkColor` = (0.06, 0.06, 0.07)
   - `healthColor` = (0.85, 0.1, 0.1) — Le rouge des PV, du voile quand on est touché et de « Vous êtes mort ».

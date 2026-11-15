@@ -305,7 +305,7 @@ namespace Deckscent
             if (SelectedCard == null)
                 return;
             _deck.Replace(Selected);
-            ShowMessage("Carte défaussée", false);
+            ShowMessage(Loc.T("Carte défaussée"), false);
         }
 
         /// <summary>Essaie de poser la carte choisie (ancre sur `slot`). Vrai si posée.</summary>
@@ -317,12 +317,12 @@ namespace Deckscent
             var reason = _board.CheckPlacement(slot, card);
             if (reason != "")
             {
-                ShowMessage(reason, true);
+                ShowMessage(Loc.T(reason), true);
                 return false;
             }
             dungeon.Place(slot, card);
             _deck.Replace(Selected);
-            ShowMessage("Tuile posée : " + card.DisplayName, false);
+            ShowMessage(Loc.F("Tuile posée : {0}", Loc.T(card.DisplayName)), false);
             return true;
         }
 
@@ -370,10 +370,10 @@ namespace Deckscent
 
             // En-tête : titre, étage, état, filet.
             var headTop = panel.y + Pad + 2f;
-            const string title = "CARTE DU DONJON";
+            var title = Loc.T("Carte du donjon").ToUpperInvariant();
             texts.Label(title, panel.x + Pad + 4f, headTop, 600f, 26, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             var titleW = TextPool.Width(title, 26, FontStyle.Bold);
-            texts.Label($"{biomeName} 1", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
+            texts.Label($"{Loc.T(biomeName)} 1", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
             DrawStatus(panel, headTop + 6f);
             Engraving.Rule(ink, new Vector2(panel.x + Pad, panel.y + Pad + TitleHeight), panel.width - Pad * 2f, inkColor);
 
@@ -400,7 +400,7 @@ namespace Deckscent
                     DrawLegend(legend, 2);
             }
 
-            texts.Label(Hint, panel.x, panel.yMax - Pad - 14f, panel.width, 14, Faded(0.45f), TextAnchor.UpperCenter, FontStyle.Italic);
+            texts.Label(Loc.T(Hint), panel.x, panel.yMax - Pad - 14f, panel.width, 14, Faded(0.45f), TextAnchor.UpperCenter, FontStyle.Italic);
         }
 
         /// <summary>Message en haut à droite : raison du refus sous le curseur, ou dernier message.</summary>
@@ -412,12 +412,12 @@ namespace Deckscent
             if (card != null && _board.IsInside(_hover) && !_board.HasTile(_hover))
             {
                 var reason = _board.CheckPlacement(_hover, card);
-                text = reason != "" ? reason : "Pose possible";
+                text = reason != "" ? Loc.T(reason) : Loc.T("Pose possible");
                 isError = reason != "";
             }
             if (string.IsNullOrEmpty(text) && _board.OpenExits().Count == 0)
             {
-                text = "Plus aucun passage libre : le donjon est fermé";
+                text = Loc.T("Plus aucun passage libre : le donjon est fermé");
                 isError = true;
             }
             if (string.IsNullOrEmpty(text))
@@ -568,8 +568,8 @@ namespace Deckscent
         {
             var count = _deck.Hand.Count;
             _cardRects.Clear();
-            texts.Label("LA MAIN", area.x, area.y, area.width, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
-            texts.Label($"{count} cartes", area.x, area.y + 1f, area.width, 14, Faded(0.4f), TextAnchor.UpperRight, FontStyle.Italic);
+            texts.Label(Loc.T("La main").ToUpperInvariant(), area.x, area.y, area.width, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.F("{0} cartes", count), area.x, area.y + 1f, area.width, 14, Faded(0.4f), TextAnchor.UpperRight, FontStyle.Italic);
             var top = area.y + 32f;
             var cardW = Engraving.CardSize.x;
             var cardH = Engraving.CardSize.y;
@@ -592,7 +592,7 @@ namespace Deckscent
                         _placeable[card] = placeable = _board.HasAnyPlacement(card);
                     DrawCard(card, rect, i, isSelected, placeable, lift);
                     if (!placeable)
-                        texts.Label("aucune place", rect.x, y + cardH + 2f, cardW, 13, invalidColor, TextAnchor.UpperCenter, FontStyle.Italic);
+                        texts.Label(Loc.T("aucune place"), rect.x, y + cardH + 2f, cardW, 13, invalidColor, TextAnchor.UpperCenter, FontStyle.Italic);
                 }
             }
             return top + rows * (cardH + CardGap + CardNote) - CardGap;
@@ -632,7 +632,7 @@ namespace Deckscent
 
             // Bandeau du nom, en capitales.
             var band = Engraving.CardBandRect(inner, area);
-            Engraving.Banner(ink, texts, band, card.DisplayName.ToUpperInvariant(), paperColor, inkColor);
+            Engraving.Banner(ink, texts, band, Loc.T(card.DisplayName).ToUpperInvariant(), paperColor, inkColor);
 
             // Pied : flamme si la carte porte une torche, danger de 0 à 3 crânes.
             var footY = band.yMax + 12f;
@@ -677,7 +677,7 @@ namespace Deckscent
         void DrawLegend(Rect area, int columns)
         {
             Engraving.Rule(ink, area.position, area.width, inkColor);
-            texts.Label("LÉGENDE", area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.T("Légende").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             const float sw = 14f;
             string[] keys = { "mur", "sol", "salle", "sortie", "torche", "depart", "joueur", "danger" };
             string[] names = { "Mur, roche", "Sol", "Mur de salle", "Sortie libre", "Torche", "Départ", "Vous", "Danger" };
@@ -719,7 +719,7 @@ namespace Deckscent
                         ink.Triangle(c + new Vector2(0, -7), c + new Vector2(0, 2), c + new Vector2(-6, 6), playerColor);
                         break;
                 }
-                texts.Label(names[i], pos.x + sw + 8f, pos.y - 2f, colW - sw - 8f, 14, inkColor);
+                texts.Label(Loc.T(names[i]), pos.x + sw + 8f, pos.y - 2f, colW - sw - 8f, 14, inkColor);
             }
         }
 

@@ -103,7 +103,7 @@ namespace Deckscent
             {
                 IsCleared = true;
                 Cleared?.Invoke(this);
-                player.Notify("Piège franchi");
+                player.Notify(Loc.T("Piège franchi"));
             }
             _turn = player.Turn;
             SetState(StateFor(_turn));

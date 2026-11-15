@@ -318,6 +318,7 @@ namespace Deckscent.Editor
             so.FindProperty("texts").objectReferenceValue = texts;
             so.FindProperty("restart").objectReferenceValue = PrototypeBuilder.ActionReference("Player", "Wait");
             so.FindProperty("restartAlt").objectReferenceValue = PrototypeBuilder.ActionReference("Player", "Interact");
+            so.FindProperty("toMenu").objectReferenceValue = PrototypeBuilder.ActionReference("UI", "Cancel");
             so.ApplyModifiedPropertiesWithoutUndo();
             PrefabUtility.SaveAsPrefabAsset(root, HudPath);
             Object.DestroyImmediate(root);

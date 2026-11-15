@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 namespace Deckscent
 {
@@ -8,7 +7,7 @@ namespace Deckscent
     /// Interface en jeu, dessinée en gravure comme la carte (papier, encre, rouge d'accent) :
     /// cartouche des PV (une case par point de vie) avec Tour / ATQ / DÉF dessous, message
     /// éphémère en haut au centre (<see cref="PlayerController.Notify"/>), voile rouge quand on est
-    /// touché, écran de mort (Entrée ou bouton du bas pour recommencer).
+    /// touché, écran de mort (Entrée ou bouton du bas pour recommencer, Échap pour revenir au menu).
     ///
     /// Canvas en surimpression : le post-process gravure ne le touche pas, couleurs libres.
     /// </summary>
@@ -24,6 +23,8 @@ namespace Deckscent
         [SerializeField] InputActionReference restart;
         [Tooltip("Recommencer après la mort, autre bouton (Player/Interact : F, bouton du bas).")]
         [SerializeField] InputActionReference restartAlt;
+        [Tooltip("Retour au menu depuis l'écran de mort (UI/Cancel : Échap, bouton droit).")]
+        [SerializeField] InputActionReference toMenu;
 
         [Header("Style")]
         [SerializeField] Color paperColor = new Color(0.97f, 0.96f, 0.93f);
@@ -43,7 +44,7 @@ namespace Deckscent
         public string Toast => _toast;
         public float DeadTime => _deadTime;
 
-        InputAction _restart, _restartAlt;
+        InputAction _restart, _restartAlt, _toMenu;
         string _toast = "";
         float _toastAge = -1f;
         float _flashAge = -1f;
@@ -56,6 +57,7 @@ namespace Deckscent
                 player = FindAnyObjectByType<PlayerController>();
             _restart = Resolve(restart, "Player/Wait");
             _restartAlt = Resolve(restartAlt, "Player/Interact");
+            _toMenu = Resolve(toMenu, "UI/Cancel");
         }
 
         static InputAction Resolve(InputActionReference reference, string path) =>
@@ -63,6 +65,7 @@ namespace Deckscent
 
         void OnEnable()
         {
+            GameSettings.Changed += MarkDirty;
             if (player == null)
                 return;
             player.HealthChanged += OnHealthChanged;
@@ -74,6 +77,7 @@ namespace Deckscent
 
         void OnDisable()
         {
+            GameSettings.Changed -= MarkDirty;
             if (player == null)
                 return;
             player.HealthChanged -= OnHealthChanged;
@@ -83,6 +87,7 @@ namespace Deckscent
             player.TurnEnded -= OnTurnEnded;
         }
 
+        void MarkDirty() => _dirty = true;
         void OnHealthChanged(int health, int max) => _dirty = true;
         void OnTurnEnded(int turn) => _dirty = true;
         void OnHurt(int amount) => _flashAge = 0f;
@@ -121,6 +126,8 @@ namespace Deckscent
                     _dirty = true;
                 if (_deadTime >= restartDelay && (Pressed(_restart) || Pressed(_restartAlt)))
                     Restart();
+                else if (_deadTime >= restartDelay && Pressed(_toMenu))
+                    SceneFlow.LoadMenu();
             }
             if (_dirty)
                 Redraw();
@@ -136,17 +143,7 @@ namespace Deckscent
         }
 
         /// <summary>Recharge la scène (nouvelle partie).</summary>
-        public void Restart()
-        {
-            Time.timeScale = 1f;
-            var scene = SceneManager.GetActiveScene();
-#if UNITY_EDITOR
-            // Dans l'éditeur, par le chemin : les scènes de test ne sont pas dans le build.
-            UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(scene.path, new LoadSceneParameters(LoadSceneMode.Single));
-#else
-            SceneManager.LoadScene(scene.buildIndex);
-#endif
-        }
+        public void Restart() => SceneFlow.Reload();
 
         public void Redraw()
         {
@@ -183,7 +180,7 @@ namespace Deckscent
             Engraving.DoubleFrame(ink, box, 4f, inkColor);
             var x = box.x + 10f;
             var y = box.y + 9f;
-            texts.Label("PV", x, y - 1f, LabelW, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            texts.Label(Loc.T("PV"), x, y - 1f, LabelW, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             for (var i = 0; i < max; i++)
             {
                 var pip = new Rect(x + LabelW + i * (PipW + PipGap), y, PipW, PipH);
@@ -191,7 +188,7 @@ namespace Deckscent
                     ink.Rect(pip, healthColor);
                 ink.RectOutline(pip, inkColor, 1.5f);
             }
-            var stats = $"Tour {player.Turn}   ·   ATQ {player.Attack}   ·   DÉF {player.Defense}";
+            var stats = $"{Loc.F("Tour {0}", player.Turn)}   ·   {Loc.F("ATQ {0}", player.Attack)}   ·   {Loc.F("DÉF {0}", player.Defense)}";
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
         }
 
@@ -220,12 +217,12 @@ namespace Deckscent
             var a = Mathf.Clamp01(_deadTime / 0.8f);
             ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, 0.75f * a));
             var cy = screen.y * 0.5f;
-            texts.Label("Vous êtes mort", 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
-            texts.Label($"Tour {player.Turn}", 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            texts.Label(Loc.T("Vous êtes mort"), 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
+            texts.Label(Loc.F("Tour {0}", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
             if (_deadTime >= restartDelay)
             {
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
-                texts.Label("Entrée / bouton du bas : recommencer", 0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), TextAnchor.UpperCenter);
+                texts.Label(Loc.T("Entrée : recommencer   ·   Échap : menu"), 0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), TextAnchor.UpperCenter);
             }
         }
 

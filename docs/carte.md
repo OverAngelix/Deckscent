@@ -34,8 +34,9 @@ Les touches sont dans la map **Map** d'`InputSystem_Actions` (sauf l'ouverture :
 
 ## Technique
 
-- Dessin « à la main », comme le `_draw` de Godot : `InkCanvas` (un `Graphic` uGUI qui trace rectangles, traits, pointillés, polygones, hachures) et `TextPool` (textes, police à empattements du système). Les primitives gravure partagées sont dans `Engraving.cs` (cadres, bandeaux, crânes, flamme, rose des vents) : le menu pourra s'en servir.
+- Dessin « à la main », comme le `_draw` de Godot : `InkCanvas` (un `Graphic` uGUI qui trace rectangles, traits, pointillés, polygones, hachures) et `TextPool` (textes, police à empattements du système). Les primitives gravure partagées sont dans `Engraving.cs` (cadres, bandeaux, cartes, crânes, flamme, rose des vents) : le menu ([menu.md](menu.md)) s'en sert aussi.
 - Canvas en **surimpression** (Screen Space Overlay) : dessiné par-dessus le jeu, il n'est pas touché par le post-process gravure, couleurs libres.
 - Surface de référence **1152 × 648** (celle de l'écran Godot), mise à l'échelle de l'écran : mêmes proportions que la version Godot (cartes de la main, plateau, légende).
 - Le dessin n'est refait que quand quelque chose change (curseur, carte choisie, pose).
+- **Traduit** (option Langue du menu) : tous les textes passent par `Loc.T` au moment du dessin, y compris les noms de formes (`TileCard`) et les raisons de refus (`DungeonBoard.CheckPlacement`), qui restent des clés françaises dans le code. Voir [menu.md](menu.md#traduction).
 - Réglages dans l'inspecteur du prefab : couleurs (papier, encre, vert, rouge, accent du joueur), écart des hachures (roche et murs), part de l'écran, voile derrière.

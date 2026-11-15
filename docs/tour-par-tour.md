@@ -33,7 +33,7 @@ On a donc le temps de se tourner face à un monstre avant de frapper, et poser d
 - **Dégâts** fixes, pas de hasard : `Attack` du joueur, `Damage` de l'ennemi.
 - **Défense** : retirée des dégâts reçus, mais un coup qui porte fait **toujours au moins 1** (défense 1 contre 3 = 2, contre 1 = 1). Vaut aussi pour les pièges. Tout le monde a 0 par défaut (`Combat.DamageAfterDefense`).
 - **Touché** : l'écran se voile de rouge et la caméra tremble.
-- **Mort** : la caméra tombe au sol en basculant, l'écran s'assombrit, « Vous êtes mort ». Au bout d'une seconde, **Entrée** (ou F / bouton du bas) recharge la scène. La carte ne s'ouvre plus.
+- **Mort** : la caméra tombe au sol en basculant, l'écran s'assombrit, « Vous êtes mort ». Au bout d'une seconde, **Entrée** (ou F / bouton du bas) recharge la scène, **Échap** (ou Rond / B, action `UI/Cancel`) revient au menu. La carte ne s'ouvre plus.
 
 Le comportement du slime est décrit dans [monstres/slime.md](monstres/slime.md), la dalle dans [pieges.md](pieges.md), le coffre dans [coffres.md](coffres.md).
 
@@ -45,7 +45,7 @@ Prefab `Assets/Prefabs/UI/Hud.prefab` ([doc](prefabs/Hud.md)), dessiné en gravu
 - en haut au centre, un **message** de 2 secondes quand il se passe quelque chose (« Piège franchi », « Coffre : +3 PV »…). N'importe quel script l'affiche avec `player.Notify(texte)` ;
 - le voile rouge, l'écran de mort.
 
-Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s).
+Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s). Textes traduits (`Loc`, option Langue du menu) : les messages aussi, traduits par le script qui appelle `Notify` (`Loc.T("Piège franchi")`).
 
 ## Réglages du joueur (prefab `Player`)
 

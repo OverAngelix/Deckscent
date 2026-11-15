@@ -19,7 +19,7 @@ namespace Deckscent.Editor
     /// </summary>
     public static class PrototypeBuilder
     {
-        const string PrefabDir = "Assets/Prefabs";
+        internal const string PrefabDir = "Assets/Prefabs";
         const string MazeDir = PrefabDir + "/Maze";
         const string MaterialDir = "Assets/Materials";
         const string ScenePath = "Assets/Scenes/Main.unity";
@@ -95,12 +95,8 @@ namespace Deckscent.Editor
         public static void BuildMainScene()
         {
             BuildScene(ScenePath, null, DungeonMode.Random);
-            // Main en tête des scènes du build.
-            var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(ScenePath, true) };
-            foreach (var other in EditorBuildSettings.scenes)
-                if (other.path != ScenePath)
-                    scenes.Add(other);
-            EditorBuildSettings.scenes = scenes.ToArray();
+            // Menu puis Main en tête des scènes du build.
+            MenuBuilder.UpdateBuildScenes();
         }
 
         [MenuItem("Deckscent/Construire la scène de test")]
@@ -136,22 +132,9 @@ namespace Deckscent.Editor
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            RenderSettings.skybox = null;
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            // Lumière des faces à l'ombre : avec le rendu gravure, elle règle la densité des hachures.
-            RenderSettings.ambientLight = new Color(0.2f, 0.2f, 0.2f);
-            RenderSettings.fog = false;
+            SetupLighting();
 
-            var mazeGo = new GameObject("Labyrinthe");
-            var maze = mazeGo.AddComponent<Maze>();
-            var so = new SerializedObject(maze);
-            SetPieces(so.FindProperty("decor"), new[] { "Mur_01", "Mur_03", "Mur_04" }, "Sol", "Plafond");
-            SetPieces(so.FindProperty("fallback"), new[] { "Mur_Gris" }, "Sol_Gris", "Plafond_Gris");
-            so.FindProperty("torchPrefab").objectReferenceValue = Load(MazeDir + "/Torche.prefab");
-            if (plan != null)
-                so.FindProperty("layout").stringValue = plan;
-            so.ApplyModifiedPropertiesWithoutUndo();
-            maze.Build();
+            var maze = CreateMaze(plan);
             if (dungeonMode != DungeonMode.None)
                 AddDungeon(maze, dungeonMode == DungeonMode.Demo);
             if (dungeonMode != DungeonMode.None)
@@ -170,6 +153,39 @@ namespace Deckscent.Editor
             EnsureFolder(Path.GetDirectoryName(scenePath).Replace('\\', '/'));
             EditorSceneManager.SaveScene(scene, scenePath);
             Debug.Log("Deckscent : scène " + scenePath + " construite.");
+        }
+
+        /// <summary>
+        /// L'objet « Labyrinthe » de la scène ouverte : décor Synty, blocs gris de secours, torches.
+        /// `plan` null = plan par défaut du labyrinthe.
+        /// </summary>
+        internal static Maze CreateMaze(string plan)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(MazeDir + "/Mur_Gris.prefab") == null)
+                BuildMazePrefabs();
+            var mazeGo = new GameObject("Labyrinthe");
+            mazeGo.SetActive(false); // réglé avant son premier OnEnable (sinon il se construit sans pièces)
+            var maze = mazeGo.AddComponent<Maze>();
+            var so = new SerializedObject(maze);
+            SetPieces(so.FindProperty("decor"), new[] { "Mur_01", "Mur_03", "Mur_04" }, "Sol", "Plafond");
+            SetPieces(so.FindProperty("fallback"), new[] { "Mur_Gris" }, "Sol_Gris", "Plafond_Gris");
+            so.FindProperty("torchPrefab").objectReferenceValue = Load(MazeDir + "/Torche.prefab");
+            if (plan != null)
+                so.FindProperty("layout").stringValue = plan;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            mazeGo.SetActive(true);
+            maze.Build();
+            return maze;
+        }
+
+        /// <summary>Ambiance des scènes : unie, 0,2 (version sombre choisie), sans ciel ni brouillard.</summary>
+        internal static void SetupLighting()
+        {
+            RenderSettings.skybox = null;
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            // Lumière des faces à l'ombre : avec le rendu gravure, elle règle la densité des hachures.
+            RenderSettings.ambientLight = new Color(0.2f, 0.2f, 0.2f);
+            RenderSettings.fog = false;
         }
 
         static void SetPieces(SerializedProperty set, string[] walls, string floor, string ceiling)
@@ -247,7 +263,7 @@ namespace Deckscent.Editor
             return root;
         }
 
-        const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
+        internal const string InputActionsPath = "Assets/InputSystem_Actions.inputactions";
         public const string MapPrefabPath = PrefabDir + "/UI/CarteDuDonjon.prefab";
 
         /// <summary>

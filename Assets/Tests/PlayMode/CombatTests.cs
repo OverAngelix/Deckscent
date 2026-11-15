@@ -27,6 +27,7 @@ namespace Deckscent.Tests
         public override void Setup()
         {
             base.Setup();
+            GameSettings.SetLocale("fr", false); // les messages vérifiés sont en français
             _keyboard = InputSystem.AddDevice<Keyboard>();
             _messages.Clear();
         }
@@ -284,6 +285,22 @@ namespace Deckscent.Tests
             var hud = Object.FindAnyObjectByType<Hud>();
             Assert.That(hud, Is.Not.Null, "HUD dans la scène de test");
             Assert.That(hud.DeadTime, Is.GreaterThanOrEqualTo(0f), "écran de mort affiché");
+        }
+
+        [UnityTest]
+        public IEnumerator EchapSurLEcranDeMortRevientAuMenu()
+        {
+            yield return LoadScene();
+            _player.TakeDamage(25);
+            yield return WaitSeconds(1.1f); // délai avant d'accepter une touche
+            Press(_keyboard.escapeKey);
+            yield return null;
+            Release(_keyboard.escapeKey);
+            var timeout = Time.realtimeSinceStartup + 5f;
+            while (SceneManager.GetActiveScene().name != "Menu" && Time.realtimeSinceStartup < timeout)
+                yield return null;
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Menu"));
+            Assert.That(Object.FindAnyObjectByType<MenuScreen>(), Is.Not.Null);
         }
     }
 }

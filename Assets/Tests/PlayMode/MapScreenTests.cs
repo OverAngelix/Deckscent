@@ -26,6 +26,7 @@ namespace Deckscent.Tests
         public override void Setup()
         {
             base.Setup();
+            GameSettings.SetLocale("fr", false); // les messages vérifiés sont en français
             _keyboard = InputSystem.AddDevice<Keyboard>();
             _gamepad = InputSystem.AddDevice<Gamepad>();
         }
