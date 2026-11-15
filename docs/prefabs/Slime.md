@@ -9,7 +9,7 @@ Ennemi simple, en formes simples (aucun slime dans les packs) : un dôme de gel�
 ## Hiérarchie
 
 ```
-Slime  [Slime]
+Slime  [Slime, AudioSource, SoundEmitter]
 └─ Corps
    ├─ Gelée  [MeshFilter, MeshRenderer]
    ├─ Œil_G  [MeshFilter, MeshRenderer]
@@ -36,6 +36,11 @@ Slime  [Slime]
   - `squash` = 0.15 — Écrasement / étirement du corps (0 = immobile).
   - `turnSpeed` = 4 — Vitesse à laquelle il se tourne vers le joueur.
   - `hitFlash` = 0.12 — Durée du flash blanc quand il est touché (secondes).
+  - `sounds` = `Slime` — Ce qui joue le slurp de l'attaque (piste Effets du mixer, son en 3D). Vide : cherché sur le slime.
+  - `slurpVolume` = 0.9 — Volume du slurp quand il attaque (0 à 1).
+- **AudioSource**
+- **SoundEmitter**
+  - `pitchJitter` = 0.08 — Variation de hauteur au hasard, en plus ou en moins (0,08 = ±8 %).
 
 ### Slime / Corps / Gelée
 

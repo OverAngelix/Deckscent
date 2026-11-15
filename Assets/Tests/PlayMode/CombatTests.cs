@@ -164,6 +164,37 @@ namespace Deckscent.Tests
         }
 
         [UnityTest]
+        public IEnumerator LesPasLesCoupsEtLeSlurpSeFontEntendreSurLaPisteEffets()
+        {
+            yield return LoadScene();
+            var sounds = _player.GetComponentInChildren<SoundEmitter>();
+            Assert.That(sounds, Is.Not.Null, "le joueur a une source de sons");
+            Assert.That(sounds.Source.outputAudioMixerGroup.name, Is.EqualTo("Effets"));
+
+            // Un pas : un bruit de pas.
+            yield return Tap(_keyboard.qKey); // tourné vers le nord…
+            yield return Tap(_keyboard.eKey); // … puis de nouveau vers l'est (gratuit, sans bruit)
+            Assert.That(sounds.PlayCount, Is.EqualTo(0), "tourner ne fait pas de bruit de pas");
+            yield return Tap(_keyboard.wKey);
+            Assert.That(System.Array.IndexOf(SoundBank.Steps, sounds.LastClip), Is.GreaterThanOrEqualTo(0), "un pas");
+            yield return Tap(_keyboard.sKey); // retour au départ, à reculons
+            Assert.That(sounds.PlayCount, Is.EqualTo(2), "un bruit par pas");
+
+            // Un coup sur un slime : le whoosh, puis le slime riposte avec son slurp.
+            var slime = SpawnSlime(Ahead);
+            yield return null;
+            var slimeSounds = slime.GetComponentInChildren<SoundEmitter>();
+            Assert.That(slimeSounds, Is.Not.Null, "le slime a une source de sons");
+            Assert.That(slimeSounds.Source.outputAudioMixerGroup.name, Is.EqualTo("Effets"));
+            var before = sounds.PlayCount;
+            yield return Tap(_keyboard.wKey);
+            Assert.That(sounds.PlayCount, Is.EqualTo(before + 2), "notre attaque, puis le coup reçu");
+            Assert.That(sounds.Recent[sounds.Recent.Count - 2], Is.SameAs(SoundBank.Attack), "notre attaque");
+            Assert.That(slimeSounds.LastClip, Is.SameAs(SoundBank.Slurp), "sa riposte");
+            Assert.That(sounds.LastClip, Is.SameAs(SoundBank.Hit), "et on prend le coup");
+        }
+
+        [UnityTest]
         public IEnumerator UnEnnemiDeCoteBloqueSansCouterDeTour()
         {
             yield return LoadScene();
@@ -197,14 +228,22 @@ namespace Deckscent.Tests
             Assert.That(trap.StateFor(2), Is.EqualTo(SpikeTrap.State.Up));
             Assert.That(trap.StateFor(3), Is.EqualTo(SpikeTrap.State.Down));
 
+            var trapSounds = trap.GetComponentInChildren<SoundEmitter>();
+            Assert.That(trapSounds, Is.Not.Null, "la dalle a une source de sons");
+            Assert.That(trapSounds.Source.outputAudioMixerGroup.name, Is.EqualTo("Effets"));
+            var playerSounds = _player.GetComponentInChildren<SoundEmitter>();
+
             yield return Tap(_keyboard.wKey); // tour 1 : sur la dalle, alerte
             Assert.That(_player.Cell, Is.EqualTo(Ahead), "la dalle ne bloque pas");
             Assert.That(trap.Current, Is.EqualTo(SpikeTrap.State.Warning));
             Assert.That(_player.Health, Is.EqualTo(10));
+            Assert.That(trapSounds.PlayCount, Is.EqualTo(0), "l'alerte ne fait pas de bruit");
 
             yield return Tap(_keyboard.enterKey); // tour 2 : les pics sortent
             Assert.That(trap.Current, Is.EqualTo(SpikeTrap.State.Up));
             Assert.That(_player.Health, Is.EqualTo(8), "2 dégâts");
+            Assert.That(trapSounds.LastClip, Is.SameAs(SoundBank.Spikes), "les pics qui sortent");
+            Assert.That(playerSounds.LastClip, Is.SameAs(SoundBank.Hit), "le coup reçu");
 
             yield return Tap(_keyboard.sKey); // tour 3 : on ressort
             Assert.That(trap.IsCleared, Is.True);

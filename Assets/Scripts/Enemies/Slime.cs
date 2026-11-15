@@ -58,6 +58,12 @@ namespace Deckscent
         [Tooltip("Durée du flash blanc quand il est touché (secondes).")]
         [SerializeField, Min(0f)] float hitFlash = 0.12f;
 
+        [Header("Sons")]
+        [Tooltip("Ce qui joue le slurp de l'attaque (piste Effets du mixer, son en 3D). Vide : cherché sur le slime.")]
+        [SerializeField] SoundEmitter sounds;
+        [Tooltip("Volume du slurp quand il attaque (0 à 1).")]
+        [SerializeField, Range(0f, 1f)] float slurpVolume = 0.9f;
+
         static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
         public Variant Kind => variant;
@@ -108,6 +114,8 @@ namespace Deckscent
 
         void Start()
         {
+            if (sounds == null)
+                sounds = GetComponentInChildren<SoundEmitter>();
             var player = FindAnyObjectByType<PlayerController>();
             if (player != null)
                 _player = player.transform;
@@ -177,6 +185,8 @@ namespace Deckscent
         {
             var start = transform.position;
             var end = start + WorldDir(dir) * 0.9f;
+            if (sounds != null)
+                sounds.Play(SoundBank.Slurp, slurpVolume);
             yield return Animate(moveTime * 0.5f, t => transform.position = Vector3.Lerp(start, end, BackOut(t)));
             if (IsActive)
                 player.TakeDamage(damage);

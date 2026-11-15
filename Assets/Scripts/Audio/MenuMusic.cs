@@ -8,7 +8,7 @@ namespace Deckscent
     /// et un souffle de vent. Ambiance « descente » : sombre, lente, beaucoup de silence.
     ///
     /// Générée dans <see cref="OnAudioFilterRead"/> (fil audio) sur une AudioSource sans clip.
-    /// Volume : option Son (<see cref="GameSettings.Volume"/>, via AudioListener.volume).
+    /// Volume : sort sur la piste Musique du mixer (options Général et Musique, <see cref="GameSettings"/>).
     /// Musique provisoire : pour un vrai morceau, retirer ce script et donner un clip à l'AudioSource.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]

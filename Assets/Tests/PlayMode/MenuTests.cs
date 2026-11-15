@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.SceneManagement;
@@ -17,7 +18,7 @@ namespace Deckscent.Tests
     {
         Keyboard _keyboard;
         MenuScreen _menu;
-        float _volume;
+        float _volume, _music, _effects;
         string _locale;
 
         public override void Setup()
@@ -25,6 +26,8 @@ namespace Deckscent.Tests
             base.Setup();
             _keyboard = InputSystem.AddDevice<Keyboard>();
             _volume = GameSettings.Volume;
+            _music = GameSettings.MusicVolume;
+            _effects = GameSettings.EffectsVolume;
             _locale = GameSettings.Locale;
             GameSettings.SetLocale("fr", false);
         }
@@ -32,6 +35,8 @@ namespace Deckscent.Tests
         public override void TearDown()
         {
             GameSettings.SetVolume(_volume);
+            GameSettings.SetMusicVolume(_music);
+            GameSettings.SetEffectsVolume(_effects);
             GameSettings.SetLocale(_locale);
             base.TearDown();
         }
@@ -95,9 +100,17 @@ namespace Deckscent.Tests
             Assert.That(_menu.OpenPanel, Is.EqualTo(MenuScreen.Panel.Options));
             yield return Tap(_keyboard.rightArrowKey);
             Assert.That(GameSettings.Volume, Is.EqualTo(0.6f).Within(1e-4f));
-            Assert.That(AudioListener.volume, Is.EqualTo(0.6f).Within(1e-4f), "appliqué au son");
+            Resources.Load<AudioMixer>("Mixage").GetFloat("VolumeGeneral", out var db);
+            Assert.That(db, Is.EqualTo(20f * Mathf.Log10(0.6f)).Within(0.01f), "appliqué à la piste générale du mixer");
             yield return Tap(_keyboard.downArrowKey);
-            Assert.That(_menu.OptionRow, Is.EqualTo(1));
+            Assert.That(_menu.OptionRow, Is.EqualTo(1), "ligne Musique");
+            GameSettings.SetMusicVolume(0.5f);
+            yield return Tap(_keyboard.rightArrowKey);
+            Assert.That(GameSettings.MusicVolume, Is.EqualTo(0.6f).Within(1e-4f), "la musique a son propre volume");
+            Assert.That(GameSettings.Volume, Is.EqualTo(0.6f).Within(1e-4f), "le général ne bouge pas");
+            yield return Tap(_keyboard.downArrowKey);
+            yield return Tap(_keyboard.downArrowKey);
+            Assert.That(_menu.OptionRow, Is.EqualTo(3), "ligne Langue");
             yield return Tap(_keyboard.rightArrowKey);
             Assert.That(GameSettings.Locale, Is.EqualTo("en"));
             Assert.That(Loc.T("Descendre"), Is.EqualTo("Descend"));

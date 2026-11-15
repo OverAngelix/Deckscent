@@ -21,7 +21,7 @@ Présentés comme une **main de cartes**, dessinées comme les cartes-tuiles de 
 | Carte | Effet |
 |---|---|
 | Descendre | Fondu au noir (la musique s'éteint avec), puis la scène Main : nouvelle partie. |
-| Options | Son et langue (voir plus bas). |
+| Options | Volumes (général, musique, effets sonores) et langue (voir plus bas). |
 | Commandes | Liste des touches, lues dans `InputSystem_Actions` et affichées selon le clavier (Z Q S D en AZERTY). |
 | Quitter | Ferme le jeu (arrête le Play mode dans l'éditeur). |
 
@@ -41,12 +41,12 @@ Touches de la map **UI** d'`InputSystem_Actions` (`Navigate`, `Submit`, `Cancel`
 
 | Ligne | Réglage |
 |---|---|
-| Son | Volume général, jauge à 10 cases comme les PV, de « Muet » à 100 %. ← → par pas de 10 % (en gardant la touche, ça défile), ou clic / glisser sur la jauge. |
+| Général, Musique, Effets sonores | Un volume par piste du mixer, jauge à 10 cases comme les PV, de « Muet » à 100 %. ← → par pas de 10 % (en gardant la touche, ça défile), ou clic / glisser sur la jauge. |
 | Langue | **FR / EN**, avec les drapeaux. ← → ou Entrée pour changer, ou clic sur un drapeau. La langue en cours est encadrée. |
 
-↑ ↓ (Z S) choisissent la ligne, Échap ou un clic hors du cadre ferme. Tout est **sauvegardé** (`PlayerPrefs`, clés `Deckscent.Volume` et `Deckscent.Locale`) et réappliqué au lancement, avant la première scène.
+↑ ↓ (Z S) choisissent la ligne, Échap ou un clic hors du cadre ferme. Tout est **sauvegardé** (`PlayerPrefs`, clés `Deckscent.Volume`, `Deckscent.MusicVolume`, `Deckscent.EffectsVolume` et `Deckscent.Locale`) et réappliqué au lancement, avant la première scène.
 
-Le volume agit sur `AudioListener.volume` : la musique du menu le suit, les futurs sons du jeu aussi.
+Les volumes règlent les trois pistes du mixer `Assets/Resources/Mixage.mixer` (Master, Musique, Effets) : voir [sons.md](sons.md). Le panneau a 4 lignes (`VolumeRows`, `LanguageRow`, `OptionCount` dans `MenuScreen`) ; une jauge se dessine avec `DrawGauge(ligne, …)` et se lit / règle avec `GetVolume` / `SetVolume(ligne, …)`.
 
 ## Traduction
 
@@ -60,7 +60,7 @@ Sont traduits : le menu, l'**écran de carte** (titre, étage, main, légende, a
 
 ## Musique
 
-Le menu joue une ambiance **synthétisée en temps réel**, sans fichier audio, reprise du prototype Godot (`MenuMusic`, dans `OnAudioFilterRead` d'une `AudioSource` sans clip, à la fréquence de sortie) :
+Le menu joue, sur la piste **Musique** du mixer, une ambiance **synthétisée en temps réel**, sans fichier audio, reprise du prototype Godot (`MenuMusic`, dans `OnAudioFilterRead` d'une `AudioSource` sans clip, à la fréquence de sortie) :
 
 - un **bourdon** grave en ré mineur (ré 2, la 2, ré 3), chaque note doublée et désaccordée pour battre doucement, qui respire sur 19 s ;
 - des **cloches** éparses (toutes les 2,2 à 5,5 s) tirées dans le ré mineur pentatonique, parfois suivies d'une note une quinte ou une octave plus bas, avec un écho croisé gauche / droite ;

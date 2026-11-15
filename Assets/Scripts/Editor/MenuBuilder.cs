@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Rendering.Universal;
 
 namespace Deckscent.Editor
@@ -157,6 +158,8 @@ namespace Deckscent.Editor
             source.playOnAwake = true;
             source.loop = true;
             source.spatialBlend = 0f;
+            var mixer = Resources.Load<AudioMixer>("Mixage");
+            source.outputAudioMixerGroup = mixer.FindMatchingGroups("Musique")[0];
             var music = musicGo.AddComponent<MenuMusic>();
 
             var mso = new SerializedObject(menu);

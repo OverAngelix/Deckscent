@@ -343,7 +343,29 @@ namespace Deckscent.Editor
             var lantern = root.transform.Find("Caméra/Lanterne");
             so.FindProperty("lantern").objectReferenceValue = lantern != null ? lantern.GetComponent<Light>() : null;
             so.FindProperty("cameraRig").objectReferenceValue = root.transform.Find("Caméra");
+            so.FindProperty("sounds").objectReferenceValue = AddSoundEmitter(root, 0f);
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Source des effets sonores (SoundEmitter) sur la piste Effets du mixer. `spatial` : 0 = son
+        /// à plat (le joueur), 1 = son placé en 3D (on entend d'où vient un monstre).
+        /// </summary>
+        internal static SoundEmitter AddSoundEmitter(GameObject root, float spatial)
+        {
+            var source = root.GetComponent<AudioSource>();
+            if (source == null)
+                source = root.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.spatialBlend = spatial;
+            source.rolloffMode = AudioRolloffMode.Linear;
+            source.minDistance = 3f;
+            source.maxDistance = 24f;
+            var mixer = Resources.Load<UnityEngine.Audio.AudioMixer>("Mixage");
+            if (mixer != null)
+                source.outputAudioMixerGroup = mixer.FindMatchingGroups("Effets")[0];
+            var emitter = root.GetComponent<SoundEmitter>();
+            return emitter != null ? emitter : root.AddComponent<SoundEmitter>();
         }
 
         internal static UnityEngine.InputSystem.InputActionReference ActionReference(string map, string action)

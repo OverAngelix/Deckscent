@@ -60,6 +60,9 @@ namespace Deckscent
         const string OptionsHint = "↑ ↓  choisir   ·   ← →  régler   ·   Échap  retour";
         const float CardGap = 20f, Lift = 12f, FadeInTime = 1.2f, FadeOutTime = 0.6f;
         const float RepeatDelay = 0.4f, RepeatRate = 0.12f;
+        /// <summary>Lignes du panneau Options : les volumes (0 général, 1 musique, 2 effets), puis la langue.</summary>
+        const int VolumeRows = 3, LanguageRow = 3, OptionCount = 4;
+        static readonly string[] VolumeLabels = { "Général", "Musique", "Effets sonores" };
         static readonly string[] Labels = { "Descendre", "Options", "Commandes", "Quitter" };
         static readonly string[] Notes = { "nouvelle partie", "son · langue", "les touches", "fermer le jeu" };
 
@@ -87,14 +90,15 @@ namespace Deckscent
 
         public int Selected { get; private set; }
         public Panel OpenPanel { get; private set; }
-        /// <summary>Ligne choisie dans les options : 0 = son, 1 = langue.</summary>
+        /// <summary>Ligne choisie dans les options : 0 général, 1 musique, 2 effets sonores, 3 langue.</summary>
         public int OptionRow { get; private set; }
         public bool IsLeaving { get; private set; }
 
         InputAction _navigate, _submit, _cancel;
         readonly float[] _lift = new float[4];
         readonly Rect[] _cardRects = new Rect[4];
-        Rect _panelRect, _sliderRect;
+        Rect _panelRect;
+        readonly Rect[] _sliderRects = new Rect[VolumeRows];
         readonly Rect[] _flagRects = new Rect[2];
         float _fade = 1f;
         float _fadeTarget;
@@ -155,8 +159,8 @@ namespace Deckscent
                     if (cancelled)
                         SetPanel(Panel.None);
                     else if (dir.y != 0)
-                        OptionRow = (OptionRow + (dir.y > 0 ? -1 : 1) + 2) % 2;
-                    else if (dir.x != 0 || (submitted && OptionRow == 1))
+                        OptionRow = (OptionRow + (dir.y > 0 ? -1 : 1) + OptionCount) % OptionCount;
+                    else if (dir.x != 0 || (submitted && OptionRow == LanguageRow))
                         Adjust(dir.x != 0 ? dir.x : 1);
                     break;
                 case Panel.Controls:
@@ -230,27 +234,46 @@ namespace Deckscent
                 {
                     if (!_panelRect.Contains(pos))
                         SetPanel(Panel.None);
-                    else if (Grow(_sliderRect, 10f).Contains(pos))
-                    {
-                        OptionRow = 0;
-                        SetVolumeAt(pos.x);
-                    }
-                    else
-                        for (var i = 0; i < _flagRects.Length; i++)
-                            if (Grow(_flagRects[i], 6f).Contains(pos))
-                            {
-                                OptionRow = 1;
-                                GameSettings.SetLocale(GameSettings.Locales[i]);
-                            }
+                    for (var row = 0; row < VolumeRows; row++)
+                        if (Grow(_sliderRects[row], 10f).Contains(pos))
+                        {
+                            OptionRow = row;
+                            SetVolumeAt(row, pos.x);
+                        }
+                    for (var i = 0; i < _flagRects.Length; i++)
+                        if (Grow(_flagRects[i], 6f).Contains(pos))
+                        {
+                            OptionRow = LanguageRow;
+                            GameSettings.SetLocale(GameSettings.Locales[i]);
+                        }
                 }
-                else if (mouse.leftButton.isPressed && moved && Grow(_sliderRect, 10f).Contains(pos))
-                    SetVolumeAt(pos.x);
+                // Glisser : règle la jauge de la ligne choisie (celle qu'on vient de cliquer).
+                else if (mouse.leftButton.isPressed && moved && OptionRow < VolumeRows && Grow(_sliderRects[OptionRow], 10f).Contains(pos))
+                    SetVolumeAt(OptionRow, pos.x);
             }
             else if (mouse.leftButton.wasPressedThisFrame)
                 SetPanel(Panel.None);
         }
 
-        void SetVolumeAt(float x) => GameSettings.SetVolume((x - _sliderRect.x) / _sliderRect.width);
+        void SetVolumeAt(int row, float x) => SetVolume(row, (x - _sliderRects[row].x) / _sliderRects[row].width);
+
+        /// <summary>Volume de la ligne `row` (0 général, 1 musique, 2 effets sonores).</summary>
+        static float GetVolume(int row) => row switch
+        {
+            0 => GameSettings.Volume,
+            1 => GameSettings.MusicVolume,
+            _ => GameSettings.EffectsVolume,
+        };
+
+        static void SetVolume(int row, float value)
+        {
+            switch (row)
+            {
+                case 0: GameSettings.SetVolume(value); break;
+                case 1: GameSettings.SetMusicVolume(value); break;
+                default: GameSettings.SetEffectsVolume(value); break;
+            }
+        }
 
         /// <summary>Position écran → coordonnées du canvas (origine en haut à gauche, y vers le bas).</summary>
         Vector2 ToCanvas(Vector2 screen)
@@ -274,11 +297,11 @@ namespace Deckscent
 
         static Rect Grow(Rect r, float by) => new Rect(r.x - by, r.y - by, r.width + by * 2f, r.height + by * 2f);
 
-        /// <summary>Son : ±10 %. Langue : la suivante.</summary>
+        /// <summary>Volumes : ±10 %. Langue : la suivante.</summary>
         void Adjust(int step)
         {
-            if (OptionRow == 0)
-                GameSettings.SetVolume(GameSettings.Volume + step * 0.1f);
+            if (OptionRow < VolumeRows)
+                SetVolume(OptionRow, GetVolume(OptionRow) + step * 0.1f);
             else
                 GameSettings.NextLocale(step);
         }
@@ -601,40 +624,25 @@ namespace Deckscent
         {
             var ink = front.ink;
             var texts = front.texts;
-            var box = DrawPanel(screen, new Vector2(520f, 290f), "Options");
+            var box = DrawPanel(screen, new Vector2(540f, 410f), "Options");
             _panelRect = box;
             var labelX = box.x + 48f;
-            var valueX = box.x + 200f;
-            float[] rowsY = { box.y + 118f, box.y + 186f };
+            var valueX = box.x + 220f;
 
-            for (var row = 0; row < 2; row++)
+            for (var row = 0; row < OptionCount; row++)
             {
-                var y = rowsY[row];
+                var y = OptionY(box, row);
                 var active = row == OptionRow;
                 if (active)
                     ink.Triangle(new Vector2(labelX - 22f, y - 13f), new Vector2(labelX - 12f, y - 7f), new Vector2(labelX - 22f, y - 1f), accentColor);
-                texts.Label(Loc.T(row == 0 ? "Son" : "Langue"), labelX, y - 21f, 150f, 19, active ? accentColor : inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+                var label = row < VolumeRows ? VolumeLabels[row] : "Langue";
+                texts.Label(Loc.T(label), labelX, y - 21f, valueX - labelX - 8f, 19, active ? accentColor : inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+                if (row < VolumeRows)
+                    DrawGauge(row, y, valueX);
             }
-
-            // Son : jauge à cases, comme les PV du HUD.
-            var y0 = rowsY[0];
-            _sliderRect = new Rect(valueX, y0 - 18f, 200f, 20f);
-            const int n = 10;
-            const float gap = 4f;
-            var pipW = (_sliderRect.width - (n - 1) * gap) / n;
-            var filled = Mathf.RoundToInt(GameSettings.Volume * n);
-            for (var i = 0; i < n; i++)
-            {
-                var pip = new Rect(_sliderRect.x + i * (pipW + gap), _sliderRect.y, pipW, _sliderRect.height);
-                if (i < filled)
-                    ink.Rect(pip, OptionRow == 0 ? accentColor : inkColor);
-                ink.RectOutline(pip, inkColor, 1.5f);
-            }
-            var volume = filled == 0 ? Loc.T("Muet") : $"{Mathf.RoundToInt(GameSettings.Volume * 100f)} %";
-            texts.Label(volume, _sliderRect.xMax + 14f, y0 - 19f, 100f, 16, inkColor);
 
             // Langue : un drapeau par langue, celle en cours encadrée.
-            var y1 = rowsY[1];
+            var y1 = OptionY(box, LanguageRow);
             var flag = new Vector2(48f, 32f);
             var x = valueX;
             for (var i = 0; i < GameSettings.Locales.Length; i++)
@@ -645,13 +653,38 @@ namespace Deckscent
                 DrawFlag(ink, locale, rect);
                 var current = locale == GameSettings.Locale;
                 if (current)
-                    ink.RectOutline(Grow(rect, 5f), OptionRow == 1 ? accentColor : inkColor, 3f);
+                    ink.RectOutline(Grow(rect, 5f), OptionRow == LanguageRow ? accentColor : inkColor, 3f);
                 texts.Label(locale.ToUpperInvariant(), x, rect.yMax + 8f, flag.x, 15, current ? inkColor : WithAlpha(inkColor, 0.45f), TextAnchor.UpperCenter);
                 x += flag.x + 34f;
             }
             texts.Label(Loc.LocaleName(GameSettings.Locale), x, y1 - 20f, 150f, 16, inkColor);
 
             texts.Label(Loc.T(OptionsHint), box.x, box.yMax - 44f, box.width, 14, WithAlpha(inkColor, 0.6f), TextAnchor.UpperCenter, FontStyle.Italic);
+        }
+
+        /// <summary>Ligne de base de la ligne `row` du panneau Options.</summary>
+        static float OptionY(Rect box, int row) => box.y + 118f + row * 56f;
+
+        /// <summary>Jauge à 10 cases d'un volume, comme les PV du HUD, et sa valeur (Muet ou 80 %).</summary>
+        void DrawGauge(int row, float y, float x)
+        {
+            var ink = front.ink;
+            var rect = new Rect(x, y - 18f, 200f, 20f);
+            _sliderRects[row] = rect;
+            const int n = 10;
+            const float gap = 4f;
+            var pipW = (rect.width - (n - 1) * gap) / n;
+            var volume = GetVolume(row);
+            var filled = Mathf.RoundToInt(volume * n);
+            for (var i = 0; i < n; i++)
+            {
+                var pip = new Rect(rect.x + i * (pipW + gap), rect.y, pipW, rect.height);
+                if (i < filled)
+                    ink.Rect(pip, OptionRow == row ? accentColor : inkColor);
+                ink.RectOutline(pip, inkColor, 1.5f);
+            }
+            var text = filled == 0 ? Loc.T("Muet") : Mathf.RoundToInt(volume * 100f) + " %";
+            front.texts.Label(text, rect.xMax + 14f, y - 19f, 100f, 16, inkColor);
         }
 
         /// <summary>Drapeaux simplifiés (France, Royaume-Uni), cernés d'encre.</summary>

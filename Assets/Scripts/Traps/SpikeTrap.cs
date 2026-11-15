@@ -46,6 +46,12 @@ namespace Deckscent
         [Tooltip("Durée de la rentrée des pics (secondes) : plus lente.")]
         [SerializeField, Min(0.01f)] float lowerTime = 0.25f;
 
+        [Header("Sons")]
+        [Tooltip("Ce qui joue le bruit des pics (piste Effets du mixer, son en 3D). Vide : cherché sur la dalle.")]
+        [SerializeField] SoundEmitter sounds;
+        [Tooltip("Volume du bruit des pics qui sortent (0 à 1).")]
+        [SerializeField, Range(0f, 1f)] float spikesVolume = 0.7f;
+
         /// <summary>Émis une fois, quand le joueur ressort de la dalle pour la première fois.</summary>
         public event Action<SpikeTrap> Cleared;
 
@@ -68,7 +74,12 @@ namespace Deckscent
         Vector2Int _lastPlayerCell = new Vector2Int(int.MinValue, int.MinValue);
         Coroutine _move;
 
-        void Start() => Refresh(_turn);
+        void Start()
+        {
+            if (sounds == null)
+                sounds = GetComponentInChildren<SoundEmitter>();
+            Refresh(_turn);
+        }
 
         // Pas de Refresh ici : dans l'éditeur, le prefab garde ses pics sortis (on les voit et on les règle).
         void OnValidate() => activeTurns = Mathf.Min(activeTurns, period - 1);
@@ -143,6 +154,8 @@ namespace Deckscent
             if (state == Current)
                 return;
             Current = state;
+            if (state == State.Up && sounds != null)
+                sounds.Play(SoundBank.Spikes, spikesVolume);
             if (spikes == null)
                 return;
             if (_move != null)

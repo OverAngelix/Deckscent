@@ -9,7 +9,7 @@ Piège : dalle à pics (grille et piques Synty `SM_Trap_Spears_Grate_01` / `SM_T
 ## Hiérarchie
 
 ```
-DallePics  [SpikeTrap]
+DallePics  [SpikeTrap, AudioSource, SoundEmitter]
 ├─ Dalle  [DecorFallback]
 │  ├─ Décor
 │  │  └─ Pièce
@@ -70,6 +70,11 @@ DallePics  [SpikeTrap]
   - `warningHeight` = 0.4 — Hauteur des pointes en alerte (mètres).
   - `riseTime` = 0.1 — Durée de la sortie des pics (secondes) : sèche.
   - `lowerTime` = 0.25 — Durée de la rentrée des pics (secondes) : plus lente.
+  - `sounds` = `DallePics` — Ce qui joue le bruit des pics (piste Effets du mixer, son en 3D). Vide : cherché sur la dalle.
+  - `spikesVolume` = 0.7 — Volume du bruit des pics qui sortent (0 à 1).
+- **AudioSource**
+- **SoundEmitter**
+  - `pitchJitter` = 0.08 — Variation de hauteur au hasard, en plus ou en moins (0,08 = ±8 %).
 
 ### DallePics / Dalle
 

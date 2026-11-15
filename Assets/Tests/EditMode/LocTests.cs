@@ -6,13 +6,15 @@ namespace Deckscent.Tests
     public class LocTests
     {
         string _locale;
-        float _volume;
+        float _volume, _music, _effects;
 
         [SetUp]
         public void Remember()
         {
             _locale = GameSettings.Locale;
             _volume = GameSettings.Volume;
+            _music = GameSettings.MusicVolume;
+            _effects = GameSettings.EffectsVolume;
         }
 
         [TearDown]
@@ -20,6 +22,8 @@ namespace Deckscent.Tests
         {
             GameSettings.SetLocale(_locale, false);
             GameSettings.SetVolume(_volume, false);
+            GameSettings.SetMusicVolume(_music, false);
+            GameSettings.SetEffectsVolume(_effects, false);
         }
 
         [Test]
@@ -68,6 +72,17 @@ namespace Deckscent.Tests
             Assert.That(GameSettings.Volume, Is.EqualTo(0f));
             GameSettings.SetVolume(0.43f, false);
             Assert.That(GameSettings.Volume, Is.EqualTo(0.45f).Within(1e-5f));
+        }
+
+        [Test]
+        public void LaMusiqueEtLesEffetsOntLeurPropreVolume()
+        {
+            GameSettings.SetVolume(0.5f, false);
+            GameSettings.SetMusicVolume(1.7f, false);
+            GameSettings.SetEffectsVolume(0.33f, false);
+            Assert.That(GameSettings.MusicVolume, Is.EqualTo(1f), "borné à 1");
+            Assert.That(GameSettings.EffectsVolume, Is.EqualTo(0.35f).Within(1e-5f), "arrondi au vingtième");
+            Assert.That(GameSettings.Volume, Is.EqualTo(0.5f), "le volume général ne bouge pas");
         }
 
         [Test]

@@ -67,6 +67,16 @@ namespace Deckscent
         [Tooltip("La caméra du joueur : elle tremble quand on est touché et tombe au sol à la mort. Vide : la caméra enfant.")]
         [SerializeField] Transform cameraRig;
 
+        [Header("Sons")]
+        [Tooltip("Ce qui joue les pas et l'attaque (piste Effets du mixer). Vide : cherché sur le joueur.")]
+        [SerializeField] SoundEmitter sounds;
+        [Tooltip("Volume d'un bruit de pas (0 à 1).")]
+        [SerializeField, Range(0f, 1f)] float stepVolume = 0.35f;
+        [Tooltip("Volume de l'attaque (0 à 1).")]
+        [SerializeField, Range(0f, 1f)] float attackVolume = 0.8f;
+        [Tooltip("Volume du coup reçu, monstre ou piège (0 à 1).")]
+        [SerializeField, Range(0f, 1f)] float hitVolume = 0.8f;
+
         /// <summary>Un tour complet vient de se terminer (le joueur, puis le monde).</summary>
         public event Action<int> TurnEnded;
         /// <summary>PV modifiés (PV, maximum).</summary>
@@ -100,6 +110,8 @@ namespace Deckscent
         void Awake()
         {
             Health = maxHealth;
+            if (sounds == null)
+                sounds = GetComponentInChildren<SoundEmitter>();
             if (cameraRig == null)
             {
                 var cam = GetComponentInChildren<Camera>(true);
@@ -250,6 +262,8 @@ namespace Deckscent
                 if (trap != null)
                     trap.Anticipate(Turn + 1);
                 Cell = target;
+                if (sounds != null)
+                    sounds.Play(SoundBank.RandomStep(), stepVolume);
                 var from = transform.position;
                 var to = maze.CellToWorld(Cell);
                 yield return Animate(moveTime, t => transform.position = Vector3.Lerp(from, to, t));
@@ -306,6 +320,8 @@ namespace Deckscent
         {
             var start = transform.position;
             var end = start + Grid.ToWorldDir(dir) * 0.6f;
+            if (sounds != null)
+                sounds.Play(SoundBank.Attack, attackVolume);
             yield return Animate(moveTime * 0.45f, t => transform.position = Vector3.Lerp(start, end, t));
             if (enemy is UnityEngine.Object o && o != null)
                 enemy.TakeDamage(attack);
@@ -426,6 +442,8 @@ namespace Deckscent
             Health = Mathf.Max(0, Health - dealt);
             HealthChanged?.Invoke(Health, maxHealth);
             Hurt?.Invoke(dealt);
+            if (sounds != null)
+                sounds.Play(SoundBank.Hit, hitVolume);
             if (Health == 0)
                 Die();
             else if (cameraRig != null)

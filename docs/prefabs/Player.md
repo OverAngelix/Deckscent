@@ -11,7 +11,7 @@ Ce que voit sa caméra : les captures de la scène de test, par exemple [1_depar
 ## Hiérarchie
 
 ```
-Player  [PlayerController]
+Player  [PlayerController, AudioSource, SoundEmitter]
 └─ Caméra  [Camera, UniversalAdditionalCameraData, AudioListener]
    └─ Lanterne  [Light]
 ```
@@ -37,6 +37,13 @@ Player  [PlayerController]
   - `stickThreshold` = 0.5 — Seuil au-delà duquel un stick compte comme une direction.
   - `lantern` = `Lanterne` — La lumière que l'action Torch allume et éteint.
   - `cameraRig` = `Caméra` — La caméra du joueur : elle tremble quand on est touché et tombe au sol à la mort. Vide : la caméra enfant.
+  - `sounds` = `Player` — Ce qui joue les pas et l'attaque (piste Effets du mixer). Vide : cherché sur le joueur.
+  - `stepVolume` = 0.35 — Volume d'un bruit de pas (0 à 1).
+  - `attackVolume` = 0.8 — Volume de l'attaque (0 à 1).
+  - `hitVolume` = 0.8 — Volume du coup reçu, monstre ou piège (0 à 1).
+- **AudioSource**
+- **SoundEmitter**
+  - `pitchJitter` = 0.08 — Variation de hauteur au hasard, en plus ou en moins (0,08 = ±8 %).
 
 ### Player / Caméra
 

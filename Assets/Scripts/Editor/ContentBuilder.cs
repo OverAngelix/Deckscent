@@ -107,6 +107,7 @@ namespace Deckscent.Editor
             var so = new SerializedObject(slime);
             so.FindProperty("body").objectReferenceValue = body;
             so.FindProperty("jelly").objectReferenceValue = jelly.GetComponent<MeshRenderer>();
+            so.FindProperty("sounds").objectReferenceValue = PrototypeBuilder.AddSoundEmitter(root, 1f);
             so.ApplyModifiedPropertiesWithoutUndo();
             PrefabUtility.SaveAsPrefabAsset(root, SlimePath);
             Object.DestroyImmediate(root);
@@ -136,10 +137,12 @@ namespace Deckscent.Editor
             foreach (var r in spikes.GetComponentsInChildren<MeshRenderer>(true))
                 r.shadowCastingMode = ShadowCastingMode.Off; // cachés sous le sol : pas d'ombre parasite
 
+            var trapSounds = PrototypeBuilder.AddSoundEmitter(root, 1f);
             var trap = root.AddComponent<SpikeTrap>();
             var so = new SerializedObject(trap);
             so.FindProperty("spikes").objectReferenceValue = spikes.transform;
             so.FindProperty("spikeHeight").floatValue = spikeHeight;
+            so.FindProperty("sounds").objectReferenceValue = trapSounds;
             so.ApplyModifiedPropertiesWithoutUndo();
             _ = plate;
             PrefabUtility.SaveAsPrefabAsset(root, SpikeTrapPath);

@@ -44,3 +44,4 @@ Une grille au sol (Synty `SM_Trap_Spears_Grate_01`) d'où sortent des piques (`S
 - `StateFor(tour)` : avec `p = (tour + Phase Offset) mod Period`, sortis si `p ≥ Period − Active Turns`, en alerte le tour juste avant. Le cycle suit le compteur de tours du joueur.
 - Au repos, les piques sont **sous le sol** : seul le groupe `Pics` monte et descend. Dans l'éditeur, le prefab les montre sortis (pour les voir et les régler) ; en jeu, ils prennent leur état dès le lancement.
 - Le décor Synty et sa version de secours sont choisis par `DecorFallback` (sur `Dalle` et sur `Pics`).
+- **Son** : quand les pics sortent, un raclement et un tintement métalliques, en 3D (`SoundEmitter` sur la racine, `Spikes Volume`) ; l'alerte est muette. Le joueur touché joue en plus le coup reçu. Voir [sons.md](sons.md).
