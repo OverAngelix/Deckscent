@@ -6,7 +6,7 @@ Cocher (✅) chaque tâche finie et validée.
 
 ## Dans l'ordre
 
-0. **Finir la musique du donjon** (étape 7 du portage) : validation à l'écoute, puis commit.
+0. ✅ **Finir la musique du donjon** (étape 7 du portage) : validation à l'écoute, puis commit.
 1. **Touches affichées selon l'appareil**
    - Dernier appareil utilisé (`InputSystem.onActionChange` / `InputUser`) : clavier-souris, manette PlayStation (DualShock / DualSense), Switch, **Xbox par défaut** pour les autres manettes.
    - Texte des touches par `InputAction.GetBindingDisplayString` (groupe de contrôle de l'appareil).

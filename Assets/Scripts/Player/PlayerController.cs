@@ -83,6 +83,8 @@ namespace Deckscent
         public event Action<int, int> HealthChanged;
         /// <summary>Le joueur vient d'être touché (dégâts subis, après défense).</summary>
         public event Action<int> Hurt;
+        /// <summary>Le joueur vient de frapper un ennemi (musique de combat).</summary>
+        public event Action Struck;
         public event Action Died;
         /// <summary>Un court message à afficher au HUD (piège franchi, butin…).</summary>
         public event Action<string> Notified;
@@ -324,7 +326,10 @@ namespace Deckscent
                 sounds.Play(SoundBank.Attack, attackVolume);
             yield return Animate(moveTime * 0.45f, t => transform.position = Vector3.Lerp(start, end, t));
             if (enemy is UnityEngine.Object o && o != null)
+            {
                 enemy.TakeDamage(attack);
+                Struck?.Invoke();
+            }
             yield return Animate(moveTime * 0.55f, t => transform.position = Vector3.Lerp(end, start, t));
             transform.position = start;
         }

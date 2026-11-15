@@ -10,7 +10,7 @@ Master            ← option « Général »         (paramètre exposé VolumeG
 └── Effets        ← option « Effets sonores »  (VolumeEffets)
 ```
 
-- Chaque `AudioSource` choisit sa piste avec son champ **Output** : la musique du menu sort sur `Musique`, le joueur, les slimes et les dalles à pics sur `Effets`.
+- Chaque `AudioSource` choisit sa piste avec son champ **Output** : la musique du menu et celle du donjon ([musique.md](musique.md)) sortent sur `Musique`, le joueur, les slimes et les dalles à pics sur `Effets`.
 - Une piste fille passe par sa mère : le volume général baisse tout.
 - Le mixer est dans un dossier **`Resources`** : le code le charge par son nom (`Resources.Load<AudioMixer>("Mixage")`), sans référence à glisser.
 

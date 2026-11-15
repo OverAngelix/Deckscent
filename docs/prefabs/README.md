@@ -4,6 +4,7 @@
 
 | Prefab | Chemin | Rôle |
 |---|---|---|
+| [MusiqueDonjon](MusiqueDonjon.md) | `Assets/Prefabs/Audio/MusiqueDonjon.prefab` | Musique du donjon, à couches (exploration, menace, coffre, combat, boss), synthétisée en temps réel sur la piste Musique du mixer. `MusicDirector` regarde la situation du joueur, `DungeonMusic` joue. Voir docs/musique.md. |
 | [Slime](Slime.md) | `Assets/Prefabs/Enemies/Slime.prefab` | Ennemi simple, en formes simples (aucun slime dans les packs) : un dôme de gelée qui rebondit, deux yeux tournés vers le joueur. Trois sortes (vert 3 PV, rouge 6 PV, bleu 2 d'attaque) réglées par `variant` ; couleur saturée, donc gardée par le post-process (accent). Au tour par tour : attaque le joueur à côté, sinon s'en approche s'il est à moins de `aggroRange` pas. Posé par le Spawner (contenu « monstre »). Voir docs/monstres/slime.md. |
 | [Mur_01](Mur_01.md) | `Assets/Prefabs/Maze/Mur_01.prefab` | Pan de mur du décor (Synty `SM_Env_Wall_01`). Posé au milieu de chaque bord fermé d'une case de sol, face (+Z) vers la case. |
 | [Mur_03](Mur_03.md) | `Assets/Prefabs/Maze/Mur_03.prefab` | Variante de pan de mur (Synty `SM_Env_Wall_03`). |
