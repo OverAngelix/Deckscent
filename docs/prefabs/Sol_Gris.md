@@ -23,4 +23,4 @@ Sol_Gris
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Gris_Sol` (Universal Render Pipeline/Lit)
+  - matériaux `M_Gris_Sol` (Deckscent/Toon)

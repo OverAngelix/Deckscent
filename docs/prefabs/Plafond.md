@@ -27,4 +27,4 @@ Plafond
 - **MeshFilter**
   - maillage `SM_Env_Ceiling_Stone_Flat_01` (`Assets/Synty/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Flat_01.fbx`)
 - **MeshRenderer**
-  - matériaux `PolygonDungeon_01` (Synty/Generic_Basic)
+  - matériaux `M_Toon_PolygonDungeon_01` (Deckscent/Toon)

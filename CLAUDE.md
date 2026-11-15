@@ -8,7 +8,7 @@ Dungeon crawler en vue à la première personne, déplacement case par case **au
 
 - **Tout en français** : messages, commentaires, noms affichés dans l'inspecteur (`[Tooltip]`, `[Header]`), messages de commit, docs.
 - **Répondre avant d'agir** sur un retour de jeu (« ça fait bizarre quand… ») : proposer la correction et attendre son oui avant de coder.
-- **Commiter quand c'est fini**, sans demander : un commit par fonctionnalité, puis `git push` (remote `origin` = GitHub `OverAngelix/Deckscent`).
+- **Commiter seulement après validation** : montrer le résultat (captures pour le rendu), attendre le feu vert de l'utilisateur, puis un commit par fonctionnalité et `git push` (remote `origin` = GitHub `OverAngelix/Deckscent`).
 - Commits au format **gitmoji** en français (`✨ Ajoute ...`, `🐛 Corrige ...`, `🎨 ...`, `🔧 ...`, `📝 ...`, `♻️ ...`). **Jamais de ligne `Co-Authored-By`** ni autre mention d'attribution.
 - Quand une fonctionnalité documentée change, **mettre la doc à jour** dans le même travail.
 
@@ -18,7 +18,7 @@ Dans l'ordre (chaque étape donne quelque chose de jouable ou de visible) :
 
 0. ✅ Ce fichier.
 1. ✅ **Labyrinthe + joueur** : `Maze` (plan texte → murs, sols, plafond, torches Synty), déplacement en grille, tourner, bump.
-2. **Rendu gravure** : shader toon + post-process Moebius (Renderer Feature URP), validé par captures.
+2. ✅ **Rendu gravure** : shader toon + post-process gravure (Renderer Feature URP), validé par captures (en attente du feu vert de l'utilisateur).
 3. **Tuiles, plateau, pioche** en C# pur, avec tests EditMode.
 4. **Écran de carte** dessiné en gravure, pose à la souris.
 5. **Tour par tour et contenu** : PV / ATQ / DÉF, slimes, dalle à pics, coffre, Spawner, HUD.
@@ -56,6 +56,8 @@ Assets/Scripts/Editor/PrototypeBuilder.cs  Menu Deckscent > Construire… : pref
 Assets/Scripts/Editor/TestCaptures.cs  Menu Deckscent > Captures de la scène de test (→ Captures/)
 Assets/Scripts/Editor/PrefabDocs.cs    Menu Deckscent > Documenter les prefabs (→ docs/prefabs/)
 Assets/Scripts/Editor/DocFiles.cs      Écriture des images et textes générés seulement s'ils ont changé
+Assets/Scripts/Editor/RenderingSetup.cs  Menu Deckscent > Installer le rendu gravure (voir « Rendu gravure »)
+Assets/Shaders/                        Toon.shader + ToonInput.hlsl (objets), Gravure.shader (post-process)
 Assets/Prefabs/Player.prefab           Joueur : PlayerController, Caméra (1,6 m, FOV 75), Lanterne
 Assets/Prefabs/Maze/                   Mur_01/03/04, Sol, Plafond (Synty), Mur_Gris, Sol_Gris, Plafond_Gris (secours), Torche
 Assets/Materials/                      M_Gris_* (secours), M_Flamme
@@ -118,14 +120,20 @@ Voir `README.md` (packs, versions, réimport).
 - **Tuiles** 3×3 cases, ouvertures en bits N=1, E=2, S=4, W=8, rotation horaire = décalage de bits ; salles sur plusieurs emplacements ; règles de pose volontairement permissives ; plateau 9×9 tuiles ; 10 départs.
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). La vitrine sert à les voir et les régler.
 
-## Rendu (cible, depuis `shaders/` du projet Godot)
+## Rendu gravure
 
-1. **Toon** sur tous les matériaux : frontière nette éclairé / ombre, décroissance des lumières continue (pas de paliers : ça crée des anneaux d'encre).
-2. **Moebius**, post-process plein écran (profondeur + normales : activer la texture de normales URP / prépasse DepthNormals) :
-   - contours : sauts de profondeur, de normale et de luminosité ;
-   - style gravure : pas de gris, fond papier, ton rendu **par l'épaisseur des traits** (`whitePoint`, `blackPoint`), deux séries diagonales croisées (`thresholdFirst`, `thresholdCross`). **Pas de trame de points**, pas de couches horizontales + verticales (effet « fil de fer ») ;
-   - hachures **ancrées au monde** (elles ne glissent pas quand on bouge), écartement constant **en pixels**, un trait sur deux s'efface au loin (LOD par puissances de 2) ;
-   - accents : seules les couleurs dont la saturation dépasse un seuil sortent du papier.
+Direction (demande de l'utilisateur) : gravure à la plume en noir et blanc, inspirée de *The Secret of Weepstone* (on fait évoluer le style avec le temps, sans reprendre aucun de ses assets). Fort contraste : ce qui est proche et éclairé reste blanc et cerné d'encre, l'ombre se hachure puis tombe au noir avec la distance.
+
+Deux étages, mis en place par *Deckscent > Installer le rendu gravure* (`RenderingSetup.cs`, relançable) :
+
+1. **`Assets/Shaders/Toon.shader`** (`Deckscent/Toon`) sur **les matériaux des objets** : frontière nette éclairé / ombre, toutes les lumières (Forward+, boucle `LIGHT_LOOP_BEGIN`, ombres des lumières ponctuelles), décroissance continue (pas de paliers : anneaux d'encre). Texture passée en gris (`_TextureSaturation` 0) et éclaircie (`_TextureGain` 2,5 pour les atlas Synty). Passes ShadowCaster / DepthOnly / DepthNormals reprises d'URP (`ToonInput.hlsl` = CBUFFER commun). Matériaux : `Materials/Toon/M_Toon_<matériau Synty>`, et les `M_Gris_*` passés au toon. `M_Flamme` reste en Unlit blanc.
+2. **`Assets/Shaders/Gravure.shader`** (`Deckscent/Gravure`, matériau `Materials/M_Gravure.mat`), **post-process plein écran** : un *Full Screen Pass Renderer Feature* « Gravure » sur `PC_Renderer` et `Mobile_Renderer` (avant le post-traitement, avec couleur, profondeur et normales). Il s'applique donc à **toute caméra** de ces renderers, pas aux vues d'aperçu (images de `docs/prefabs` : toon seul). Réglages dans `M_Gravure.mat` :
+   - contours : sauts de profondeur, de normale et de luminosité, tracé légèrement tremblé (`_LineWobble`) ;
+   - pas de gris : fond papier, ton rendu **par l'épaisseur des traits** (`_WhitePoint` 0,6, `_BlackPoint` 0,1), deux séries diagonales croisées (`_ThresholdFirst` 0,85, `_ThresholdCross` 0,55). **Pas de trame de points**, pas de couches horizontales + verticales (effet « fil de fer ») ;
+   - hachures **ancrées au monde** (elles ne glissent pas quand on bouge), écartement visé **en pixels** (`_HatchSpacingPx` 5) au loin (LOD par puissances de 2), jamais plus serré que `_HatchMinSpacing` sur la surface : **de près, les traits s'élargissent** (gros traits devant la caméra). Écartement mesuré avec `fwidth` (il l'exagère un peu en diagonale : traits plus larges). Ces deux points font partie de la **version sombre choisie par l'utilisateur** : une mesure plus exacte ou un LOD sans plancher donne des traits plus fins, qu'il a écartés ;
+   - accents : seules les couleurs dont la saturation dépasse `_AccentSaturation` sortent du papier.
+- **Version sombre, choisie par l'utilisateur** (entre plusieurs essais, le 2026-11-15) : ambiante unie 0,2 (Main et scène de test), lanterne du joueur 0,9 / 6 m, torches 2,5 / 9 m, ombres dures (`m_SoftShadowsSupported` 0). Beaucoup de hachures croisées, noir plein dans les recoins, seuls les murs près d'une torche restent blancs. Un essai plus clair (ambiante 0,3, lanterne 2 / 10 m) a été écarté. Ne pas éclaircir sans lui demander.
+- Après un changement de shader, Unity ne réimporte pas toujours tout de suite : forcer `AssetDatabase.ImportAsset(…, ForceUpdate)` avant de refaire les captures, sinon elles montrent l'ancien shader.
 - Pour mettre un objet en valeur : `albedo` **saturé**. Le décor reste en niveaux de gris. **Lumières blanches** uniquement. Ombres à bords durs.
 - La densité des hachures dépend de la luminosité de la scène : après un changement d'éclairage, recaler les seuils.
 - L'UI n'est pas touchée par le post-process : couleurs libres.

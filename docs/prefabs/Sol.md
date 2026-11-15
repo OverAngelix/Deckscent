@@ -27,4 +27,4 @@ Sol
 - **MeshFilter**
   - maillage `SM_Env_Tiles_Texture_01` (`Assets/Synty/PolygonDungeon/Models/SM_Env_Tiles_Texture_01.fbx`)
 - **MeshRenderer**
-  - matériaux `Textured_Floor_01` (Synty/Generic_Basic)
+  - matériaux `M_Toon_Textured_Floor_01` (Deckscent/Toon)

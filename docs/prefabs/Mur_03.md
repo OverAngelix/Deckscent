@@ -27,4 +27,4 @@ Mur_03
 - **MeshFilter**
   - maillage `SM_Env_Wall_03` (`Assets/Synty/PolygonDungeon/Models/SM_Env_Wall_03.fbx`)
 - **MeshRenderer**
-  - matériaux `PolygonDungeon_01` (Synty/Generic_Basic)
+  - matériaux `M_Toon_PolygonDungeon_01` (Deckscent/Toon)

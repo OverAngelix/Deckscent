@@ -23,4 +23,4 @@ Mur_Gris
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Gris_Mur` (Universal Render Pipeline/Lit)
+  - matériaux `M_Gris_Mur` (Deckscent/Toon)

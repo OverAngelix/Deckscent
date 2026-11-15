@@ -23,4 +23,4 @@ Plafond_Gris
 - **MeshFilter**
   - maillage `Quad` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Gris_Plafond` (Universal Render Pipeline/Lit)
+  - matériaux `M_Gris_Plafond` (Deckscent/Toon)

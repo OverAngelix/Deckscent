@@ -110,7 +110,8 @@ namespace Deckscent.Editor
 
             RenderSettings.skybox = null;
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.35f, 0.35f, 0.35f);
+            // Lumière des faces à l'ombre : avec le rendu gravure, elle règle la densité des hachures.
+            RenderSettings.ambientLight = new Color(0.2f, 0.2f, 0.2f);
             RenderSettings.fog = false;
 
             var mazeGo = new GameObject("Labyrinthe");
@@ -202,6 +203,7 @@ namespace Deckscent.Editor
             lantern.transform.localPosition = new Vector3(0f, 0.2f, -0.4f);
             var light = lantern.AddComponent<Light>();
             light.type = LightType.Point;
+            // Faible exprès : version sombre du rendu gravure, choisie par l'utilisateur.
             light.intensity = 0.9f;
             light.range = 6f;
             light.shadows = LightShadows.None;
