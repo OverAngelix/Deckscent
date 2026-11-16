@@ -36,3 +36,4 @@ Cocher (✅) chaque tâche finie et validée.
 - **Pioche limitée** (jalon 3) : aujourd'hui, elle est infinie.
 - **Ressenti des coups** : tremblement de caméra (Cinemachine Impulse), flash d'encre sur la cible, chiffres de dégâts gravés.
 - **Écran de fin d'étage ou de mort** avec le bilan (tours, salles, butin).
+- **Les succès sur le menu** : liste des succès consultable depuis l'écran titre.
