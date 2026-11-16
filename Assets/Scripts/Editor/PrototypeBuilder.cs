@@ -141,6 +141,7 @@ namespace Deckscent.Editor
             {
                 AddMapToScene(scene);
                 ContentBuilder.AddSpawnerToScene(scene);
+                PauseBuilder.AddToScene(scene);
             }
             ContentBuilder.AddHudToScene(scene);
 

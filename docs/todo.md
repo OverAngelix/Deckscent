@@ -7,12 +7,12 @@ Cocher (✅) chaque tâche finie et validée.
 ## Dans l'ordre
 
 0. ✅ **Finir la musique du donjon** (étape 7 du portage) : validation à l'écoute, puis commit.
-1. **Touches affichées selon l'appareil**
+1. ✅ **Touches affichées selon l'appareil**
    - Dernier appareil utilisé (`InputSystem.onActionChange` / `InputUser`) : clavier-souris, manette PlayStation (DualShock / DualSense), Switch, **Xbox par défaut** pour les autres manettes.
    - Texte des touches par `InputAction.GetBindingDisplayString` (groupe de contrôle de l'appareil).
    - Pictos (✕ ○ △ □, A B X Y, LB / RB…) dessinés en gravure avec `InkCanvas`, pas de sprites.
    - Avant le menu pause et la mission : les nouveaux écrans en profitent dès le départ.
-2. **Menu pause** (Échap / Start) : Continuer, Options (celles du menu), Sauvegarder, Quitter (menu ou bureau).
+2. ✅ **Menu pause** (Échap / Start) : Continuer, Options (celles du menu), Sauvegarder, Quitter (menu ou bureau).
    - Échap ferme d'abord la carte si elle est ouverte, sinon ouvre la pause.
    - `Time.timeScale = 0`, comme la carte.
 3. **Mission de l'étage** (la « recette » du GDD, §2)

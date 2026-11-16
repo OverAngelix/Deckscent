@@ -67,6 +67,8 @@ namespace Deckscent
 
         public bool IsOpen { get; private set; }
         public int Selected { get; private set; }
+        /// <summary>Frame où la carte s'est fermée : Échap la ferme, et ne doit pas ouvrir la pause au même frame.</summary>
+        public int ClosedFrame { get; private set; } = -1;
 
         Canvas _canvas;
         DungeonBoard _board;
@@ -129,6 +131,8 @@ namespace Deckscent
 
         void SetOpen(bool open)
         {
+            if (IsOpen && !open)
+                ClosedFrame = Time.frameCount;
             IsOpen = open;
             if (_canvas != null)
                 _canvas.enabled = open;
@@ -153,8 +157,9 @@ namespace Deckscent
         void Update()
         {
             TrackDungeon();
-            // Mort : la carte ne s'ouvre plus (l'écran de mort attend « recommencer »).
-            if (_toggle != null && _toggle.WasPressedThisFrame() && (IsOpen || player == null || !player.IsDead))
+            // Mort : la carte ne s'ouvre plus (l'écran de mort attend « recommencer »). Pas non plus
+            // par-dessus le menu pause.
+            if (_toggle != null && _toggle.WasPressedThisFrame() && (IsOpen || ((player == null || !player.IsDead) && !PauseScreen.IsPaused)))
             {
                 SetOpen(!IsOpen);
                 if (!IsOpen)

@@ -146,6 +146,13 @@ namespace Deckscent
         }
 
         IEnumerable<InputAction> Actions => new[] { _move, _turn, _wait, _torch, _interact };
+        bool _heldSincePause;
+
+        bool AnyActionHeld() =>
+            (_move != null && _move.ReadValue<Vector2>().sqrMagnitude >= stickThreshold * stickThreshold)
+            || (_turn != null && Mathf.Abs(_turn.ReadValue<float>()) >= stickThreshold)
+            || (_wait != null && _wait.IsPressed())
+            || (_interact != null && _interact.IsPressed());
 
         /// <summary>L'action référencée, sinon celle du même nom dans les actions du projet.</summary>
         InputAction Resolve(InputActionReference reference, string path)
@@ -197,8 +204,21 @@ namespace Deckscent
 
         void Update()
         {
-            // Jeu en pause (carte ouverte) ou joueur mort : le joueur ne bouge pas.
-            if (_busy || IsDead || Time.timeScale == 0f || maze == null || _move == null || _turn == null || _wait == null)
+            // Jeu en pause (carte ou menu pause ouverts) ou joueur mort : le joueur ne bouge pas.
+            if (Time.timeScale == 0f)
+            {
+                _heldSincePause = true;
+                return;
+            }
+            // Au sortir d'une pause, on attend qu'on lâche les touches : Entrée (ou le bouton du
+            // bas) qui valide « Continuer » ne doit pas faire attendre un tour ou ouvrir un coffre.
+            if (_heldSincePause)
+            {
+                if (AnyActionHeld())
+                    return;
+                _heldSincePause = false;
+            }
+            if (_busy || IsDead || maze == null || _move == null || _turn == null || _wait == null)
                 return;
             var forward = Grid.Dirs[Facing];
             var right = Grid.Dirs[(Facing + 1) % 4];

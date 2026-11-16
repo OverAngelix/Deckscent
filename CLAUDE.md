@@ -96,6 +96,8 @@ Assets/Scripts/Settings/Loc.cs         Traduction par codes clés : Loc.T("menu.
 Assets/Scripts/Audio/MenuMusic.cs      Musique du menu synthétisée (OnAudioFilterRead)
 Assets/Scripts/UI/MainMenu.cs          Scène du menu (caméra qui tourne, fondu) ; MenuScreen.cs = écran titre (prefab UI/EcranTitre)
 Assets/Scripts/UI/SceneFlow.cs         Menu → jeu, recommencer, retour au menu, quitter
+Assets/Scripts/UI/PauseScreen.cs       Menu pause (Échap / Start) : Continuer, Options, Sauvegarder (à venir), menu, bureau ; prefab UI/MenuPause (PauseBuilder.cs)
+Assets/Scripts/UI/OptionsPanel.cs      Panneau Options (volumes, langue), partagé par le menu titre et le menu pause
 Assets/Scripts/Editor/MenuBuilder.cs   Menu Deckscent > Construire la scène du menu (prefab, scène, ordre du build)
 docs/menu.md                           Doc du menu, des options, de la traduction et de la musique
 Assets/Scripts/UI/ControlDevice.cs     Dernier appareil utilisé (clavier-souris, PlayStation, Xbox, Switch) → touches affichées
@@ -156,13 +158,14 @@ Voir `README.md` (packs, versions, réimport).
   | `Torch` | T | bouton droit (Rond / B) | oui : lanterne, gratuit |
   | `Interact` | F | bouton du bas (Croix / A) | oui : ouvre le coffre droit devant (un tour) ; recommencer après la mort |
   | `Map` | virgule (`m`) | bouton du haut (Triangle / Y) | oui : ouvre / ferme la carte |
+  | `Pause` | Échap | Start | oui : menu pause (la carte passe d'abord : Échap la ferme seulement) |
 
   Map **`Map`** (carte ouverte, voir `docs/carte.md`) : `Close` (Échap / Rond-B), `Rotate` (R / Carré-X), `Discard` (Suppr, Retour arrière / Select), `Place` (Entrée, Espace / Croix-A), `NextCard` (Tab / RB), `PreviousCard` (LB), `Cursor` (flèches / croix, stick gauche). Chiffres 1-6 et souris lus directement.
 
   Map **`UI`** (menu, voir `docs/menu.md`) : `Navigate` (ZQSD, flèches, stick, croix), `Submit` (Entrée / Croix-A), `Cancel` (Échap / Rond-B, aussi « retour au menu » sur l'écran de mort). Chiffres 1-4 et souris lus directement.
 
   Les autres actions de base (Attack, Jump, Crouch, Sprint, Look, Previous, Next) ne servent pas et certaines partagent des touches (Entrée = Attack, L3 = Sprint) : en tenir compte avant de les utiliser. Pour changer une touche, modifier le fichier d'actions (pas le code). Le joueur référence ses actions par `InputActionReference` (assignées par `PrototypeBuilder.ConfigurePlayer`, à rappeler sur le prefab si on ajoute une action). Carte (à venir) : R pour tourner une tuile, Suppr pour défausser, à ajouter au fichier.
-- **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit) : `Time.timeScale = 0`. Le joueur ne lit pas ses touches en pause (et la lanterne ignore Rond / B, qui ferme la carte). Tout ce qui doit tourner carte ouverte utilise `Time.unscaledTime`.
+- **La carte met le jeu en pause** (le joueur ne la connaît pas, l'ouvrir est gratuit) : `Time.timeScale = 0`, comme le **menu pause** (`PauseScreen`, voir `docs/menu.md`). Le joueur ne lit pas ses touches en pause (et la lanterne ignore Rond / B, qui ferme la carte), puis attend qu'on les lâche au sortir de la pause (l'Entrée de « Continuer » ne fait pas attendre un tour). Tout ce qui doit tourner carte ouverte utilise `Time.unscaledTime`.
 - **Écran de carte, retours de l'utilisateur** : tout ce qui n'est pas du sol est hachuré pareil (roche non construite = murs, carte d'un seul tenant ; pas de roche pâle) ; proportions de l'écran Godot (CanvasScaler référence 1152 × 648) ; légende en colonne étroite ; pas de rose des vents ; l'aperçu de pose montre une flèche sur chaque entrée.
 - **Les cartes gardent le style Godot** (demande de l'utilisateur) : carte à jouer gravée 112 × 172 (double filet à losanges, numéro, emprise, plan fléché, bandeau à queues d'aronde, flamme, crânes). L'UI gravure se dessine avec `InkCanvas` + `TextPool` + `Engraving`, pas avec des sprites.
 - **Capturer la carte** : Play mode dans `Test_Donjon`, `script eval` qui appelle `MapScreen.Open()` (et `PreviewSlot`), puis `capture game_view` (le canvas en surimpression n'est pas rendu par `Camera.Render`, donc pas par le menu de captures). Image de la doc : `docs/images/carte.png`.

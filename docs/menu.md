@@ -11,6 +11,7 @@ Le jeu démarre sur le **menu** (scène `Assets/Scenes/Menu.unity`, scène 0 du 
 - `Assets/Scripts/Audio/MenuMusic.cs` : la musique (objet `Musique`).
 - `Assets/Scripts/Settings/GameSettings.cs` : options (volume, langue), sauvegardées. `Assets/Scripts/Settings/Loc.cs` : traduction.
 - `Assets/Scripts/UI/SceneFlow.cs` : passages menu → jeu, recommencer, retour au menu, quitter.
+- `Assets/Scripts/UI/OptionsPanel.cs` : le panneau Options, partagé avec le menu pause (`Assets/Scripts/UI/PauseScreen.cs`, voir « Menu pause »).
 - `Assets/Scripts/Editor/MenuBuilder.cs` : menu *Deckscent > Construire la scène du menu* (prefab, scène, ordre du build). Relancer écrase le prefab et la scène.
 - Tests : `Assets/Tests/PlayMode/MenuTests.cs`, `Assets/Tests/EditMode/LocTests.cs`.
 
@@ -56,7 +57,7 @@ Toutes les aides (sous les cartes du menu, panneaux Options et Commandes, pied d
 
 ↑ ↓ (Z S) choisissent la ligne, Échap ou un clic hors du cadre ferme. Tout est **sauvegardé** (`PlayerPrefs`, clés `Deckscent.Volume`, `Deckscent.MusicVolume`, `Deckscent.EffectsVolume` et `Deckscent.Locale`) et réappliqué au lancement, avant la première scène.
 
-Les volumes règlent les trois pistes du mixer `Assets/Resources/Mixage.mixer` (Master, Musique, Effets) : voir [sons.md](sons.md). Le panneau a 4 lignes (`VolumeRows`, `LanguageRow`, `OptionCount` dans `MenuScreen`) ; une jauge se dessine avec `DrawGauge(ligne, …)` et se lit / règle avec `GetVolume` / `SetVolume(ligne, …)`.
+Les volumes règlent les trois pistes du mixer `Assets/Resources/Mixage.mixer` (Master, Musique, Effets) : voir [sons.md](sons.md). Le panneau est la classe **`OptionsPanel`** (`Assets/Scripts/UI/OptionsPanel.cs`), partagée par le menu titre et le menu pause : 4 lignes (`VolumeRows`, `LanguageRow`, `RowCount`) ; une jauge se dessine avec `DrawGauge(…)` et se lit / règle avec `GetVolume` / `SetVolume(ligne, …)`. L'écran qui l'affiche lui passe les touches (`Navigate`) et la souris (`HandleMouse`, qui dit si on a cliqué hors du cadre) et le referme lui-même.
 
 ## Traduction
 
@@ -70,11 +71,11 @@ Le code n'écrit jamais un texte affiché, mais son **code clé**, traduit au mo
 { "hud.tour",       "Tour {0}" },            { "hud.tour",       "Turn {0}" },
 ```
 
-- **Clé** = `domaine.nom`, en minuscules, sans accents, mots séparés par `_`. Le domaine dit où le texte s'affiche : `menu`, `commandes`, `options`, `carte`, `biome`, `legende`, `refus`, `forme`, `hud`, `message`.
+- **Clé** = `domaine.nom`, en minuscules, sans accents, mots séparés par `_`. Le domaine dit où le texte s'affiche : `menu`, `pause`, `commandes`, `options`, `carte`, `biome`, `legende`, `refus`, `forme`, `hud`, `message`.
 - Une clé absente de la langue en cours retombe sur le **français** ; absente partout, la **clé elle-même** s'affiche (on la repère tout de suite à l'écran).
 - `Loc.In("fr", clé)` donne le texte dans une langue précise sans toucher à l'option (la planche des tuiles l'utilise).
 
-Sont traduits : le menu, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (piège franchi, coffre). Les noms de formes ont pour clé `forme.` + l'identifiant de la forme (`TileCard.DisplayName` les traduit) ; les raisons de refus sont des clés `refus.…` renvoyées par `DungeonBoard.CheckPlacement`.
+Sont traduits : le menu, le **menu pause**, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (piège franchi, coffre). Les noms de formes ont pour clé `forme.` + l'identifiant de la forme (`TileCard.DisplayName` les traduit) ; les raisons de refus sont des clés `refus.…` renvoyées par `DungeonBoard.CheckPlacement`.
 
 Tests (`LocTests`) : `Fr` et `En` ont exactement les mêmes clés, les `{0}` se correspondent, les clés sont bien formées, et **toute clé écrite dans le code** (`Loc.T("…")` ou un texte `"domaine.nom"`) existe : une faute de frappe dans une clé fait échouer les tests.
 
@@ -94,9 +95,38 @@ Réglages sur `Musique` : `Drone Level`, `Bell Level`, `Wind Level`, `Bell Inter
 
 C'est une musique **provisoire** : pour un vrai morceau, retirer `MenuMusic` et donner un clip (`.ogg` en boucle) à l'`AudioSource`.
 
+## Menu pause
+
+![Le menu pause](images/pause.png)
+
+En jeu, **Échap** ou **Start** ouvre le menu pause (`PauseScreen`, prefab `Assets/Prefabs/UI/MenuPause.prefab`, [doc du prefab](prefabs/MenuPause.md)). Le jeu est arrêté (`Time.timeScale = 0`, comme la carte) et le monde reste visible derrière un voile d'encre.
+
+| Ligne | Effet |
+|---|---|
+| Continuer | Reprend la partie. |
+| Options | Le **même panneau** que dans le menu titre (volumes, langue) : `OptionsPanel`, partagé par les deux écrans. |
+| Sauvegarder | Grisée, « à venir » : la sauvegarde de suspension viendra avec la tâche 7 de [la todo](todo.md). La navigation la saute. |
+| Retour au menu | Quitte la partie et revient à l'écran titre. |
+| Quitter le jeu | Ferme le jeu (arrête le Play mode dans l'éditeur). |
+
+| | Souris | Clavier | Manette |
+|---|---|---|---|
+| Choisir | survol | ↑ ↓, Z S | stick gauche, croix |
+| Valider | clic | Entrée | Croix / A |
+| Reprendre | clic hors du cadre | Échap | Rond / B, Start |
+| Quitter les options | clic hors du cadre | Échap (retour à la liste) | Rond / B (retour à la liste), Start (reprend le jeu) |
+
+- Action **`Player/Pause`** (Échap, Start) pour ouvrir et fermer, map **UI** pour le reste, comme le menu titre.
+- **La carte passe d'abord** : carte ouverte, Échap ferme la carte et rien d'autre (`MapScreen.ClosedFrame` : la pause ne s'ouvre pas au frame où la carte s'est fermée). La carte ne s'ouvre pas pendant la pause (`PauseScreen.IsPaused`).
+- Pas de pause sur l'écran de mort : Échap y revient au menu.
+- **Au sortir d'une pause** (carte ou menu), le joueur attend qu'on lâche les touches (`PlayerController`) : l'Entrée qui valide « Continuer » ne fait pas attendre un tour, le bouton du bas n'ouvre pas de coffre.
+- Construction : *Deckscent > Construire le menu pause* (`PauseBuilder.cs`) construit le prefab et l'ajoute à Main et Test_Donjon. Relancer écrase le prefab.
+- Tests : `Assets/Tests/PlayMode/PauseScreenTests.cs`.
+- Captures : Play mode dans `Test_Donjon`, `script eval` qui appelle `PauseScreen.Open()`, `Select(…)` et `ShowOptions(…)`, puis `capture game_view`.
+
 ## Retour au menu
 
-Depuis le jeu, **Échap** (ou Rond / B) **sur l'écran de mort** revient au menu ; Entrée recommence toujours directement.
+Depuis le jeu, **Échap** (ou Rond / B) **sur l'écran de mort** revient au menu ; Entrée recommence toujours directement. Sinon, par le menu pause.
 
 ## La scène
 

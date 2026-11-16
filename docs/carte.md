@@ -9,7 +9,7 @@ C'est là que le joueur **pose ses tuiles**. Code : `Assets/Scripts/UI/MapScreen
 ## Ouvrir, fermer
 
 - **Virgule** (M en QWERTY) ou **Triangle / Y** : ouvrir ou fermer.
-- **Échap** ou **Rond / B** : fermer.
+- **Échap** ou **Rond / B** : fermer. Échap ferme seulement la carte : le menu pause ne s'ouvre qu'à l'appui suivant. La carte ne s'ouvre pas pendant la pause.
 - **Le jeu est en pause** tant que la carte est ouverte : le joueur ne connaît pas la carte, il est juste en pause. Ouvrir la carte et poser ne coûtent pas de tour.
 
 ## Commandes, carte ouverte

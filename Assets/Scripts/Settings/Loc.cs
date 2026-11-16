@@ -54,6 +54,14 @@ namespace Deckscent
             { "menu.commandes.note", "les touches" },
             { "menu.quitter.note",   "fermer le jeu" },
 
+            // --- Menu pause (PauseScreen) ---
+            { "pause.titre",       "Pause" },
+            { "pause.continuer",   "Continuer" },
+            { "pause.sauvegarder", "Sauvegarder" },
+            { "pause.a_venir",     "à venir" },
+            { "pause.menu",        "Retour au menu" },
+            { "pause.bureau",      "Quitter le jeu" },
+
             // --- Aides « touches + action » (KeyPrompts, selon l'appareil) ---
             { "aide.choisir",     "choisir" },
             { "aide.valider",     "valider" },
@@ -66,6 +74,7 @@ namespace Deckscent
             { "aide.fermer",      "fermer" },
             { "aide.recommencer", "recommencer" },
             { "aide.menu",        "menu" },
+            { "aide.reprendre",   "reprendre" },
 
             // --- Noms de touches (KeyPrompts ; les lettres viennent du clavier) ---
             { "touche.entree",         "Entrée" },
@@ -89,6 +98,7 @@ namespace Deckscent
             { "commandes.carte",           "Carte (poser des tuiles)" },
             { "commandes.carte_tourner",   "Carte : tourner la tuile" },
             { "commandes.carte_defausser", "Carte : défausser" },
+            { "commandes.pause",           "Pause" },
 
             // --- Options (MenuScreen) ---
             { "options.general", "Général" },
@@ -172,6 +182,14 @@ namespace Deckscent
             { "menu.commandes.note", "key bindings" },
             { "menu.quitter.note",   "close the game" },
 
+            // --- Menu pause (PauseScreen) ---
+            { "pause.titre",       "Paused" },
+            { "pause.continuer",   "Resume" },
+            { "pause.sauvegarder", "Save" },
+            { "pause.a_venir",     "coming soon" },
+            { "pause.menu",        "Back to menu" },
+            { "pause.bureau",      "Quit game" },
+
             // --- Aides « touches + action » (KeyPrompts, selon l'appareil) ---
             { "aide.choisir",     "choose" },
             { "aide.valider",     "confirm" },
@@ -184,6 +202,7 @@ namespace Deckscent
             { "aide.fermer",      "close" },
             { "aide.recommencer", "restart" },
             { "aide.menu",        "menu" },
+            { "aide.reprendre",   "resume" },
 
             // --- Noms de touches (KeyPrompts ; les lettres viennent du clavier) ---
             { "touche.entree",         "Enter" },
@@ -207,6 +226,7 @@ namespace Deckscent
             { "commandes.carte",           "Map (place tiles)" },
             { "commandes.carte_tourner",   "Map: rotate tile" },
             { "commandes.carte_defausser", "Map: discard" },
+            { "commandes.pause",           "Pause" },
 
             // --- Options (MenuScreen) ---
             { "options.general", "Master" },
