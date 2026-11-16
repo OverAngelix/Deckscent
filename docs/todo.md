@@ -15,7 +15,7 @@ Cocher (✅) chaque tâche finie et validée.
 2. ✅ **Menu pause** (Échap / Start) : Continuer, Options (celles du menu), Sauvegarder, Quitter (menu ou bureau).
    - Échap ferme d'abord la carte si elle est ouverte, sinon ouvre la pause.
    - `Time.timeScale = 0`, comme la carte.
-3. **Mission de l'étage** (la « recette » du GDD, §2)
+3. ✅ **Mission de l'étage** (la « recette » du GDD, §2)
    - Objectifs tirés au hasard : X tours survécus, N salles nettoyées, N trésors ouverts, N monstres tués…
    - Affichée dans le HUD et sur la carte.
    - Une salle ne compte qu'**une fois nettoyée** : rattacher chaque monstre, piège et coffre à sa tuile (Spawner).

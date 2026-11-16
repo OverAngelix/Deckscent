@@ -5,7 +5,8 @@ namespace Deckscent
 {
     /// <summary>
     /// Interface en jeu, dessinée en gravure comme la carte (papier, encre, rouge d'accent) :
-    /// cartouche des PV (une case par point de vie) avec Tour / ATQ / DÉF dessous, message
+    /// cartouche des PV (une case par point de vie) avec Tour / ATQ / DÉF dessous, mission de
+    /// l'étage en haut à droite (<see cref="Dungeon.Mission"/>), message
     /// éphémère en haut au centre (<see cref="PlayerController.Notify"/>), voile rouge quand on est
     /// touché, écran de mort (Entrée ou bouton du bas pour recommencer, Échap pour revenir au menu).
     ///
@@ -15,6 +16,8 @@ namespace Deckscent
     {
         [Tooltip("Le joueur suivi. Vide : cherché dans la scène.")]
         [SerializeField] PlayerController player;
+        [Tooltip("Le donjon (mission de l'étage, en haut à droite). Vide : cherché dans la scène ; sans donjon, pas de mission.")]
+        [SerializeField] Dungeon dungeon;
         [SerializeField] InkCanvas ink;
         [SerializeField] TextPool texts;
 
@@ -50,11 +53,15 @@ namespace Deckscent
         float _flashAge = -1f;
         float _deadTime = -1f;
         bool _dirty = true;
+        Mission _shownMission;
+        int _shownVersion = -1;
 
         void Awake()
         {
             if (player == null)
                 player = FindAnyObjectByType<PlayerController>();
+            if (dungeon == null)
+                dungeon = FindAnyObjectByType<Dungeon>();
             _restart = Resolve(restart, "Player/Wait");
             _restartAlt = Resolve(restartAlt, "Player/Interact");
             _toMenu = Resolve(toMenu, "UI/Cancel");
@@ -132,6 +139,13 @@ namespace Deckscent
                 else if (_deadTime >= restartDelay && Pressed(_toMenu))
                     SceneFlow.LoadMenu();
             }
+            var mission = dungeon != null ? dungeon.Mission : null;
+            if (mission != _shownMission || (mission != null && mission.Version != _shownVersion))
+            {
+                _shownMission = mission;
+                _shownVersion = mission != null ? mission.Version : -1;
+                _dirty = true;
+            }
             if (_dirty)
                 Redraw();
         }
@@ -168,6 +182,8 @@ namespace Deckscent
                 ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(healthColor, hurtFlash * (1f - _flashAge / FlashTime)));
 
             DrawHealth();
+            if (_shownMission != null)
+                DrawMission(screen, _shownMission);
             DrawToast(screen);
             if (_deadTime >= 0f)
                 DrawDeath(screen);
@@ -193,6 +209,49 @@ namespace Deckscent
             }
             var stats = $"{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
+        }
+
+        /// <summary>
+        /// Mission de l'étage, en haut à droite : un objectif par ligne, case cochée quand il est
+        /// rempli, compte à droite. Titre en rouge quand tout est rempli.
+        /// </summary>
+        void DrawMission(Vector2 screen, Mission mission)
+        {
+            const float w = 214f, rowH = 19f;
+            var box = new Rect(screen.x - Margin - 4f - w, Margin + 4f, w, 30f + mission.Goals.Count * rowH);
+            ink.Rect(new Rect(box.x - 4f, box.y - 4f, box.width + 8f, box.height + 8f), paperColor);
+            Engraving.DoubleFrame(ink, box, 4f, inkColor);
+            var x = box.x + 10f;
+            var title = Loc.T(mission.IsComplete ? "mission.remplie" : "mission.titre").ToUpperInvariant();
+            texts.Label(title, x, box.y + 6f, box.width - 20f, 13, mission.IsComplete ? healthColor : inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            var y = box.y + 27f;
+            foreach (var goal in mission.Goals)
+            {
+                MissionGoalRow(ink, texts, goal, new Rect(x, y, box.width - 20f, rowH), 12, inkColor, paperColor, healthColor);
+                y += rowH;
+            }
+        }
+
+        /// <summary>Une ligne d'objectif : case (cochée en rouge si rempli), libellé, compte. Partagée avec la carte.</summary>
+        /// `stacked` : le compte sous le libellé (colonne étroite de la carte).
+        public static void MissionGoalRow(InkCanvas ink, TextPool texts, MissionGoal goal, Rect row, int size, Color inkColor, Color paperColor, Color accent, bool stacked = false)
+        {
+            var faded = Engraving.Fade(inkColor, paperColor, 0.45f);
+            var box = new Rect(row.x, row.y + 2f, 11f, 11f);
+            ink.Rect(box, paperColor);
+            ink.RectOutline(box, inkColor, 1.5f);
+            if (goal.Done)
+            {
+                ink.Line(new Vector2(box.x + 2f, box.center.y), new Vector2(box.x + 4.5f, box.yMax - 2f), accent, 2.2f);
+                ink.Line(new Vector2(box.x + 4.5f, box.yMax - 2f), new Vector2(box.xMax + 2f, box.y - 2f), accent, 2.2f);
+            }
+            var color = goal.Done ? faded : inkColor;
+            texts.Label(Loc.T(goal.LabelKey), row.x + 18f, row.y - 1f, row.width - 18f, size, color);
+            var count = $"{goal.Progress} / {goal.Target}";
+            if (stacked)
+                texts.Label(count, row.x + 18f, row.y + size + 2f, row.width - 18f, size - 1, Engraving.Fade(color, paperColor, 0.25f), TextAnchor.UpperLeft, FontStyle.Italic);
+            else
+                texts.Label(count, row.x, row.y - 1f, row.width, size, color, TextAnchor.UpperRight, FontStyle.Italic);
         }
 
         /// <summary>Message (piège franchi, butin…) : cartouche papier en haut au centre, qui apparaît puis s'efface.</summary>

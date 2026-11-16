@@ -26,9 +26,13 @@ namespace Deckscent
         [SerializeField] bool demo;
         [Tooltip("Réglages de la pioche : taille de la main, poids des formes et des contenus.")]
         [SerializeField] DeckSettings deck = new DeckSettings();
+        [Tooltip("Tirage de la mission de l'étage : nombre d'objectifs et comptes visés.")]
+        [SerializeField] MissionSettings mission = new MissionSettings();
 
         public DungeonBoard Board { get; private set; }
         public TileDeck Deck { get; private set; }
+        /// <summary>La mission de l'étage, tirée à chaque nouvelle partie (suivie par <see cref="MissionTracker"/>).</summary>
+        public Mission Mission { get; private set; }
         public Maze Maze => maze;
         /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées).</summary>
         public event System.Action GameStarted;
@@ -105,8 +109,20 @@ namespace Deckscent
                 if (card.IsRoom)
                     Deck.RoomsPlaced++;
             };
+            // Hasard à part pour la mission : le tirage des cartes n'en dépend pas.
+            Mission = Mission.Draw(seed != 0 ? new System.Random(seed * 31 + 7) : new System.Random(), mission);
             Apply();
             GameStarted?.Invoke();
+        }
+
+        /// <summary>La mission vient d'être remplacée (<see cref="SetMission"/>).</summary>
+        public event System.Action MissionChanged;
+
+        /// <summary>Remplace la mission de l'étage (tests, captures).</summary>
+        public void SetMission(Mission mission)
+        {
+            Mission = mission;
+            MissionChanged?.Invoke();
         }
 
         /// <summary>Pose une carte de la main sur le plateau (ancre sur `pos`). Vrai si posée.</summary>

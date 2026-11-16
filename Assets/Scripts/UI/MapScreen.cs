@@ -403,13 +403,20 @@ namespace Deckscent
             var boardPx = _cellPx * DungeonBoard.TileCells * (Vector2)_board.Size;
             var column = new Rect(_boardOrigin.x + boardPx.x + Pad, _boardOrigin.y,
                 Mathf.Min(LegendWidth, handArea.x - _boardOrigin.x - boardPx.x - Pad * 2f), boardPx.y);
+            // La mission de l'étage suit la légende.
             if (column.width >= 90f)
-                DrawLegend(column, 1);
+            {
+                var legendEnd = DrawLegend(column, 1);
+                DrawMission(new Rect(column.x, legendEnd + 14f, column.width, column.yMax - legendEnd - 14f));
+            }
             else
             {
                 var legend = new Rect(handArea.x, handEnd + 8f, handW, content.yMax - handEnd - 8f);
                 if (legend.height >= 100f)
-                    DrawLegend(legend, 2);
+                {
+                    var legendEnd = DrawLegend(legend, 2);
+                    DrawMission(new Rect(legend.x, legendEnd + 14f, legend.width, legend.yMax - legendEnd - 14f));
+                }
             }
 
             KeyPrompts.DrawHints(ink, texts, Hints(), panel.x, panel.yMax - Pad - 16f, panel.width, 14, Faded(0.2f), Faded(0.45f), paperColor);
@@ -711,7 +718,8 @@ namespace Deckscent
 
         // --- Dessin : légende ---------------------------------------------------
 
-        void DrawLegend(Rect area, int columns)
+        /// <summary>Légende en `columns` colonnes. Renvoie le bas de la légende.</summary>
+        float DrawLegend(Rect area, int columns)
         {
             Engraving.Rule(ink, area.position, area.width, inkColor);
             texts.Label(Loc.T("legende.titre").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
@@ -757,6 +765,32 @@ namespace Deckscent
                         break;
                 }
                 texts.Label(Loc.T(names[i]), pos.x + sw + 8f, pos.y - 2f, colW - sw - 8f, 14, inkColor);
+            }
+            return area.y + 34f + (keys.Length + columns - 1) / columns * 24f;
+        }
+
+        /// <summary>
+        /// Mission de l'étage (<see cref="Dungeon.Mission"/>), sous la légende : un objectif par
+        /// ligne, case cochée quand il est rempli. Le compte passe sous le libellé si c'est étroit.
+        /// </summary>
+        void DrawMission(Rect area)
+        {
+            var mission = dungeon != null ? dungeon.Mission : null;
+            if (mission == null || area.height < 60f)
+                return;
+            Engraving.Rule(ink, area.position, area.width, inkColor);
+            var title = Loc.T(mission.IsComplete ? "mission.remplie" : "mission.titre").ToUpperInvariant();
+            texts.Label(title, area.x, area.y + 8f, area.width, 14, mission.IsComplete ? playerColor : inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            var narrow = area.width < 180f;
+            var rowH = narrow ? 36f : 22f;
+            var y = area.y + 34f;
+            foreach (var goal in mission.Goals)
+            {
+                if (y + rowH > area.yMax + 8f)
+                    break;
+                // Colonne étroite : le compte passe sous le libellé.
+                Hud.MissionGoalRow(ink, texts, goal, new Rect(area.x, y, area.width - 6f, 18f), narrow ? 13 : 14, inkColor, paperColor, playerColor, narrow);
+                y += rowH;
             }
         }
 

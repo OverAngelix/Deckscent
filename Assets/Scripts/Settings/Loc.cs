@@ -162,7 +162,18 @@ namespace Deckscent
             { "hud.def",       "DÉF {0}" },
             { "hud.mort",      "Vous êtes mort" },
 
+            // --- Mission de l'étage (Mission, Hud, MapScreen) ---
+            { "mission.titre",    "Mission" },
+            { "mission.tours",    "Tours survécus" },
+            { "mission.salles",   "Salles nettoyées" },
+            { "mission.coffres",  "Coffres ouverts" },
+            { "mission.monstres", "Monstres tués" },
+            { "mission.pieges",   "Pièges franchis" },
+            { "mission.remplie",  "Mission remplie" },
+
             // --- Messages du jeu ---
+            { "message.objectif",        "Objectif rempli : {0}" },
+            { "message.mission_remplie", "Mission remplie !" },
             { "message.piege_franchi", "Piège franchi" },
             { "message.coffre_carte",  "Coffre : une carte de plus dans la main" },
             { "message.coffre_pv",     "Coffre : +{0} PV" },
@@ -290,7 +301,18 @@ namespace Deckscent
             { "hud.def",       "DEF {0}" },
             { "hud.mort",      "You are dead" },
 
+            // --- Mission de l'étage (Mission, Hud, MapScreen) ---
+            { "mission.titre",    "Mission" },
+            { "mission.tours",    "Turns survived" },
+            { "mission.salles",   "Rooms cleared" },
+            { "mission.coffres",  "Chests opened" },
+            { "mission.monstres", "Monsters slain" },
+            { "mission.pieges",   "Traps crossed" },
+            { "mission.remplie",  "Mission complete" },
+
             // --- Messages du jeu ---
+            { "message.objectif",        "Goal reached: {0}" },
+            { "message.mission_remplie", "Mission complete!" },
             { "message.piege_franchi", "Trap crossed" },
             { "message.coffre_carte",  "Chest: one more card in hand" },
             { "message.coffre_pv",     "Chest: +{0} HP" },

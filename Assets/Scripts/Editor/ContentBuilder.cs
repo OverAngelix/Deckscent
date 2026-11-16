@@ -329,7 +329,7 @@ namespace Deckscent.Editor
 
         // --- Scènes ----------------------------------------------------------------------------
 
-        /// <summary>Ajoute le Spawner (contenu des tuiles posées) à la scène, s'il n'y est pas.</summary>
+        /// <summary>Ajoute le Spawner (contenu des tuiles posées) et le suivi de la mission à la scène, s'ils n'y sont pas.</summary>
         public static void AddSpawnerToScene(Scene scene)
         {
             if (AssetDatabase.LoadAssetAtPath<GameObject>(SlimePath) == null)
@@ -349,6 +349,9 @@ namespace Deckscent.Editor
             so.FindProperty("spikeTrapPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<SpikeTrap>(SpikeTrapPath);
             so.FindProperty("chestPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Chest>(ChestPath);
             so.ApplyModifiedPropertiesWithoutUndo();
+            // La mission de l'étage suit ce que le Spawner fait apparaître.
+            if (spawner.GetComponent<MissionTracker>() == null)
+                spawner.gameObject.AddComponent<MissionTracker>();
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

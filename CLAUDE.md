@@ -108,6 +108,9 @@ Assets/Scripts/Audio/AdventureSynth.cs Synthé du morceau à couches (testable h
 docs/musique.md                        Doc de la musique du donjon
 Assets/Scripts/Audio/SoundBank.cs      Effets sonores synthétisés (pas, attaque, coup reçu, slurp, pics) ; SoundEmitter.cs les joue sur la piste Effets
 docs/sons.md                           Doc des pistes, des volumes et des effets sonores
+Assets/Scripts/Mission/Mission.cs      Mission de l'étage : objectifs tirés au hasard (MissionSettings dans l'inspecteur du Donjon), Dungeon.Mission
+Assets/Scripts/Mission/MissionTracker.cs  Suit la mission en jeu (objet « Contenu », à côté du Spawner) : tours, monstres, coffres, pièges, salles nettoyées
+docs/mission.md                        Doc de la mission de l'étage
 ```
 
 **Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
@@ -176,6 +179,7 @@ Voir `README.md` (packs, versions, réimport).
 - **Touches affichées selon l'appareil** (`docs/menu.md`) : jamais de nom de touche en dur dans un texte ; une aide se construit avec `KeyPrompts` (`Of("Map/Place")`, `Confirm()`, `Back()`, `Navigate(axe)`) et se dessine avec `KeyPrompts.DrawHints` (libellés `aide.…`). Un écran qui affiche des touches appelle `ControlDevice.Listen()` à son activation et se redessine sur `ControlDevice.Changed`.
 - **Tout texte affiché est un code clé passé à `Loc.T`** (FR / EN, option du menu ; demande de l'utilisateur) : jamais de texte affiché en dur dans le code. Clé `domaine.nom` (minuscules, sans accents, `_`), ajoutée dans `Loc.Fr` **et** `Loc.En` ; `Loc.F` pour les `{0}`. Formes : `forme.<identifiant>` ; refus de pose : `refus.…`. `LocTests` vérifie que les deux dictionnaires ont les mêmes clés et que toute clé du code existe. Les tests qui vérifient des textes forcent le français (`GameSettings.SetLocale("fr", false)`).
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). Le donjon de démo (`Test_Donjon`) a du contenu sur ses tuiles (`DemoDungeon.Contents`) pour essayer le combat sans rien poser.
+- **Mission de l'étage** (`docs/mission.md`) : objectifs tirés au hasard, affichés dans le HUD et sur la carte. Le Spawner rattache chaque élément à sa tuile (`TileContents`) ; une salle ne compte qu'une fois **nettoyée** (monstres tués, coffres ouverts ; pas besoin de franchir ses dalles, objectif à part) **et visitée**.
 - **Tour par tour** (`docs/tour-par-tour.md`) : ce qui joue après le joueur hérite de `GridEntity` (liste `GridEntity.All`, dans l'ordre d'apparition) ; un ennemi qui meurt appelle `Retire()` avant son animation. Prefabs du contenu construits par `ContentBuilder` (relancer écrase les réglages faits à la main).
 
 ## Rendu gravure

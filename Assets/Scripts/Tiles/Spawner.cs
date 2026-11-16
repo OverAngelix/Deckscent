@@ -14,6 +14,11 @@ namespace Deckscent
     /// tuile (quelle case de sol), la sorte de slime et le décalage des dalles sont tirés avec un
     /// générateur à part : le tirage des cartes n'en dépend pas.
     ///
+    /// Chaque élément est rattaché à sa tuile (<see cref="TileContents"/>) : la tuile est
+    /// nettoyée quand tous ses monstres sont morts et ses coffres ouverts (<see cref="TileCleared"/>,
+    /// pour la mission de l'étage). Les dalles n'en font pas partie : les franchir est un objectif
+    /// à part, il serait pénible de devoir passer sur toutes.
+    ///
     /// En jeu seulement. Aucun ennemi ni piège n'est posé à la main dans la scène de jeu.
     /// </summary>
     public class Spawner : MonoBehaviour
@@ -37,6 +42,27 @@ namespace Deckscent
 
         /// <summary>Un élément vient d'apparaître.</summary>
         public event System.Action<GridEntity> Spawned;
+        /// <summary>Un élément est réglé : monstre tué, coffre ouvert, dalle franchie.</summary>
+        public event System.Action<GridEntity> ElementCleared;
+        /// <summary>Tout le contenu d'une tuile est réglé.</summary>
+        public event System.Action<TileContents> TileCleared;
+
+        /// <summary>Ce qui est apparu sur une carte posée.</summary>
+        public class TileContents
+        {
+            public Vector2Int Origin;
+            public TileCard Card;
+            public readonly List<GridEntity> Elements = new List<GridEntity>();
+            public readonly HashSet<GridEntity> Cleared = new HashSet<GridEntity>();
+
+            /// <summary>Monstres morts et coffres ouverts (les dalles ne comptent pas).</summary>
+            public bool IsCleared => Elements.TrueForAll(e => e is SpikeTrap || Cleared.Contains(e));
+        }
+
+        readonly Dictionary<TileCard, TileContents> _contents = new Dictionary<TileCard, TileContents>();
+
+        /// <summary>Le contenu apparu sur cette carte (null si elle n'a rien fait apparaître).</summary>
+        public TileContents ContentsOf(TileCard card) => card != null && _contents.TryGetValue(card, out var c) ? c : null;
 
         public bool SpawnOnPlace { get => spawnOnPlace; set => spawnOnPlace = value; }
 
@@ -96,6 +122,7 @@ namespace Deckscent
         /// <summary>Retire tout ce qui est apparu.</summary>
         public void Clear()
         {
+            _contents.Clear();
             for (var i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
         }
@@ -118,6 +145,7 @@ namespace Deckscent
                 (cells[i], cells[j]) = (cells[j], cells[i]);
             }
             var trapPhase = _rng.Next(3);
+            var contents = new TileContents { Origin = pos, Card = card };
             for (var i = 0; i < Mathf.Min(elements.Length, cells.Count); i++)
             {
                 var entity = SpawnElement(elements[i], cells[i]);
@@ -126,8 +154,32 @@ namespace Deckscent
                 if (entity is SpikeTrap trap)
                     trap.PhaseOffset = trapPhase++ % trap.Period;
                 created.Add(entity);
+                Attach(contents, entity);
             }
+            if (contents.Elements.Count > 0)
+                _contents[card] = contents;
             return created;
+        }
+
+        /// <summary>Rattache un élément à sa tuile et suit sa fin (mort, ouverture, franchissement).</summary>
+        void Attach(TileContents contents, GridEntity entity)
+        {
+            contents.Elements.Add(entity);
+            void Done(GridEntity e)
+            {
+                var wasCleared = contents.IsCleared;
+                if (!contents.Cleared.Add(e))
+                    return;
+                ElementCleared?.Invoke(e);
+                if (!wasCleared && contents.IsCleared)
+                    TileCleared?.Invoke(contents);
+            }
+            switch (entity)
+            {
+                case Enemy enemy: enemy.Died += e => Done(e); break;
+                case Chest chest: chest.Cleared += c => Done(c); break;
+                case SpikeTrap trap: trap.Cleared += t => Done(t); break;
+            }
         }
 
         /// <summary>Un élément (« monstre », « piege », « tresor ») sur cette case. Null pour un élément pas encore géré (le boss).</summary>
