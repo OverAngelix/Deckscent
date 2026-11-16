@@ -78,6 +78,7 @@ namespace Deckscent
         string _message = "";
         bool _messageIsError;
         bool _dirty = true;
+        int _fogVersion = -1;
         Vector2 _lastMouse;
         float _nextCursorMove;
         Vector2 _boardOrigin;
@@ -174,6 +175,13 @@ namespace Deckscent
             }
             HandleMouse();
             HandleKeys();
+            // Une tuile posée à côté du joueur se voit tout de suite : le brouillard bouge.
+            var fog = dungeon != null && dungeon.Exploration != null ? dungeon.Exploration.Version : -1;
+            if (fog != _fogVersion)
+            {
+                _fogVersion = fog;
+                _dirty = true;
+            }
             if (_dirty)
                 Redraw();
         }
@@ -358,6 +366,15 @@ namespace Deckscent
 
         Color Faded(float amount) => Engraving.Fade(inkColor, paperColor, amount);
 
+        // --- Brouillard ----------------------------------------------------------
+
+        /// <summary>Murs des tuiles posées pas encore vues : pointillés gris (plan pas encore tracé à l'encre).</summary>
+        Color SketchColor => Faded(0.45f);
+        const float SketchWidth = 1.5f, SketchDash = 3f;
+
+        /// <summary>Le joueur a vu cette case (sans mémoire de l'étage, tout est vu).</summary>
+        bool IsSeen(Vector2Int cell) => dungeon == null || dungeon.Exploration == null || dungeon.Exploration.IsSeen(cell);
+
         public void Redraw()
         {
             _dirty = false;
@@ -499,7 +516,8 @@ namespace Deckscent
             }
 
             // Tuiles posées : le sol en papier (les murs sont déjà la roche hachurée), contours et
-            // murs fins à l'encre.
+            // murs fins à l'encre. Brouillard : ce que le joueur n'a pas encore vu reste en esquisse
+            // (murs en pointillés gris, ni torche ni départ).
             var card = SelectedCard;
             var validAnchors = new List<Vector2Int>();
             for (var y = 0; y < tiles.y; y++)
@@ -507,13 +525,16 @@ namespace Deckscent
                 {
                     var slot = new Vector2Int(x, y);
                     if (_board.HasTile(slot))
-                        DrawFloor(_boardOrigin + (Vector2)slot * tilePx, _cellPx, _board.CellsAt(slot), inkColor);
+                        DrawFloor(_boardOrigin + (Vector2)slot * tilePx, _cellPx, _board.CellsAt(slot), inkColor, slot * DungeonBoard.TileCells);
                     else if (card != null && _board.CanPlace(slot, card))
                         validAnchors.Add(slot);
                 }
-            DrawEdges(_boardOrigin, _cellPx, _board.ToLayout().Split('\n'), true, inkColor, 2f);
+            DrawEdges(_boardOrigin, _cellPx, _board.ToLayout().Split('\n'), true, inkColor, 2f, true);
             foreach (var (cell, dir) in _board.EdgeWalls())
-                EdgeLine(_boardOrigin, _cellPx, cell, dir, inkColor, 2.5f);
+            {
+                var seen = IsSeen(cell) || IsSeen(cell + Grid.Dirs[dir]);
+                EdgeLine(_boardOrigin, _cellPx, cell, dir, seen ? inkColor : SketchColor, seen ? 2.5f : SketchWidth, !seen);
+            }
 
             // Sorties encore libres des tuiles posées : une petite flèche, comme sur les cartes.
             // Pas sous l'aperçu de la carte à poser (les deux se superposeraient).
@@ -644,7 +665,7 @@ namespace Deckscent
 
         /// <summary>
         /// Une carte façon carte à jouer gravée : double cadre, numéro, emprise, plan de la tuile
-        /// au centre, bandeau du nom, torche et danger en pied.
+        /// au centre, bandeau du nom, danger en pied (pas de torche : on la découvre sur place).
         /// </summary>
         void DrawCard(TileCard card, Rect rect, int index, bool isSelected, bool placeable, float lift)
         {
@@ -678,10 +699,9 @@ namespace Deckscent
             var band = Engraving.CardBandRect(inner, area);
             Engraving.Banner(ink, texts, band, card.DisplayName.ToUpperInvariant(), paperColor, inkColor);
 
-            // Pied : flamme si la carte porte une torche, danger de 0 à 3 crânes.
+            // Pied : danger de 0 à 3 crânes. Pas de torche affichée : on la découvre en y allant
+            // (choix de l'utilisateur, pour garder le mystère).
             var footY = band.yMax + 12f;
-            if (card.Torch)
-                Engraving.Flame(ink, new Vector2(inner.x + 11f, footY), 7f, inkColor, paperColor);
             for (var i = 0; i < TileCard.MaxDanger; i++)
                 Engraving.Skull(ink, new Vector2(inner.xMax - 11f - (TileCard.MaxDanger - 1 - i) * 16f, footY), 13f, i < card.Danger, inkColor, paperColor);
 
@@ -724,8 +744,8 @@ namespace Deckscent
             Engraving.Rule(ink, area.position, area.width, inkColor);
             texts.Label(Loc.T("legende.titre").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             const float sw = 14f;
-            string[] keys = { "mur", "sol", "salle", "sortie", "torche", "depart", "joueur", "danger" };
-            string[] names = { "legende.roche", "legende.sol", "legende.mur_salle", "legende.sortie", "legende.torche", "legende.depart", "legende.vous", "legende.danger" };
+            string[] keys = { "mur", "sol", "salle", "pas_vu", "sortie", "torche", "depart", "joueur", "danger" };
+            string[] names = { "legende.roche", "legende.sol", "legende.mur_salle", "legende.pas_vu", "legende.sortie", "legende.torche", "legende.depart", "legende.vous", "legende.danger" };
             var colW = area.width / columns;
             for (var i = 0; i < keys.Length; i++)
             {
@@ -745,6 +765,10 @@ namespace Deckscent
                     case "salle":
                         ink.Rect(box, paperColor);
                         ink.Line(new Vector2(box.xMin, box.center.y), new Vector2(box.xMax, box.center.y), inkColor, 2.5f);
+                        break;
+                    case "pas_vu":
+                        ink.Rect(box, paperColor);
+                        ink.DashedLine(new Vector2(box.xMin, box.center.y), new Vector2(box.xMax, box.center.y), SketchColor, SketchWidth, SketchDash);
                         break;
                     case "sortie":
                         ExitArrow(new Vector2(box.center.x, box.yMax - 1f), new Vector2(0f, -1f), inkColor, 1.3f);
@@ -797,7 +821,8 @@ namespace Deckscent
         // --- Dessin : plans de tuiles -------------------------------------------
 
         /// <summary>Sol d'une tuile posée : les cases de sol en papier, torche et départ. Les murs restent la roche hachurée.</summary>
-        void DrawFloor(Vector2 topLeft, float cell, string[] rows, Color color)
+        /// `firstCell` : la case du plan sous le coin haut gauche (pour le brouillard).
+        void DrawFloor(Vector2 topLeft, float cell, string[] rows, Color color, Vector2Int firstCell)
         {
             for (var dy = 0; dy < rows.Length; dy++)
                 for (var dx = 0; dx < rows[dy].Length; dx++)
@@ -807,6 +832,9 @@ namespace Deckscent
                         continue;
                     var r = new Rect(topLeft + new Vector2(dx, dy) * cell, Vector2.one * cell);
                     ink.Rect(r, paperColor);
+                    // Esquisse : sol papier, sans torche ni départ (les murs en pointillés).
+                    if (!IsSeen(firstCell + new Vector2Int(dx, dy)))
+                        continue;
                     if (ch == 'T')
                         Engraving.Flame(ink, r.center, cell * 0.32f, color, paperColor);
                     else if (ch == 'P')
@@ -814,7 +842,7 @@ namespace Deckscent
                 }
         }
 
-        /// <summary>Plan (lignes de caractères) : murs hachurés, sol papier, torche (flamme), départ (étoile).</summary>
+        /// <summary>Plan d'une carte à poser (lignes de caractères) : murs hachurés, sol papier, départ (étoile). Les torches ne s'y voient pas.</summary>
         void DrawPlan(Vector2 topLeft, float cell, string[] rows, Color color, float spacing)
         {
             for (var dy = 0; dy < rows.Length; dy++)
@@ -825,10 +853,9 @@ namespace Deckscent
                         continue; // hors de la tuile (creux d'une salle en L, en T…)
                     var r = new Rect(topLeft + new Vector2(dx, dy) * cell, Vector2.one * cell);
                     ink.Rect(r, paperColor);
+                    // Pas de torche (« T ») : sur une carte à poser, elle reste une surprise.
                     if (ch == '#')
                         ink.Hatch(r, spacing, color);
-                    else if (ch == 'T')
-                        Engraving.Flame(ink, r.center, cell * 0.32f, color, paperColor);
                     else if (ch == 'P')
                         Engraving.Star(ink, r.center, cell * 0.36f, color);
                 }
@@ -838,7 +865,8 @@ namespace Deckscent
         /// Contours à l'encre entre sol et roche. `outsideIsWall` : faux pour une tuile seule, dont
         /// les passages débouchent à l'extérieur (pas de trait au bout).
         /// </summary>
-        void DrawEdges(Vector2 topLeft, float cell, string[] rows, bool outsideIsWall, Color color, float width)
+        /// `fog` : les rangées sont le plan entier du plateau, les cases pas encore vues ont un trait d'esquisse.
+        void DrawEdges(Vector2 topLeft, float cell, string[] rows, bool outsideIsWall, Color color, float width, bool fog = false)
         {
             for (var dy = 0; dy < rows.Length; dy++)
                 for (var dx = 0; dx < rows[dy].Length; dx++)
@@ -855,7 +883,11 @@ namespace Deckscent
                             var nc = rows[n.y][n.x];
                             wall = nc == '#' || (nc == ' ' && outsideIsWall);
                         }
-                        if (wall)
+                        if (!wall)
+                            continue;
+                        if (fog && !IsSeen(new Vector2Int(dx, dy)))
+                            EdgeLine(topLeft, cell, new Vector2Int(dx, dy), i, SketchColor, SketchWidth, true);
+                        else
                             EdgeLine(topLeft, cell, new Vector2Int(dx, dy), i, color, width);
                     }
                 }
@@ -870,17 +902,21 @@ namespace Deckscent
                     EdgeLine(topLeft, cell, (slot - b.position) * 3 + c, System.Array.IndexOf(TileCard.Dirs, dir), color, width);
         }
 
-        /// <summary>Trait sur le bord `dir` (0 nord, 1 est, 2 sud, 3 ouest) de la case `c`.</summary>
-        void EdgeLine(Vector2 topLeft, float cell, Vector2Int c, int dir, Color color, float width)
+        /// <summary>Trait sur le bord `dir` (0 nord, 1 est, 2 sud, 3 ouest) de la case `c`. `dashed` : en pointillés (esquisse).</summary>
+        void EdgeLine(Vector2 topLeft, float cell, Vector2Int c, int dir, Color color, float width, bool dashed = false)
         {
             var a = topLeft + (Vector2)c * cell;
-            switch (dir)
+            var (from, to) = dir switch
             {
-                case 0: ink.Line(a, a + new Vector2(cell, 0f), color, width, true); break;
-                case 1: ink.Line(a + new Vector2(cell, 0f), a + new Vector2(cell, cell), color, width, true); break;
-                case 2: ink.Line(a + new Vector2(0f, cell), a + new Vector2(cell, cell), color, width, true); break;
-                case 3: ink.Line(a, a + new Vector2(0f, cell), color, width, true); break;
-            }
+                0 => (a, a + new Vector2(cell, 0f)),
+                1 => (a + new Vector2(cell, 0f), a + new Vector2(cell, cell)),
+                2 => (a + new Vector2(0f, cell), a + new Vector2(cell, cell)),
+                _ => (a, a + new Vector2(0f, cell)),
+            };
+            if (dashed)
+                ink.DashedLine(from, to, color, width, SketchDash);
+            else
+                ink.Line(from, to, color, width, true);
         }
 
         static (Vector2, Vector2)[] RectSides(Rect r) => new[]

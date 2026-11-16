@@ -28,9 +28,22 @@ Les touches sont dans la map **Map** d'`InputSystem_Actions` (sauf l'ouverture :
 
 - **En-tête** : « Carte du donjon », l'étage (« Sous-sols 1 »), et à droite l'état : « Pose possible » en vert, ou la **raison du refus** en rouge (« Doit se raccorder par un passage »…), ou le dernier message (« Tuile posée : Couloir », « Carte défaussée »).
 - **Le plateau** (9 × 9 emplacements, coordonnées A–I et 1–9) : **tout ce qui n'est pas du sol est hachuré de la même façon**, en traits gris espacés (6 px) pour ne pas papilloter (roche pas encore construite comme murs des tuiles : la carte est d'un seul tenant), le sol des tuiles posées s'y découpe en papier, avec ses contours et les **murs fins des salles** à l'encre, les torches (flamme), le départ (étoile) et **le joueur** (flèche rouge, dans sa direction). Emplacements en pointillés. **Une petite flèche sur chaque sortie encore libre** (passage ou porte qui mène à un emplacement vide) : on voit où le donjon peut s'agrandir ; pas de flèche sur une sortie raccordée, ni sous l'aperçu de la carte à poser. Une ouverture tournée vers l'extérieur du plateau est un mur.
+- **Le brouillard** : seules les cases que le joueur **a vues** sont tracées à l'encre (voir « Brouillard » plus bas). Une tuile posée mais pas encore vue reste en **esquisse** : sol papier, murs en **pointillés gris**, ni torche ni départ.
 - **Où poser** : la forme de la carte choisie en **pointillés verts** partout où elle peut être posée telle quelle. Sous le curseur, son **aperçu** en vert (posable) ou en rouge (refusé), avec **une flèche sur chaque entrée** (porte d'une salle, passage d'un couloir) : on voit où la tuile s'ouvre avant de la poser.
-- **La main** : les cartes au style « carte à jouer gravée » : numéro, emprise (« 2×1 » et ses carrés), plan de la tuile avec une flèche sur chaque sortie, bandeau du nom, flamme si elle a une torche, **danger en crânes** (0 à 3). La carte choisie est soulevée et cerclée de rouge. Une carte qui ne peut être posée nulle part, dans aucune orientation, est voilée de hachures (« aucune place »).
+- **La main** : les cartes au style « carte à jouer gravée » : numéro, emprise (« 2×1 » et ses carrés), plan de la tuile avec une flèche sur chaque sortie, bandeau du nom, **danger en crânes** (0 à 3). **Pas de torche** sur les cartes à poser : on la découvre en explorant la tuile, pour garder le mystère. La carte choisie est soulevée et cerclée de rouge. Une carte qui ne peut être posée nulle part, dans aucune orientation, est voilée de hachures (« aucune place »).
 - **La légende**, en colonne étroite entre le plateau et la main, puis la **mission de l'étage** (objectifs cochés quand ils sont remplis, voir [mission.md](mission.md)).
+
+## Brouillard
+
+![Le brouillard : ce qu'on a vu à l'encre, le reste en pointillés](images/brouillard.png)
+
+La carte ne trace à l'encre que **ce que le joueur a vu** ; le reste des tuiles posées est en esquisse (murs en pointillés gris, ni torche ni départ), pour garder la vue d'ensemble quand on prépare une pose. La légende a une ligne « Pas encore vu ».
+
+- **Ce qu'on voit** (`Exploration.Look`) : sa case, puis **tout droit dans les quatre directions** (on tourne gratuitement) jusqu'à un mur ou un mur fin, à **5 cases** au plus (`Sight Range` d'`ExplorationTracker`, au-delà le rendu gravure est noir), et **toute la salle** où l'on se trouve.
+- Le jeu regarde à chaque case où se trouve le joueur, et à chaque tuile posée (une tuile posée à côté de lui se voit aussitôt).
+- La mémoire retient aussi les **emplacements où le joueur a mis les pieds** (`IsSlotVisited`) et ceux dont il a vu au moins une case (`IsSlotSeen`) : la salle du boss se posera sur un emplacement jamais visité (tâche 5 de la [todo](todo.md)).
+- Fichiers : `Assets/Scripts/Exploration/Exploration.cs` (la mémoire, logique pure, tenue par `Dungeon.Exploration`, neuve à chaque partie ; tests `Assets/Tests/EditMode/ExplorationTests.cs`) et `ExplorationTracker.cs` (sur l'objet `Contenu` des scènes, ajouté par *Deckscent > Ajouter le contenu aux scènes* ; tests `Assets/Tests/PlayMode/ExplorationTrackerTests.cs`).
+- Captures : Play mode dans `Test_Donjon`, `MapScreen.Open()`, `capture game_view`. Image : `docs/images/brouillard.png`.
 
 ## Technique
 

@@ -33,6 +33,8 @@ namespace Deckscent
         public TileDeck Deck { get; private set; }
         /// <summary>La mission de l'étage, tirée à chaque nouvelle partie (suivie par <see cref="MissionTracker"/>).</summary>
         public Mission Mission { get; private set; }
+        /// <summary>Mémoire de l'étage (cases vues, emplacements visités), neuve à chaque partie (<see cref="ExplorationTracker"/>).</summary>
+        public Exploration Exploration { get; private set; }
         public Maze Maze => maze;
         /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées).</summary>
         public event System.Action GameStarted;
@@ -110,6 +112,7 @@ namespace Deckscent
                     Deck.RoomsPlaced++;
             };
             // Hasard à part pour la mission : le tirage des cartes n'en dépend pas.
+            Exploration = new Exploration();
             Mission = Mission.Draw(seed != 0 ? new System.Random(seed * 31 + 7) : new System.Random(), mission);
             Apply();
             GameStarted?.Invoke();

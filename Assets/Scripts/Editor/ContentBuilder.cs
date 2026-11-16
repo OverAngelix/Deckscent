@@ -329,7 +329,7 @@ namespace Deckscent.Editor
 
         // --- Scènes ----------------------------------------------------------------------------
 
-        /// <summary>Ajoute le Spawner (contenu des tuiles posées) et le suivi de la mission à la scène, s'ils n'y sont pas.</summary>
+        /// <summary>Ajoute le Spawner (contenu des tuiles posées), le suivi de la mission et celui de l'exploration à la scène, s'ils n'y sont pas.</summary>
         public static void AddSpawnerToScene(Scene scene)
         {
             if (AssetDatabase.LoadAssetAtPath<GameObject>(SlimePath) == null)
@@ -352,6 +352,9 @@ namespace Deckscent.Editor
             // La mission de l'étage suit ce que le Spawner fait apparaître.
             if (spawner.GetComponent<MissionTracker>() == null)
                 spawner.gameObject.AddComponent<MissionTracker>();
+            // La mémoire de l'étage (brouillard de la carte) suit le joueur.
+            if (spawner.GetComponent<ExplorationTracker>() == null)
+                spawner.gameObject.AddComponent<ExplorationTracker>();
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

@@ -19,7 +19,7 @@ Cocher (✅) chaque tâche finie et validée.
    - Objectifs tirés au hasard : X tours survécus, N salles nettoyées, N trésors ouverts, N monstres tués…
    - Affichée dans le HUD et sur la carte.
    - Une salle ne compte qu'**une fois nettoyée** : rattacher chaque monstre, piège et coffre à sa tuile (Spawner).
-4. **Brouillard de guerre** : mémoire des cases visitées, la carte se dévoile en marchant. Nécessaire pour la tâche suivante.
+4. ✅ **Brouillard de guerre** : mémoire des cases visitées, la carte se dévoile en marchant. Nécessaire pour la tâche suivante.
 5. **Salle du boss posée par le jeu** une fois la mission remplie (❓ change le GDD, voir §2)
    - Sur un emplacement **jamais visité**, loin du joueur ; peut **remplacer** une tuile posée mais inexplorée, couloir compris.
    - Signalée sur la carte (crâne rouge).
