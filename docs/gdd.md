@@ -203,6 +203,12 @@ Rendu actuel : section « Rendu gravure » de `CLAUDE.md`.
 - **Rendu gravure** : noir et blanc, encre, hachures. La couleur (accents saturés) est réservée à ce qui compte : monstres, trésors, dangers.
 - **Récit** : narration **environnementale** dans le donjon (décors, objets, textes de cartes) et **histoire légère au hub** via les PNJ.
 
+### Piste pour l'écran de carte
+
+![Piste pour l'écran de carte : parchemin sur une table, plateau peint sous un brouillard, cartes illustrées](images/inspiration_carte.webp)
+
+Image de référence (non contractuelle) qui plaît : la carte du donjon devient un **parchemin posé sur une table** (bois, bougie, dés), le plateau est **peint** (dalles, murs de pierre, éboulis) avec un **brouillard** sur ce qui n'est pas exploré, et les cartes de la main portent une **petite illustration** de la tuile (couloir en perspective, fourche, virage) au lieu du seul plan. Mise en page, légende, mission et aide aux touches restent celles de l'écran actuel (`docs/carte.md`).
+
 ## 9. Périmètre et jalons
 
 - **Objectif** : projet perso / portfolio, sans pression commerciale.
