@@ -83,6 +83,28 @@ namespace Deckscent.Tests
         }
 
         [UnityTest]
+        public IEnumerator UneToucheTapeePendantUnPasEstJoueeEnsuite()
+        {
+            yield return LoadScene();
+            // Tourner à gauche (vers le nord), puis, pendant l'animation, taper un pas de côté à droite
+            // (l'est, vers (7, 3)) : le pas tapé trop tôt n'est pas perdu.
+            Press(_keyboard.qKey);
+            yield return null;
+            yield return null;
+            Release(_keyboard.qKey);
+            Assert.That(_player.IsBusy, Is.True, "le quart de tour est en cours");
+            Press(_keyboard.dKey);
+            yield return null;
+            Release(_keyboard.dKey);
+            var timeout = Time.realtimeSinceStartup + 3f;
+            while (_player.Turn == 0 && Time.realtimeSinceStartup < timeout)
+                yield return null;
+            Assert.That(_player.Facing, Is.EqualTo(0), "tourné vers le nord");
+            Assert.That(_player.Turn, Is.EqualTo(1), "le pas tapé pendant le quart de tour a été joué");
+            Assert.That(_player.Cell, Is.EqualTo(new Vector2Int(7, 3)));
+        }
+
+        [UnityTest]
         public IEnumerator TournerEstGratuitEtLesPasSuiventLOrientation()
         {
             yield return LoadScene();
