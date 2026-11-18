@@ -135,6 +135,8 @@ namespace Deckscent
         {
             if (Board != null)
                 Board.TilesChanged -= Apply;
+            if (maze != null)
+                maze.ClearHoles(); // l'escalier de l'étage d'avant
             // Graine fixe : chaque étage a quand même son propre tirage.
             var floorSeed = seed != 0 ? seed + (Floor - 1) * 7919 : 0;
             var rng = floorSeed != 0 ? new System.Random(floorSeed) : new System.Random();

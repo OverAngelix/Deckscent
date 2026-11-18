@@ -177,7 +177,10 @@ namespace Deckscent.Editor
                 var wolf = root.AddComponent<Werewolf>();
                 var so = new SerializedObject(wolf);
                 so.FindProperty("maxHealth").intValue = 10;
-                so.FindProperty("damage").intValue = 3;
+                so.FindProperty("damage").intValue = 2; // coup de base
+                so.FindProperty("heavyDamage").intValue = 3;
+                so.FindProperty("chargeDamage").intValue = 4;
+                so.FindProperty("chargeCooldown").intValue = 0;
                 so.FindProperty("defense").intValue = 0;
                 so.FindProperty("rig").objectReferenceValue = rig;
                 so.FindProperty("sounds").objectReferenceValue = emitter;
@@ -208,39 +211,72 @@ namespace Deckscent.Editor
 
         // --- Escalier --------------------------------------------------------------------------
 
+        /// <summary>
+        /// L'escalier qui descend : un puits de 3 × 3 m sous la case (le sol de la case est percé par
+        /// <see cref="Maze.AddHole"/>), un rebord de pierre, une volée de marches qui plonge vers le fond
+        /// noir, une lueur blanche qui monte du fond, et la dalle qui s'effondre à l'ouverture.
+        /// En formes simples : rien ne dépend des packs.
+        /// </summary>
         static void BuildStairs()
         {
-            var stone = PrototypeBuilder.SaveMaterial("M_Toon_Gris_Escalier", Toon, m =>
+            var steps = PrototypeBuilder.SaveMaterial("M_Toon_Gris_Escalier", Toon, m =>
             {
                 m.SetColor("_BaseColor", new Color(0.75f, 0.75f, 0.75f));
                 m.SetFloat("_TextureStrength", 0f);
                 m.SetFloat("_Glow", 0.25f);
             });
-            var root = new GameObject("Escalier");
-            var decor = FitSynty("Décor", SyntyDungeon + "Environments/Floors/SM_Env_SpiralStairs_01.prefab", 2.6f, 3.4f, 0.25f);
-            // Secours : un colimaçon de marches autour d'un pilier.
-            var fallback = new GameObject("Secours");
-            Shape("Pilier", PrimitiveType.Cylinder, stone, fallback.transform, new Vector3(0f, 1.6f, 0f), new Vector3(0.35f, 1.6f, 0.35f));
-            for (var i = 0; i < 10; i++)
+            var wall = PrototypeBuilder.SaveMaterial("M_Toon_Gris_Puits", Toon, m =>
             {
-                var step = Shape("Marche", PrimitiveType.Cube, stone, fallback.transform, Vector3.zero, new Vector3(1.1f, 0.12f, 0.45f));
-                var a = i * 36f * Mathf.Deg2Rad;
-                step.transform.localPosition = new Vector3(Mathf.Sin(a) * 0.7f, 0.15f + i * 0.3f, Mathf.Cos(a) * 0.7f);
-                step.transform.localRotation = Quaternion.Euler(0f, i * 36f + 90f, 0f);
+                m.SetColor("_BaseColor", new Color(0.45f, 0.45f, 0.45f));
+                m.SetFloat("_TextureStrength", 0f);
+            });
+            var ink = PrototypeBuilder.SaveMaterial("M_Toon_Encre", Toon, m =>
+            {
+                m.SetColor("_BaseColor", new Color(0.02f, 0.02f, 0.02f));
+                m.SetFloat("_TextureStrength", 0f);
+            });
+            const float half = 1.5f, depth = 4f;
+            var root = new GameObject("Escalier");
+            var well = new GameObject("Puits").transform;
+            well.SetParent(root.transform, false);
+            // Parois du puits et fond noir.
+            for (var i = 0; i < 4; i++)
+            {
+                var side = Shape("Paroi", PrimitiveType.Cube, wall, well, Vector3.zero, new Vector3(3f, depth, 0.1f));
+                side.transform.localRotation = Quaternion.Euler(0f, i * 90f, 0f);
+                side.transform.localPosition = side.transform.localRotation * new Vector3(0f, 0f, half + 0.05f) + Vector3.down * depth * 0.5f;
             }
-            Pair(root, decor, fallback);
-            // Une lueur blanche monte de l'escalier : on le repère de loin dans le noir.
+            Shape("Fond", PrimitiveType.Cube, ink, well, new Vector3(0f, -depth, 0f), new Vector3(3f, 0.1f, 3f));
+            // Rebord : quatre pierres plates qui cernent le trou.
+            for (var i = 0; i < 4; i++)
+            {
+                var lip = Shape("Rebord", PrimitiveType.Cube, wall, well, Vector3.zero, new Vector3(3.1f, 0.12f, 0.22f));
+                lip.transform.localRotation = Quaternion.Euler(0f, i * 90f, 0f);
+                lip.transform.localPosition = lip.transform.localRotation * new Vector3(0f, 0f, half - 0.08f) + Vector3.up * 0.04f;
+            }
+            // Les marches partent du bord -Z (côté passage) et plongent vers +Z.
+            const int count = 9;
+            const float tread = 3f / count, rise = 0.38f;
+            for (var i = 0; i < count; i++)
+                Shape("Marche", PrimitiveType.Cube, steps, well,
+                    new Vector3(0f, -rise * (i + 1) + 0.12f, -half + tread * (i + 0.5f)), new Vector3(2.2f, 0.24f, tread));
+            // La lueur monte du fond : on repère le puits de loin.
             var lightGo = new GameObject("Lueur");
             lightGo.transform.SetParent(root.transform, false);
-            lightGo.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+            lightGo.transform.localPosition = new Vector3(0f, -2.6f, 0.6f);
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = Color.white;
-            light.intensity = 2f;
+            light.intensity = 3f;
             light.range = 7f;
             light.shadows = LightShadows.None;
+            // La dalle qui s'effondre à l'ouverture (cachée au repos).
+            var slab = Shape("Dalle", PrimitiveType.Cube, wall, root.transform, new Vector3(0f, -0.06f, 0f), new Vector3(2.9f, 0.12f, 2.9f));
+            slab.SetActive(false);
+
             var stairs = root.AddComponent<Stairs>();
             var so = new SerializedObject(stairs);
+            so.FindProperty("slab").objectReferenceValue = slab.transform;
             so.FindProperty("sounds").objectReferenceValue = PrototypeBuilder.AddSoundEmitter(root, 1f);
             so.ApplyModifiedPropertiesWithoutUndo();
             PrefabUtility.SaveAsPrefabAsset(root, StairsPath);

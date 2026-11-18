@@ -9,8 +9,8 @@ namespace Deckscent
     /// l'étage en haut à droite (<see cref="Dungeon.Mission"/>), message
     /// éphémère en haut au centre (<see cref="PlayerController.Notify"/>), voile rouge quand on est
     /// touché, écran de mort (Entrée ou bouton du bas pour recommencer, Échap pour revenir au menu).
-    /// Chaque coup porté fait monter un chiffre de dégâts gravé au-dessus de l'ennemi, avec un éclat
-    /// d'encre à l'impact ; les dégâts reçus s'affichent à côté des PV.
+    /// Chaque coup porté fait monter un chiffre de dégâts (« −2 ») au-dessus de l'ennemi, sans cadre
+    /// (choix de l'utilisateur).
     /// Le boss éveillé a sa barre de vie gravée en bas au centre ; le passage d'un étage à l'autre
     /// voile l'écran d'encre (<see cref="FadeOut"/>, <see cref="FadeIn"/>) avec le numéro de l'étage.
     ///
@@ -64,15 +64,12 @@ namespace Deckscent
         float _fade;
         int _bossHealth = -1;
 
-        /// <summary>Un chiffre de dégâts : au-dessus d'un ennemi (point du monde) ou près des PV (écran).</summary>
+        /// <summary>Un chiffre de dégâts au-dessus d'un ennemi (point du monde).</summary>
         struct Popup
         {
             public Vector3 World;
-            public bool OnScreen;
-            public Vector2 Screen;
             public string Text;
             public float Age;
-            public bool Burst;
         }
 
         readonly System.Collections.Generic.List<Popup> _popups = new System.Collections.Generic.List<Popup>();
@@ -130,16 +127,13 @@ namespace Deckscent
         void OnHurt(int amount)
         {
             _flashAge = 0f;
-            // Les dégâts reçus : à droite du cartouche des PV.
-            var x = Margin + 4f + 34f + player.MaxHealth * 18f + 40f;
-            _popups.Add(new Popup { OnScreen = true, Screen = new Vector2(x, Margin + 24f), Text = "−" + amount });
         }
 
         void OnEnemyDamaged(Enemy enemy, int amount)
         {
             // Au-dessus de la tête (un loup-garou est plus grand qu'un slime).
             var top = enemy.transform.position + Vector3.up * (enemy is Werewolf ? 2.6f : 1.3f);
-            _popups.Add(new Popup { World = top, Text = "−" + amount, Burst = true });
+            _popups.Add(new Popup { World = top, Text = "−" + amount });
             _dirty = true;
         }
         void OnDied() => _deadTime = 0f;
@@ -393,51 +387,25 @@ namespace Deckscent
             Engraving.DoubleFrame(ink, bar, 3f, inkColor);
         }
 
-        /// <summary>
-        /// Chiffres de dégâts : un éclat d'encre (traits papier rayonnants) au moment du coup, puis le
-        /// chiffre dans un petit cartouche papier qui monte et s'efface.
-        /// </summary>
+        /// <summary>Chiffres de dégâts : « −2 » en rouge qui monte au-dessus de l'ennemi et s'efface, rien d'autre.</summary>
         void DrawPopups(Vector2 screen)
         {
             if (_camera == null)
                 _camera = Camera.main;
+            if (_camera == null)
+                return;
             var scale = UnityEngine.Screen.width > 0 ? screen.x / UnityEngine.Screen.width : 1f;
             foreach (var popup in _popups)
             {
-                Vector2 at;
-                if (popup.OnScreen)
-                    at = popup.Screen;
-                else
-                {
-                    if (_camera == null)
-                        continue;
-                    var sp = _camera.WorldToScreenPoint(popup.World);
-                    if (sp.z <= 0f)
-                        continue; // derrière la caméra
-                    at = new Vector2(sp.x * scale, screen.y - sp.y * scale);
-                }
+                var sp = _camera.WorldToScreenPoint(popup.World);
+                if (sp.z <= 0f)
+                    continue; // derrière la caméra
+                var at = new Vector2(sp.x * scale, screen.y - sp.y * scale);
                 var t = popup.Age / popupTime;
-                // Éclat : huit traits qui jaillissent du point d'impact, le premier dixième de seconde.
-                if (popup.Burst && popup.Age < 0.15f)
-                {
-                    var b = popup.Age / 0.15f;
-                    for (var k = 0; k < 8; k++)
-                    {
-                        var a = k * Mathf.PI / 4f + 0.3f;
-                        var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-                        var inner = 10f + 18f * b;
-                        var outer = inner + 14f * (1f - b) + 6f;
-                        ink.Line(at + dir * inner, at + dir * outer, WithAlpha(paperColor, 1f - b), 3f);
-                    }
-                }
-                var rise = 34f * (1f - (1f - t) * (1f - t));
-                var alpha = t < 0.7f ? 1f : 1f - (t - 0.7f) / 0.3f;
-                const int size = 28;
-                var w = TextPool.Width(popup.Text, size, FontStyle.Bold) + 16f;
-                var box = new Rect(at.x - w * 0.5f, at.y - rise - 36f, w, 34f);
-                ink.Rect(box, WithAlpha(paperColor, alpha));
-                ink.RectOutline(box, WithAlpha(inkColor, alpha), 1.5f);
-                texts.Label(popup.Text, box.x, box.y + 1f, box.width, size, WithAlpha(healthColor, alpha), TextAnchor.UpperCenter, FontStyle.Bold);
+                var rise = 40f * (1f - (1f - t) * (1f - t));
+                var alpha = t < 0.6f ? 1f : 1f - (t - 0.6f) / 0.4f;
+                const int size = 30;
+                texts.Label(popup.Text, at.x - 60f, at.y - rise - 36f, 120f, size, WithAlpha(healthColor, alpha), TextAnchor.UpperCenter, FontStyle.Bold);
             }
         }
 

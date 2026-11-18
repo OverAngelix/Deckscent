@@ -13,8 +13,11 @@ namespace Deckscent
     /// Tout est **annoncé un tour à l'avance** (le joueur a toujours une chance de réagir) :
     /// - **Endormi** jusqu'à ce que le joueur entre dans l'antre ou arrive à <see cref="wakeRange"/>
     ///   cases en vue : il **hurle** (un tour) et la musique passe en mode boss.
-    /// - **Coup de griffe** : à côté du joueur, il **arme** (bras levé, grognement), puis frappe au
-    ///   tour suivant **si le joueur est encore à côté**. Reculer fait rater le coup.
+    /// - Chaque tour éveillé, il **tire son attaque** (poids réglés par l'utilisateur) : coup de base
+    ///   1 sur 6, coup chargé 3 sur 6, charge 2 sur 6.
+    /// - **Coup de base** : à côté du joueur, il frappe tout de suite (2 dégâts, <see cref="Enemy.Damage"/>).
+    /// - **Coup chargé** : il **arme** (bras levé, grognement) et frappe au tour suivant **vers la case
+    ///   visée**, même dans le vide (3 dégâts) : reculer ou se décaler fait rater le coup.
     /// - **Charge** : joueur aligné (même ligne ou colonne, ligne dégagée, 2 à <see cref="chargeRange"/>
     ///   cases), il **se ramasse** (yeux rouges, grognement), puis fonce tout droit au tour suivant
     ///   jusqu'au premier obstacle. S'il croise le joueur, gros dégâts ; s'il percute un mur, il est
@@ -34,7 +37,17 @@ namespace Deckscent
         [Tooltip("Distance maximale de la charge (cases). Il ne charge qu'à partir de 2 cases.")]
         [SerializeField, Range(2, 12)] int chargeRange = 6;
         [Tooltip("Tours d'attente entre deux charges.")]
-        [SerializeField, Range(0, 10)] int chargeCooldown = 3;
+        [SerializeField, Range(0, 10)] int chargeCooldown;
+        [Tooltip("Dégâts du coup chargé (annoncé un tour à l'avance, porté au tour suivant même dans le vide). Le coup de base (sans annonce) fait les dégâts « Damage ».")]
+        [SerializeField, Range(0, 20)] int heavyDamage = 3;
+
+        [Header("Choix de l'attaque (poids, réglés par l'utilisateur)")]
+        [Tooltip("Poids du coup de base (2 dégâts, tout de suite, à côté du joueur). 1 sur 6.")]
+        [SerializeField, Min(0f)] float basicWeight = 1f;
+        [Tooltip("Poids du coup chargé (3 dégâts, annoncé, porté au tour suivant même dans le vide). 3 sur 6.")]
+        [SerializeField, Min(0f)] float heavyWeight = 3f;
+        [Tooltip("Poids de la charge (4 dégâts, annoncée, en ligne droite). 2 sur 6. Joueur pas aligné : il s'approche à la place.")]
+        [SerializeField, Min(0f)] float chargeWeight = 2f;
         [Tooltip("Louveteaux appelés à la moitié de ses PV.")]
         [SerializeField, Range(0, 4)] int cubs = 2;
         [Tooltip("Distance de poursuite (en pas, murs contournés).")]
@@ -79,7 +92,30 @@ namespace Deckscent
         public bool InSecondPhase => _phase2Done;
 
         State _state = State.Dormant;
-        int _chargeDir = -1, _cooldown;
+        int _chargeDir = -1, _cooldown, _armDir = -1;
+        enum Intent { None, Basic, Heavy, Charge }
+        /// <summary>L'attaque tirée pour ce tour (dès la phase de déplacement : s'il veut charger, il ne bouge pas).</summary>
+        Intent _intent;
+
+        /// <summary>Change les poids du choix de l'attaque (tests, essais).</summary>
+        public void SetAttackWeights(float basic, float heavy, float charge)
+        {
+            basicWeight = basic;
+            heavyWeight = heavy;
+            chargeWeight = charge;
+        }
+
+        Intent RollIntent()
+        {
+            var charge = _cooldown == 0 ? chargeWeight : 0f;
+            var total = basicWeight + heavyWeight + charge;
+            if (total <= 0f)
+                return Intent.Basic;
+            var roll = UnityEngine.Random.value * total;
+            if (roll < basicWeight)
+                return Intent.Basic;
+            return roll < basicWeight + heavyWeight ? Intent.Heavy : Intent.Charge;
+        }
         bool _phase2Pending, _phase2Done, _dying, _woke;
         MaterialPropertyBlock _block;
         PlayerController _player;
@@ -114,6 +150,7 @@ namespace Deckscent
             maxHealth += extra * 2;
             damage += extra / 2;
             chargeDamage += extra / 2;
+            heavyDamage += extra / 2;
             Health = maxHealth;
         }
 
@@ -182,8 +219,9 @@ namespace Deckscent
         {
             if (_dying || _state != State.Awake || _phase2Pending || Maze == null || Adjacent(player))
                 return null;
-            if (_cooldown == 0 && ChargeLine(player) >= 0)
-                return null; // il préfère se ramasser pour charger
+            _intent = RollIntent();
+            if (_intent == Intent.Charge && ChargeLine(player) >= 0)
+                return null; // il se ramasse pour charger au lieu d'avancer
             var path = GridPath.Find(Maze, Cell, player.Cell, chaseRange, occupied);
             if (path.Count < 2)
                 path = GridPath.Find(Maze, Cell, player.Cell, chaseRange);
@@ -225,17 +263,14 @@ namespace Deckscent
                     yield return Charge(player);
                     yield break;
                 case State.Armed:
-                    if (Adjacent(player))
-                        yield return Swipe(player, player.Cell - Cell);
-                    else
-                    {
-                        _state = State.Awake; // le joueur a reculé : coup perdu
-                        rig?.SetPose(WerewolfRig.Pose.Garde);
-                    }
+                    // Le coup chargé part toujours, vers la case visée : si le joueur a bougé, il frappe le vide.
+                    yield return HeavySwipe(player);
                     yield break;
             }
             if (_cooldown > 0)
                 _cooldown--;
+            var intent = _intent != Intent.None ? _intent : RollIntent();
+            _intent = Intent.None;
             if (_phase2Pending)
             {
                 yield return CallCubs();
@@ -243,10 +278,17 @@ namespace Deckscent
             }
             if (Adjacent(player))
             {
-                yield return Arm();
+                // À côté : coup de base tout de suite, coup chargé annoncé, ou charge à bout portant.
+                var toward = Array.IndexOf(Grid.Dirs, player.Cell - Cell);
+                if (intent == Intent.Charge)
+                    yield return Crouch(toward);
+                else if (intent == Intent.Heavy)
+                    yield return Arm(toward);
+                else
+                    yield return Swipe(player, player.Cell - Cell, damage, true);
                 yield break;
             }
-            if (_cooldown == 0)
+            if (intent == Intent.Charge)
             {
                 var dir = ChargeLine(player);
                 if (dir >= 0)
@@ -286,15 +328,26 @@ namespace Deckscent
             CallsCubs?.Invoke(this, cubs);
         }
 
-        IEnumerator Arm()
+        IEnumerator Arm(int dir)
         {
             _state = State.Armed;
+            _armDir = dir;
             rig?.SetPose(WerewolfRig.Pose.Armer, 0.25f);
             sounds?.Play(SoundBank.Growl, 0.8f);
             yield return Animate(0.3f, _ => { });
         }
 
-        IEnumerator Swipe(PlayerController player, Vector2Int dir)
+        /// <summary>Le coup chargé, vers la case visée au tour d'avant : touche seulement si le joueur y est resté.</summary>
+        IEnumerator HeavySwipe(PlayerController player)
+        {
+            var dir = Grid.Dirs[_armDir < 0 ? 0 : _armDir];
+            transform.rotation = Quaternion.LookRotation(WorldDir(dir));
+            var hit = player.Cell == Cell + dir;
+            yield return Swipe(player, dir, heavyDamage, hit);
+        }
+
+        /// <summary>Un coup de griffe vers `dir` : `hit` = le joueur est là et prend `amount` dégâts.</summary>
+        IEnumerator Swipe(PlayerController player, Vector2Int dir, int amount, bool hit)
         {
             _state = State.Awake;
             var start = transform.position;
@@ -302,8 +355,8 @@ namespace Deckscent
             rig?.SetPose(WerewolfRig.Pose.Griffer, 0.1f);
             sounds?.Play(SoundBank.Attack, 1f);
             yield return Animate(0.12f, t => transform.position = Vector3.Lerp(start, end, t));
-            if (IsActive)
-                player.TakeDamage(damage);
+            if (IsActive && hit)
+                player.TakeDamage(amount);
             yield return Animate(0.25f, t => transform.position = Vector3.Lerp(end, start, Smooth(t)));
             rig?.SetPose(WerewolfRig.Pose.Garde, 0.3f);
         }

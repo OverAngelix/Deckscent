@@ -150,6 +150,26 @@ namespace Deckscent
 
         public bool IsWalkable(Vector2Int cell) => GetCell(cell) != '#';
 
+        readonly HashSet<Vector2Int> _holes = new HashSet<Vector2Int>();
+
+        /// <summary>
+        /// Perce le sol d'une case (l'escalier qui descend à l'étage suivant) : sa dalle disparaît,
+        /// maintenant et à chaque reconstruction, jusqu'à <see cref="ClearHoles"/> (nouvel étage).
+        /// </summary>
+        public void AddHole(Vector2Int cell)
+        {
+            if (!_holes.Add(cell) || _generated == null)
+                return;
+            var floor = _generated.Find($"Sol_{cell.x}_{cell.y}");
+            if (floor != null)
+                floor.gameObject.SetActive(false);
+        }
+
+        public bool IsHole(Vector2Int cell) => _holes.Contains(cell);
+
+        /// <summary>Rebouche tous les trous (nouvel étage). Ne reconstruit pas : le nouveau plan le fera.</summary>
+        public void ClearHoles() => _holes.Clear();
+
         /// <summary>Vrai si un mur fin ferme ce bord de la case (direction : indice dans Grid.Dirs).</summary>
         public bool HasEdgeWall(Vector2Int cell, int dir) => _edgeWalls.Contains((cell, dir));
 
@@ -255,7 +275,8 @@ namespace Deckscent
         {
             var center = CellToLocal(cell);
             var flat = new Vector3(cellSize / PrefabCellSize, 1f, cellSize / PrefabCellSize);
-            Spawn(pieces.floor, center, Quaternion.identity, flat, $"Sol_{cell.x}_{cell.y}");
+            if (!_holes.Contains(cell))
+                Spawn(pieces.floor, center, Quaternion.identity, flat, $"Sol_{cell.x}_{cell.y}");
             Spawn(pieces.ceiling, center + Vector3.up * wallHeight, Quaternion.identity, flat,
                 $"Plafond_{cell.x}_{cell.y}");
 

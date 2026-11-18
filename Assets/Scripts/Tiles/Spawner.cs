@@ -249,6 +249,7 @@ namespace Deckscent
                     }
             var contents = new TileContents { Origin = pos, Card = card };
             var layout = LairDecor.Layout(cells, doors.Contains, _rng, out var bossCell);
+            var cellSet = new HashSet<Vector2Int>(cells);
             foreach (var (cell, kind) in layout)
             {
                 var prefab = kind switch
@@ -262,10 +263,7 @@ namespace Deckscent
                 var decor = Spawn(prefab, cell, "Décor_" + kind);
                 if (decor == null)
                     continue;
-                // Tourné vers le centre de l'antre.
-                var to = (Vector2)(bossCell - cell);
-                if (to.sqrMagnitude > 0f)
-                    decor.transform.rotation = Quaternion.LookRotation(new Vector3(to.x, 0f, -to.y));
+                PlaceAgainstWall(decor.transform, cell, kind, bossCell, cellSet);
                 created.Add(decor);
             }
             var boss = Spawn(werewolfPrefab, bossCell, "LoupGarou");
@@ -285,6 +283,32 @@ namespace Deckscent
             }
             _contents[card] = contents;
             return created;
+        }
+
+        /// <summary>
+        /// Une pièce du décor au bord de l'antre tourne le dos au mur et s'y colle (le trône ne flotte
+        /// pas au milieu de sa case) ; dans un coin, elle se cale dans l'angle. Les ossements épars,
+        /// au milieu, regardent le boss.
+        /// </summary>
+        void PlaceAgainstWall(Transform decor, Vector2Int cell, string kind, Vector2Int bossCell, HashSet<Vector2Int> lair)
+        {
+            var wall = Vector2Int.zero;
+            foreach (var d in Grid.Dirs)
+                if (!lair.Contains(cell + d))
+                    wall += d;
+            var cellSize = dungeon != null && dungeon.Maze != null ? dungeon.Maze.CellSize : 3f;
+            if (wall == Vector2Int.zero || kind == "ossements")
+            {
+                var to = (Vector2)(bossCell - cell);
+                if (to.sqrMagnitude > 0f)
+                    decor.rotation = Quaternion.LookRotation(new Vector3(to.x, 0f, -to.y));
+                return;
+            }
+            var back = new Vector3(wall.x, 0f, -wall.y);
+            decor.rotation = Quaternion.LookRotation(-back.normalized);
+            // Jusqu'au mur, moins la moitié de la profondeur de la pièce (≈ 1 m pour le trône).
+            var gap = kind == "trone" ? 0.55f : kind == "brasero" ? 0.75f : 0.7f;
+            decor.position += Vector3.Scale(back, new Vector3(1f, 0f, 1f)) * (cellSize * 0.5f - gap);
         }
 
         readonly List<WolfCub> _cubs = new List<WolfCub>();

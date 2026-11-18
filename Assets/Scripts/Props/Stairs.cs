@@ -5,17 +5,20 @@ using UnityEngine;
 namespace Deckscent
 {
     /// <summary>
-    /// L'escalier vers l'étage suivant, ouvert par la mort du boss (« le boss est l'escalier »,
-    /// GDD §2). Il sort du sol à la place du loup-garou ; on le prend en avançant dessus ou avec
-    /// Interact : l'écran se voile, le Donjon passe à l'étage suivant (<see cref="Dungeon.NextFloor"/>)
-    /// et le joueur repart du départ, avec ses PV.
+    /// L'escalier vers le sous-sol suivant, ouvert par la mort du boss (« le boss est l'escalier »,
+    /// GDD §2). À la place du loup-garou, la dalle du sol s'effondre (<see cref="Maze.AddHole"/>) et
+    /// découvre un puits où des marches **descendent** ; une lueur monte du fond. On le prend en
+    /// avançant dessus ou avec Interact : l'écran se voile, le Donjon passe au sous-sol suivant
+    /// (<see cref="Dungeon.NextFloor"/>) et le joueur repart du départ, avec ses PV.
     /// </summary>
     public class Stairs : GridEntity, IInteractable
     {
-        [Tooltip("Hauteur dont il sort du sol à son apparition (mètres).")]
-        [SerializeField, Min(0f)] float riseDepth = 1.2f;
-        [Tooltip("Durée de la sortie du sol (secondes).")]
-        [SerializeField, Min(0.01f)] float riseTime = 1.2f;
+        [Tooltip("La dalle qui s'effondre dans le puits à l'ouverture (enfant, cachée ensuite).")]
+        [SerializeField] Transform slab;
+        [Tooltip("Profondeur de la chute de la dalle (mètres).")]
+        [SerializeField, Min(0f)] float fallDepth = 4f;
+        [Tooltip("Durée de la chute de la dalle (secondes).")]
+        [SerializeField, Min(0.01f)] float fallTime = 0.9f;
         [Tooltip("Ce qui joue le raclement de pierre. Vide : cherché sur l'escalier.")]
         [SerializeField] SoundEmitter sounds;
 
@@ -36,24 +39,33 @@ namespace Deckscent
         public override void Place(Maze maze, Vector2Int cell)
         {
             base.Place(maze, cell);
-            // Il fait face à un passage : on le voit de face en arrivant.
+            // Les marches partent d'un passage : on les voit descendre en arrivant.
             for (var i = 0; i < Grid.Dirs.Length; i++)
                 if (maze.CanStep(cell, i))
                 {
                     transform.rotation = Quaternion.Euler(0f, Grid.Yaw(i) + 180f, 0f);
                     break;
                 }
+            maze.AddHole(cell);
             if (isActiveAndEnabled)
-                StartCoroutine(Rise());
+                StartCoroutine(Collapse());
         }
 
-        IEnumerator Rise()
+        /// <summary>La dalle tombe dans le puits en basculant, avec un raclement de pierre.</summary>
+        IEnumerator Collapse()
         {
             sounds?.Play(SoundBank.Stairs, 1f);
-            var end = transform.position;
-            var start = end + Vector3.down * riseDepth;
-            transform.position = start;
-            yield return Animate(riseTime, t => transform.position = Vector3.Lerp(start, end, Smooth(t)));
+            if (slab == null)
+                yield break;
+            slab.gameObject.SetActive(true);
+            var start = slab.localPosition;
+            var from = slab.localRotation;
+            yield return Animate(fallTime, t =>
+            {
+                slab.localPosition = start + Vector3.down * fallDepth * t * t;
+                slab.localRotation = from * Quaternion.Euler(25f * t, 0f, 12f * t);
+            });
+            slab.gameObject.SetActive(false);
         }
 
         public IEnumerator Interact(PlayerController player)

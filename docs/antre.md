@@ -27,23 +27,23 @@ L'antre ne compte ni dans le plafond de salles de la pioche, ni comme salle nett
 | Pièce | Où | Bloque |
 |---|---|---|
 | **Brasero** (flamme et lumière blanche, sans ombre) | les quatre coins, et de part et d'autre du trône | oui |
-| **Trône** (`SM_Prop_Skeleton_Knight_Throne_01`) | milieu du mur le plus loin des portes (à vol d'oiseau) ; le boss dort devant | oui |
+| **Trône** (`SM_Prop_Skeleton_Knight_Throne_01`) | milieu du mur le plus loin des portes (à vol d'oiseau), **adossé au mur** ; le boss dort devant | oui |
 | **Cage** de torture, **tas d'os** | le long des murs des grandes antres (≥ 36 cases), une case sur trois, jamais deux côte à côte | oui |
 | **Ossements** épars | au sol, au milieu, une case libre sur huit | non |
 
-Jamais sur une porte ni juste devant, jamais au milieu : l'antre reste traversable d'une porte à l'autre. Une pièce qui bloque est un `LairDecor` (objet de grille sans tour) : le joueur, les monstres et la charge du boss s'y arrêtent.
+Les pièces du bord tournent le dos au mur et s'y collent (`Spawner.PlaceAgainstWall`), celles des coins se calent dans l'angle. Jamais sur une porte ni juste devant, jamais au milieu : l'antre reste traversable d'une porte à l'autre. Une pièce qui bloque est un `LairDecor` (objet de grille sans tour) : le joueur, les monstres et la charge du boss s'y arrêtent.
 
 ## L'escalier
 
-À la mort du boss, l'**escalier** (`Stairs`, prefab `Assets/Prefabs/Props/Escalier.prefab`, colimaçon Synty `SM_Env_SpiralStairs_01` avec une lueur blanche) sort du sol à sa place, avec un raclement de pierre (si le joueur s'est avancé sur la case, à côté de lui). On le prend en avançant dessus ou avec Interact :
+À la mort du boss, le sol **s'effondre** à sa place (si le joueur s'est avancé sur la case, à côté de lui) : la dalle tombe dans un **puits** avec un raclement de pierre, et découvre un **escalier qui descend** (`Stairs`, prefab `Assets/Prefabs/Props/Escalier.prefab`, en formes simples : rebord de pierre, parois, marches qui plongent, une lueur blanche qui monte du fond). Le sol de la case est percé par `Maze.AddHole` (rebouché au sous-sol suivant, `ClearHoles`). On le prend en avançant dessus ou avec Interact :
 
-1. l'écran se voile d'encre, « Étage 2 » s'affiche au milieu (`Hud.FadeOut` / `FadeIn`) ;
+1. l'écran se voile d'encre, « Sous-sol 2 » s'affiche au milieu (`Hud.FadeOut` / `FadeIn`) ;
 2. le Donjon passe à l'**étage suivant** (`Dungeon.NextFloor`) : nouveau plateau, départ tiré au hasard, **nouvelle main** et nouvelle mission, mémoire de l'étage neuve ;
 3. le joueur repart du départ **avec ses PV** (choix de l'utilisateur : PV gardés, nouvelle main).
 
-## Étages
+## Sous-sols (étages)
 
-`Dungeon.Floor` (1 au départ) : affiché dans le HUD (« Étage 2 · Tour 31 · ATQ 1 · DÉF 0 »), sur l'écran de mort et sur la carte (« Sous-sols 2 »). Plus on descend, plus les monstres sont forts (`Enemy.ScaleForFloor`, voir [loup-garou.md](monstres/loup-garou.md#plus-fort-plus-bas)). Avec une graine fixe, chaque étage a son propre tirage (graine + étage).
+`Dungeon.Floor` (1 au départ) : on **descend**, donc « Sous-sol 2 » (demande de l'utilisateur) dans le HUD (« Sous-sol 2 · Tour 31 · ATQ 1 · DÉF 0 »), sur l'écran de mort et sur la carte (« Sous-sols 2 »). Plus on descend, plus les monstres sont forts (`Enemy.ScaleForFloor`, voir [loup-garou.md](monstres/loup-garou.md#plus-fort-plus-bas)). Avec une graine fixe, chaque étage a son propre tirage (graine + étage).
 
 ## Fichiers
 

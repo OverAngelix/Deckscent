@@ -150,21 +150,24 @@ namespace Deckscent.Tests
             yield return BossTurn(boss);
             Assert.That(boss.IsAwake, Is.True);
             Assert.That(Werewolf.Current, Is.SameAs(boss));
-            // À côté : il arme son coup…
+            // À côté : il arme son coup chargé…
+            boss.SetAttackWeights(0f, 1f, 0f);
             PutPlayer(boss.Cell + Grid.Dirs[dir]);
             yield return BossTurn(boss);
             Assert.That(boss.IsArmed, Is.True, "le coup est annoncé");
-            // … le joueur recule : coup perdu.
+            // … le joueur recule : le coup part quand même, dans le vide.
             var health = _player.Health;
             PutPlayer(boss.Cell + Grid.Dirs[dir] * 2);
             yield return BossTurn(boss);
             Assert.That(_player.Health, Is.EqualTo(health), "rien reçu en reculant");
-            Assert.That(boss.IsArmed, Is.False);
-            // Il réarme, le joueur reste : il frappe.
+            Assert.That(boss.IsArmed, Is.False, "le coup chargé est parti");
+            // Le joueur revient à côté : coup de base, tout de suite.
+            boss.SetAttackWeights(1f, 0f, 0f);
             PutPlayer(boss.Cell + Grid.Dirs[dir]);
             yield return BossTurn(boss);
-            yield return BossTurn(boss);
+            Assert.That(boss.IsArmed, Is.False, "pas d'annonce pour le coup de base");
             Assert.That(_player.Health, Is.EqualTo(health - Combat.DamageAfterDefense(boss.Damage, _player.Defense)));
+            Assert.That(boss.Damage, Is.EqualTo(2), "coup de base à 2");
         }
 
         [UnityTest]
@@ -176,6 +179,7 @@ namespace Deckscent.Tests
             var dir = OpenLine(boss, 4);
             Assert.That(dir, Is.GreaterThanOrEqualTo(0), "une ligne libre devant le boss");
             PutPlayer(boss.Cell + Grid.Dirs[dir] * 4);
+            boss.SetAttackWeights(0f, 0f, 1f);
             yield return BossTurn(boss); // réveil
             yield return BossTurn(boss); // se ramasse
             Assert.That(boss.AnnouncedCharge, Is.EqualTo(dir), "la charge est annoncée vers le joueur");

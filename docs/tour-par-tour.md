@@ -32,8 +32,8 @@ On a donc le temps de se tourner face à un monstre avant de frapper, et poser d
 - **Attaquer** : avancer vers un ennemi juste devant. Petit élan, le coup part au bout de l'élan. Seulement **devant soi** : un ennemi sur le côté ou derrière, il faut d'abord se tourner (gratuit).
 - **Dégâts** fixes, pas de hasard : `Attack` du joueur, `Damage` de l'ennemi.
 - **Défense** : retirée des dégâts reçus, mais un coup qui porte fait **toujours au moins 1** (défense 1 contre 3 = 2, contre 1 = 1). Vaut aussi pour les pièges. Tout le monde a 0 par défaut (`Combat.DamageAfterDefense`).
-- **Touché** : l'écran se voile de rouge et la caméra tremble ; les dégâts reçus s'affichent à droite des PV (« −2 »).
-- **Coup porté** : un **chiffre de dégâts** gravé (cartouche papier, chiffre rouge) monte au-dessus de l'ennemi et s'efface, avec un **éclat d'encre** (traits papier qui jaillissent) à l'impact, et un court **arrêt sur image** (`Hit Stop`, 0,06 s) : le coup « pèse ».
+- **Touché** : l'écran se voile de rouge et la caméra tremble.
+- **Coup porté** : le **chiffre des dégâts** (« −2 », en rouge, sans cadre : choix de l'utilisateur) monte au-dessus de l'ennemi et s'efface, avec un court **arrêt sur image** (`Hit Stop`, 0,06 s) : le coup « pèse ».
 - **Tampon d'entrée** : un pas, un quart de tour ou Interact tapé **pendant** l'animation précédente est joué juste après (s'il date de moins de `Input Buffer` = 0,3 s), au lieu d'être perdu. On enchaîne les déplacements sans attendre la fin de chaque pas.
 - **Mort** : la caméra tombe au sol en basculant, l'écran s'assombrit, « Vous êtes mort », l'étage et le tour atteints, puis le **bilan de la partie** (tous étages confondus, `RunStats`) : monstres tués, coffres ouverts, boss vaincus, dégâts infligés (dans un cartouche papier).
 

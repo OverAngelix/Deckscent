@@ -2,20 +2,24 @@
 
 `Assets/Prefabs/Props/Escalier.prefab` · [← liste des prefabs](README.md)
 
-Escalier vers l'étage suivant (colimaçon Synty `SM_Env_SpiralStairs_01`, ou marches en formes simples), avec une lueur blanche. Sort du sol à la place du boss vaincu ; on le prend en avançant dessus ou avec Interact. Voir docs/antre.md.
+Escalier qui descend au sous-sol suivant : un puits sous la case (le sol est percé par `Maze.AddHole`), un rebord de pierre, des marches qui plongent, une lueur blanche qui monte du fond. À la mort du boss, la dalle s'effondre dans le puits ; on le prend en avançant dessus ou avec Interact. Voir docs/antre.md.
 
 ![Escalier](images/Escalier.png)
 
 ## Hiérarchie
 
 ```
-Escalier  [DecorFallback, Stairs, AudioSource, SoundEmitter]
-├─ Décor
-│  └─ Pièce
-│     └─ SM_Env_SpiralStairs_01  [MeshFilter, MeshRenderer]
-├─ Secours
-│  ├─ Pilier  [MeshFilter, MeshRenderer]
-│  ├─ Marche  [MeshFilter, MeshRenderer]
+Escalier  [Stairs, AudioSource, SoundEmitter]
+├─ Puits
+│  ├─ Paroi  [MeshFilter, MeshRenderer]
+│  ├─ Paroi  [MeshFilter, MeshRenderer]
+│  ├─ Paroi  [MeshFilter, MeshRenderer]
+│  ├─ Paroi  [MeshFilter, MeshRenderer]
+│  ├─ Fond  [MeshFilter, MeshRenderer]
+│  ├─ Rebord  [MeshFilter, MeshRenderer]
+│  ├─ Rebord  [MeshFilter, MeshRenderer]
+│  ├─ Rebord  [MeshFilter, MeshRenderer]
+│  ├─ Rebord  [MeshFilter, MeshRenderer]
 │  ├─ Marche  [MeshFilter, MeshRenderer]
 │  ├─ Marche  [MeshFilter, MeshRenderer]
 │  ├─ Marche  [MeshFilter, MeshRenderer]
@@ -25,153 +29,204 @@ Escalier  [DecorFallback, Stairs, AudioSource, SoundEmitter]
 │  ├─ Marche  [MeshFilter, MeshRenderer]
 │  ├─ Marche  [MeshFilter, MeshRenderer]
 │  └─ Marche  [MeshFilter, MeshRenderer]
-└─ Lueur  [Light]
+├─ Lueur  [Light]
+└─ Dalle  [MeshFilter, MeshRenderer]
 ```
 
 ## Contenu
 
 ### Escalier
 
-- **DecorFallback**
-  - `decor` = `Décor` — La pièce Synty (enfant).
-  - `fallback` = `Secours` — La version en formes simples, affichée si le décor n'a pas ses maillages.
-  - `forceFallback` = non — Coché : toujours le secours, même si le décor est là (pour comparer).
 - **Stairs**
-  - `riseDepth` = 1.2 — Hauteur dont il sort du sol à son apparition (mètres).
-  - `riseTime` = 1.2 — Durée de la sortie du sol (secondes).
+  - `slab` = `Dalle` — La dalle qui s'effondre dans le puits à l'ouverture (enfant, cachée ensuite).
+  - `fallDepth` = 4 — Profondeur de la chute de la dalle (mètres).
+  - `fallTime` = 0.9 — Durée de la chute de la dalle (secondes).
   - `sounds` = `Escalier` — Ce qui joue le raclement de pierre. Vide : cherché sur l'escalier.
 - **AudioSource**
 - **SoundEmitter**
   - `pitchJitter` = 0.08 — Variation de hauteur au hasard, en plus ou en moins (0,08 = ±8 %).
 
-### Escalier / Décor / Pièce
+### Escalier / Puits / Paroi
 
 - **Transform**
-  - position (1.228, 0.1, 1.277)
-  - échelle (0.249, 0.249, 0.249)
-
-### Escalier / Décor / Pièce / SM_Env_SpiralStairs_01
-
+  - position (0, -2, 1.55)
+  - échelle (3, 4, 0.1)
 - **MeshFilter**
-  - maillage `SM_Env_SpiralStairs_01` (`Assets/Synty/PolygonDungeon/Models/SM_Env_SpiralStairs_01.fbx`)
+  - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Toon_PolygonDungeon_Lueur` (Deckscent/Toon)
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
 
-### Escalier / Secours / Pilier
+### Escalier / Puits / Paroi
 
 - **Transform**
-  - position (0, 1.6, 0)
-  - échelle (0.35, 1.6, 0.35)
-- **MeshFilter**
-  - maillage `Cylinder` (`Library/unity default resources`)
-- **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
-
-### Escalier / Secours / Marche
-
-- **Transform**
-  - position (0, 0.15, 0.7)
+  - position (1.55, -2, 0)
   - rotation (0, 90, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - échelle (3, 4, 0.1)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
+### Escalier / Puits / Paroi
 
 - **Transform**
-  - position (0.411, 0.45, 0.566)
-  - rotation (0, 126, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - position (0, -2, -1.55)
+  - rotation (0, 180, 0)°
+  - échelle (3, 4, 0.1)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
-
-- **Transform**
-  - position (0.666, 0.75, 0.216)
-  - rotation (0, 162, 0)°
-  - échelle (1.1, 0.12, 0.45)
-- **MeshFilter**
-  - maillage `Cube` (`Library/unity default resources`)
-- **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
-
-### Escalier / Secours / Marche
+### Escalier / Puits / Paroi
 
 - **Transform**
-  - position (0.666, 1.05, -0.216)
-  - rotation (0, 198, 0)°
-  - échelle (1.1, 0.12, 0.45)
-- **MeshFilter**
-  - maillage `Cube` (`Library/unity default resources`)
-- **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
-
-### Escalier / Secours / Marche
-
-- **Transform**
-  - position (0.411, 1.35, -0.566)
-  - rotation (0, 234, 0)°
-  - échelle (1.1, 0.12, 0.45)
-- **MeshFilter**
-  - maillage `Cube` (`Library/unity default resources`)
-- **MeshRenderer**
-  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
-
-### Escalier / Secours / Marche
-
-- **Transform**
-  - position (0, 1.65, -0.7)
+  - position (-1.55, -2, 0)
   - rotation (0, 270, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - échelle (3, 4, 0.1)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
+
+### Escalier / Puits / Fond
+
+- **Transform**
+  - position (0, -4, 0)
+  - échelle (3, 0.1, 3)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Encre` (Deckscent/Toon)
+
+### Escalier / Puits / Rebord
+
+- **Transform**
+  - position (0, 0.04, 1.42)
+  - échelle (3.1, 0.12, 0.22)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
+
+### Escalier / Puits / Rebord
+
+- **Transform**
+  - position (1.42, 0.04, 0)
+  - rotation (0, 90, 0)°
+  - échelle (3.1, 0.12, 0.22)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
+
+### Escalier / Puits / Rebord
+
+- **Transform**
+  - position (0, 0.04, -1.42)
+  - rotation (0, 180, 0)°
+  - échelle (3.1, 0.12, 0.22)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
+
+### Escalier / Puits / Rebord
+
+- **Transform**
+  - position (-1.42, 0.04, 0)
+  - rotation (0, 270, 0)°
+  - échelle (3.1, 0.12, 0.22)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
+
+### Escalier / Puits / Marche
+
+- **Transform**
+  - position (0, -0.26, -1.333)
+  - échelle (2.2, 0.24, 0.333)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
   - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
+### Escalier / Puits / Marche
 
 - **Transform**
-  - position (-0.411, 1.95, -0.566)
-  - rotation (0, 306, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - position (0, -0.64, -1)
+  - échelle (2.2, 0.24, 0.333)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
   - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
+### Escalier / Puits / Marche
 
 - **Transform**
-  - position (-0.666, 2.25, -0.216)
-  - rotation (0, 342, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - position (0, -1.02, -0.667)
+  - échelle (2.2, 0.24, 0.333)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
   - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
+### Escalier / Puits / Marche
 
 - **Transform**
-  - position (-0.666, 2.55, 0.216)
-  - rotation (0, 18, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - position (0, -1.4, -0.333)
+  - échelle (2.2, 0.24, 0.333)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
   - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
 
-### Escalier / Secours / Marche
+### Escalier / Puits / Marche
 
 - **Transform**
-  - position (-0.411, 2.85, 0.566)
-  - rotation (0, 54, 0)°
-  - échelle (1.1, 0.12, 0.45)
+  - position (0, -1.78, 0)
+  - échelle (2.2, 0.24, 0.333)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+
+### Escalier / Puits / Marche
+
+- **Transform**
+  - position (0, -2.16, 0.333)
+  - échelle (2.2, 0.24, 0.333)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+
+### Escalier / Puits / Marche
+
+- **Transform**
+  - position (0, -2.54, 0.667)
+  - échelle (2.2, 0.24, 0.333)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+
+### Escalier / Puits / Marche
+
+- **Transform**
+  - position (0, -2.92, 1)
+  - échelle (2.2, 0.24, 0.333)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Escalier` (Deckscent/Toon)
+
+### Escalier / Puits / Marche
+
+- **Transform**
+  - position (0, -3.3, 1.333)
+  - échelle (2.2, 0.24, 0.333)
 - **MeshFilter**
   - maillage `Cube` (`Library/unity default resources`)
 - **MeshRenderer**
@@ -180,6 +235,16 @@ Escalier  [DecorFallback, Stairs, AudioSource, SoundEmitter]
 ### Escalier / Lueur
 
 - **Transform**
-  - position (0, 1.2, 0)
+  - position (0, -2.6, 0.6)
 - **Light**
-  - Point, couleur (1, 1, 1), intensité 2, portée 7 m, ombres None
+  - Point, couleur (1, 1, 1), intensité 3, portée 7 m, ombres None
+
+### Escalier / Dalle
+
+- **Transform**
+  - position (0, -0.06, 0)
+  - échelle (2.9, 0.12, 2.9)
+- **MeshFilter**
+  - maillage `Cube` (`Library/unity default resources`)
+- **MeshRenderer**
+  - matériaux `M_Toon_Gris_Puits` (Deckscent/Toon)
