@@ -32,8 +32,13 @@ On a donc le temps de se tourner face à un monstre avant de frapper, et poser d
 - **Attaquer** : avancer vers un ennemi juste devant. Petit élan, le coup part au bout de l'élan. Seulement **devant soi** : un ennemi sur le côté ou derrière, il faut d'abord se tourner (gratuit).
 - **Dégâts** fixes, pas de hasard : `Attack` du joueur, `Damage` de l'ennemi.
 - **Défense** : retirée des dégâts reçus, mais un coup qui porte fait **toujours au moins 1** (défense 1 contre 3 = 2, contre 1 = 1). Vaut aussi pour les pièges. Tout le monde a 0 par défaut (`Combat.DamageAfterDefense`).
-- **Touché** : l'écran se voile de rouge et la caméra tremble.
-- **Mort** : la caméra tombe au sol en basculant, l'écran s'assombrit, « Vous êtes mort ». Au bout d'une seconde, **Entrée** (ou F / bouton du bas) recharge la scène, **Échap** (ou Rond / B, action `UI/Cancel`) revient au menu. La carte ne s'ouvre plus.
+- **Touché** : l'écran se voile de rouge et la caméra tremble ; les dégâts reçus s'affichent à droite des PV (« −2 »).
+- **Coup porté** : un **chiffre de dégâts** gravé (cartouche papier, chiffre rouge) monte au-dessus de l'ennemi et s'efface, avec un **éclat d'encre** (traits papier qui jaillissent) à l'impact, et un court **arrêt sur image** (`Hit Stop`, 0,06 s) : le coup « pèse ».
+- **Tampon d'entrée** : un pas, un quart de tour ou Interact tapé **pendant** l'animation précédente est joué juste après (s'il date de moins de `Input Buffer` = 0,3 s), au lieu d'être perdu. On enchaîne les déplacements sans attendre la fin de chaque pas.
+- **Mort** : la caméra tombe au sol en basculant, l'écran s'assombrit, « Vous êtes mort », l'étage et le tour atteints, puis le **bilan de la partie** (tous étages confondus, `RunStats`) : monstres tués, coffres ouverts, boss vaincus, dégâts infligés (dans un cartouche papier).
+
+  ![Écran de mort et bilan](images/mort_bilan.png)
+ Au bout d'une seconde, **Entrée** (ou F / bouton du bas) recharge la scène, **Échap** (ou Rond / B, action `UI/Cancel`) revient au menu. La carte ne s'ouvre plus.
 
 Le comportement du slime est décrit dans [monstres/slime.md](monstres/slime.md), la dalle dans [pieges.md](pieges.md), le coffre dans [coffres.md](coffres.md).
 
@@ -52,7 +57,9 @@ Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravu
 | Réglage | Défaut | Rôle |
 |---|---|---|
 | `Wait Time` | 0,25 s | Durée minimale d'une attente (sinon garder Entrée enfoncée ferait un tour par image). |
+| `Hit Stop` | 0,06 s | Arrêt sur image quand un coup porte (temps réel). 0 = aucun. |
 | `Turning Takes Turn` | non | Coché : tourner coûte un tour. |
+| `Input Buffer` | 0,3 s | Tampon d'entrée : une action tapée pendant une animation est jouée ensuite si elle date de moins que ça. 0 = aucun. |
 | `Max Health` | 10 | PV au départ et maximum. |
 | `Attack` | 1 | Dégâts d'une attaque. |
 | `Defense` | 0 | Retirée des dégâts reçus (minimum 1 par coup). |

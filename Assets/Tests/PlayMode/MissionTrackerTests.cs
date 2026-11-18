@@ -165,11 +165,13 @@ namespace Deckscent.Tests
             yield return LoadScene();
             var mission = new Mission(new[] { new MissionGoal(GoalKind.Monsters, 1) });
             _dungeon.SetMission(mission);
-            string message = null;
-            _player.Notified += text => message = text;
+            var messages = new System.Collections.Generic.List<string>();
+            _player.Notified += messages.Add;
             GridEntity.AllOf<Slime>().First().TakeDamage(999);
             Assert.That(mission.IsComplete, Is.True);
-            Assert.That(message, Is.EqualTo("Mission remplie !"));
+            Assert.That(messages, Does.Contain("Mission remplie !"));
+            // Puis l'antre du boss apparaît (son message suit celui de la mission).
+            Assert.That(messages.Last(), Does.Contain("antre du boss"));
         }
     }
 }

@@ -1,6 +1,6 @@
 # Mission de l'étage
 
-Chaque étage a une **mission** (la « recette » du [GDD](gdd.md#un-étage)) : quelques objectifs tirés au hasard, à remplir tous. Elle est affichée **dans le HUD**, en haut à droite, et **sur la carte**, sous la légende. Une fois remplie, la salle du boss viendra (tâche 5 de la [todo](todo.md)) ; pour l'instant, le jeu le dit seulement (« Mission remplie ! »).
+Chaque étage a une **mission** (la « recette » du [GDD](gdd.md#un-étage)) : quelques objectifs tirés au hasard, à remplir tous. Elle est affichée **dans le HUD**, en haut à droite, et **sur la carte**, sous la légende. Une fois remplie (« Mission remplie ! »), **le jeu pose l'antre du boss** loin du joueur, sur de l'inexploré (voir [antre.md](antre.md)).
 
 ![La mission dans le HUD](images/mission_hud.png)
 

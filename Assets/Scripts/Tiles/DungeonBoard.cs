@@ -71,6 +71,13 @@ namespace Deckscent
         public event Action<Vector2Int, TileCard> TilePlaced;
         /// <summary>Le plateau vient d'être vidé pour une nouvelle partie.</summary>
         public event Action BoardReset;
+        /// <summary>Une tuile vient d'être retirée (remplacée par l'antre du boss) : (ancre, carte).</summary>
+        public event Action<Vector2Int, TileCard> TileRemoved;
+
+        /// <summary>L'antre du boss posée par le jeu (null tant que la mission n'est pas remplie).</summary>
+        public TileCard BossLair { get; private set; }
+        /// <summary>Ancre de l'antre du boss.</summary>
+        public Vector2Int BossLairOrigin { get; private set; }
 
         public Vector2Int Size { get; }
         /// <summary>Emplacement de la tuile où apparaît le joueur.</summary>
@@ -96,6 +103,7 @@ namespace Deckscent
             StarterName = starter.Name;
             _tiles.Clear();
             _origins.Clear();
+            BossLair = null;
             BoardReset?.Invoke();
             foreach (var t in starter.Tiles)
                 Put(t.Pos, new TileCard(t.Shape, t.Turns, t.Torch));
@@ -259,6 +267,232 @@ namespace Deckscent
                 _tiles[pos + offset] = card;
                 _origins[pos + offset] = pos;
             }
+        }
+
+        // --- Antre du boss -----------------------------------------------------------
+
+        /// <summary>Où et comment poser l'antre du boss (<see cref="FindBossLair"/>).</summary>
+        public sealed class BossLairPlan
+        {
+            /// <summary>L'antre, portes comprises.</summary>
+            public TileCard Card;
+            public Vector2Int Anchor;
+            /// <summary>Ancres des tuiles inexplorées que l'antre remplace.</summary>
+            public List<Vector2Int> Replaced = new List<Vector2Int>();
+            /// <summary>Murs des tuiles voisines percés pour rejoindre une porte de l'antre : (emplacement voisin, direction vers l'antre).</summary>
+            public List<(Vector2Int slot, int dir)> Breaches = new List<(Vector2Int, int)>();
+            /// <summary>Distance en emplacements depuis le joueur (chemin à travers les tuiles).</summary>
+            public int Distance;
+        }
+
+        /// <summary>
+        /// Cherche où le jeu pose l'antre du boss, une fois la mission remplie (idée de l'utilisateur,
+        /// 2026-11-16) : sur des emplacements **jamais visités**, le **plus loin possible du joueur**
+        /// (en chemin à travers les tuiles), la plus grande forme qui y tient à distance égale.
+        ///
+        /// - Elle peut **remplacer** des tuiles posées mais jamais visitées, couloirs compris (la
+        ///   tuile part en entier, avec son contenu) ; jamais le départ ni la tuile du joueur.
+        /// - Elle s'appuie contre le labyrinthe : une porte face à chaque passage d'une tuile voisine
+        ///   qui donne sur elle ; s'il n'y en a aucun, elle **perce le mur** de la voisine la plus
+        ///   proche du joueur.
+        /// - Tout le labyrinthe doit rester d'un seul tenant (rien ne se retrouve coupé du joueur).
+        ///
+        /// `visited(emplacement)` : le joueur y a mis les pieds (<see cref="Exploration.IsSlotVisited"/>).
+        /// Null si aucune place ne convient (plateau plein de tuiles visitées) : on réessaie plus tard.
+        /// </summary>
+        public BossLairPlan FindBossLair(Vector2Int playerSlot, Func<Vector2Int, bool> visited)
+        {
+            if (!HasTile(playerSlot) || BossLair != null)
+                return null;
+            // Tuiles qu'on a le droit d'écraser : aucun de leurs emplacements n'est visité, ce n'est
+            // ni le départ ni la tuile du joueur.
+            var visitedCards = new HashSet<TileCard> { GetTile(StartTile), GetTile(playerSlot) };
+            if (visited != null)
+                foreach (var kv in _tiles)
+                    if (visited(kv.Key))
+                        visitedCards.Add(kv.Value);
+
+            BossLairPlan best = null;
+            foreach (var kv in TileCard.BossShapeList)
+                for (var turns = 0; turns < 2; turns++)
+                {
+                    var shape = new TileCard(kv.Key, turns);
+                    if (turns == 1 && shape.Footprint.x == shape.Footprint.y)
+                        continue; // carré : la rotation ne change rien
+                    for (var y = 0; y < Size.y; y++)
+                        for (var x = 0; x < Size.x; x++)
+                        {
+                            var plan = TryLair(shape, new Vector2Int(x, y), playerSlot, visitedCards);
+                            if (plan == null)
+                                continue;
+                            // Le plus loin d'abord ; à distance égale, la plus grande ; puis le moins de tuiles écrasées.
+                            if (best == null || plan.Distance > best.Distance
+                                || (plan.Distance == best.Distance && (plan.Card.Slots.Count > best.Card.Slots.Count
+                                    || (plan.Card.Slots.Count == best.Card.Slots.Count && plan.Replaced.Count < best.Replaced.Count))))
+                                best = plan;
+                        }
+                }
+            return best;
+        }
+
+        /// <summary>Le plan d'une antre de cette forme sur cette ancre, ou null si elle n'y va pas.</summary>
+        BossLairPlan TryLair(TileCard shape, Vector2Int anchor, Vector2Int playerSlot, HashSet<TileCard> keep)
+        {
+            var replaced = new List<Vector2Int>();
+            var touches = false;
+            foreach (var offset in shape.Slots)
+            {
+                var slot = anchor + offset;
+                if (!IsInside(slot))
+                    return null;
+                var card = GetTile(slot);
+                if (card == null)
+                    continue;
+                if (keep.Contains(card))
+                    return null;
+                var origin = TileOrigin(slot);
+                if (!replaced.Contains(origin))
+                    replaced.Add(origin);
+            }
+            // Tri rapide avant la copie : il faut au moins un voisin posé qui ne sera pas remplacé.
+            foreach (var (offset, dir) in shape.PerimeterSides())
+            {
+                var n = anchor + offset + TileCard.Offset(dir);
+                if (HasTile(n) && !replaced.Contains(TileOrigin(n)))
+                {
+                    touches = true;
+                    break;
+                }
+            }
+            if (!touches)
+                return null;
+
+            // Essai sur une copie du plateau : on retire, on pose, on perce, puis on vérifie que tout
+            // le labyrinthe est relié au joueur.
+            var trial = Clone();
+            foreach (var origin in replaced)
+                trial.Remove(origin, false);
+            var lair = shape.Copy();
+            lair.Content = "antre";
+            lair.SetDoors(Array.Empty<(Vector2Int, int)>());
+            var breaches = new List<(Vector2Int, int)>();
+            var walls = new List<(Vector2Int lairSlot, int dir, Vector2Int neighbor)>();
+            foreach (var (offset, dir) in lair.PerimeterSides())
+            {
+                var neighbor = anchor + offset + TileCard.Offset(dir);
+                if (!trial.HasTile(neighbor))
+                    continue;
+                if (trial.HasOpening(neighbor, TileCard.Opposite(dir)))
+                    lair.OpenDoor(offset, dir);
+                else
+                    walls.Add((offset, dir, neighbor));
+            }
+            if (lair.DoorCount == 0)
+            {
+                // Aucun passage ne donne sur elle : elle perce le mur de la voisine la plus proche du joueur.
+                var dist = trial.SlotDistances(playerSlot);
+                var pick = -1;
+                for (var i = 0; i < walls.Count; i++)
+                    if (dist.TryGetValue(walls[i].neighbor, out var d) && (pick < 0 || d < dist[walls[pick].neighbor]))
+                        pick = i;
+                if (pick < 0)
+                    return null;
+                var (lairSlot, wallDir, n) = walls[pick];
+                lair.OpenDoor(lairSlot, wallDir);
+                breaches.Add((n, TileCard.Opposite(wallDir)));
+            }
+            trial.ApplyLair(anchor, lair, breaches);
+            var distances = trial.SlotDistances(playerSlot);
+            if (distances.Count != trial._tiles.Count)
+                return null; // une partie du labyrinthe serait coupée du joueur
+            var nearest = int.MaxValue;
+            foreach (var offset in lair.Slots)
+                nearest = Math.Min(nearest, distances[anchor + offset]);
+            return new BossLairPlan { Card = lair, Anchor = anchor, Replaced = replaced, Breaches = breaches, Distance = nearest };
+        }
+
+        /// <summary>
+        /// Pose l'antre du boss selon le plan : retire les tuiles remplacées (<see cref="TileRemoved"/>),
+        /// perce les murs, pose l'antre (<see cref="TilesChanged"/>, puis <see cref="TilePlaced"/>).
+        /// </summary>
+        public void PlaceBossLair(BossLairPlan plan)
+        {
+            foreach (var origin in plan.Replaced)
+                Remove(origin, true);
+            ApplyLair(plan.Anchor, plan.Card, plan.Breaches);
+            TilesChanged?.Invoke();
+            TilePlaced?.Invoke(plan.Anchor, plan.Card);
+        }
+
+        void ApplyLair(Vector2Int anchor, TileCard card, List<(Vector2Int slot, int dir)> breaches)
+        {
+            foreach (var (slot, dir) in breaches)
+                GetTile(slot)?.OpenDoor(slot - TileOrigin(slot), dir);
+            Put(anchor, card);
+            BossLair = card;
+            BossLairOrigin = anchor;
+        }
+
+        /// <summary>Retire toute la tuile qui couvre `pos`.</summary>
+        void Remove(Vector2Int pos, bool notify)
+        {
+            var card = GetTile(pos);
+            if (card == null)
+                return;
+            var origin = TileOrigin(pos);
+            foreach (var offset in card.Slots)
+            {
+                _tiles.Remove(origin + offset);
+                _origins.Remove(origin + offset);
+            }
+            if (notify)
+                TileRemoved?.Invoke(origin, card);
+        }
+
+        /// <summary>Copie du plateau (cartes copiées : la modifier ne touche pas l'original), sans les abonnés.</summary>
+        DungeonBoard Clone()
+        {
+            var copy = new DungeonBoard(Size) { StartTile = StartTile, StarterName = StarterName };
+            var cards = new Dictionary<TileCard, TileCard>();
+            foreach (var kv in _tiles)
+            {
+                if (!cards.TryGetValue(kv.Value, out var c))
+                    cards[kv.Value] = c = kv.Value.Copy();
+                copy._tiles[kv.Key] = c;
+                copy._origins[kv.Key] = _origins[kv.Key];
+            }
+            return copy;
+        }
+
+        /// <summary>
+        /// Distance en emplacements depuis `from` jusqu'à chaque emplacement posé qu'on peut atteindre :
+        /// on passe d'un emplacement à son voisin de la même salle, ou par un passage ouvert des deux côtés.
+        /// </summary>
+        public Dictionary<Vector2Int, int> SlotDistances(Vector2Int from)
+        {
+            var dist = new Dictionary<Vector2Int, int>();
+            if (!HasTile(from))
+                return dist;
+            dist[from] = 0;
+            var queue = new Queue<Vector2Int>();
+            queue.Enqueue(from);
+            while (queue.Count > 0)
+            {
+                var s = queue.Dequeue();
+                var card = _tiles[s];
+                foreach (var dir in TileCard.Dirs)
+                {
+                    var n = s + TileCard.Offset(dir);
+                    if (dist.ContainsKey(n) || !_tiles.TryGetValue(n, out var other))
+                        continue;
+                    var linked = other == card || (HasOpening(s, dir) && HasOpening(n, TileCard.Opposite(dir)));
+                    if (!linked)
+                        continue;
+                    dist[n] = dist[s] + 1;
+                    queue.Enqueue(n);
+                }
+            }
+            return dist;
         }
 
         /// <summary>

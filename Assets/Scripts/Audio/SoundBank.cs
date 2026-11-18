@@ -17,27 +17,117 @@ namespace Deckscent
         const float Tau = Mathf.PI * 2f;
 
         static AudioClip[] _steps;
-        static AudioClip _attack, _slurp, _spikes, _hit;
+        static AudioClip _attack, _slurp, _spikes, _hit, _howl, _growl, _stairs;
 
         /// <summary>Quatre variantes de pas sur la pierre (tirer au hasard pour ne pas répéter le même son).</summary>
-        public static AudioClip[] Steps => _steps ??= new[] { Step(1), Step(2), Step(3), Step(4) };
+        public static AudioClip[] Steps => _steps != null && _steps[0] != null ? _steps : _steps = new[] { Step(1), Step(2), Step(3), Step(4) };
 
         /// <summary>Un pas au hasard.</summary>
         public static AudioClip RandomStep() => Steps[UnityEngine.Random.Range(0, Steps.Length)];
 
         /// <summary>L'attaque du joueur : un « whoosh » d'arme qui fend l'air.</summary>
-        public static AudioClip Attack => _attack ??= MakeAttack();
+        public static AudioClip Attack => Keep(ref _attack, MakeAttack);
 
         /// <summary>L'attaque du slime : un « slurp » mouillé.</summary>
-        public static AudioClip Slurp => _slurp ??= MakeSlurp();
+        public static AudioClip Slurp => Keep(ref _slurp, MakeSlurp);
 
         /// <summary>Les pics d'une dalle qui sortent : raclement et tintement métalliques.</summary>
-        public static AudioClip Spikes => _spikes ??= MakeSpikes();
+        public static AudioClip Spikes => Keep(ref _spikes, MakeSpikes);
 
         /// <summary>Le joueur prend un coup (monstre ou piège) : un impact sourd.</summary>
-        public static AudioClip Hit => _hit ??= MakeHit();
+        public static AudioClip Hit => Keep(ref _hit, MakeHit);
+
+        /// <summary>Le hurlement du loup-garou (réveil, appel des louveteaux) : une plainte qui monte puis retombe.</summary>
+        public static AudioClip Howl => Keep(ref _howl, MakeHowl);
+
+        /// <summary>Le grognement du loup-garou qui arme un coup ou se ramasse pour charger.</summary>
+        public static AudioClip Growl => Keep(ref _growl, MakeGrowl);
+
+        /// <summary>L'escalier s'ouvre : un raclement de pierre grave.</summary>
+        public static AudioClip Stairs => Keep(ref _stairs, MakeStairs);
+
+        /// <summary>
+        /// Le clip gardé, ou un neuf s'il n'existe pas ou a été détruit (un clip fait en Play mode
+        /// disparaît à la sortie du Play mode ; `??=` ne voit pas qu'un objet Unity est détruit).
+        /// </summary>
+        static AudioClip Keep(ref AudioClip clip, Func<AudioClip> make) => clip != null ? clip : clip = make();
 
         // --- Synthèse ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Hurlement : une voix nasale (dent de scie filtrée par deux formants « ou » puis « a »)
+        /// dont la hauteur monte d'une quinte, tient avec un vibrato, puis retombe. Un souffle par-dessus.
+        /// </summary>
+        static AudioClip MakeHowl()
+        {
+            var rng = new System.Random(11);
+            const float duration = 2.2f;
+            var data = new float[(int)(duration * Rate)];
+            float phase = 0f, l1 = 0f, b1 = 0f, l2 = 0f, b2 = 0f, nl = 0f, nb = 0f;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var t = (float)i / Rate;
+                var u = t / duration;
+                // Hauteur : 220 Hz → 330 Hz en 0,5 s, tenue, puis chute vers 180 Hz.
+                var pitch = u < 0.23f ? Mathf.Lerp(220f, 330f, Smooth01(u / 0.23f))
+                    : u < 0.7f ? 330f : Mathf.Lerp(330f, 180f, Smooth01((u - 0.7f) / 0.3f));
+                pitch *= 1f + 0.012f * Mathf.Sin(Tau * 5.5f * t) * Mathf.Clamp01((t - 0.4f) * 3f);
+                phase += pitch / Rate;
+                phase -= Mathf.Floor(phase);
+                var saw = phase * 2f - 1f;
+                // Formants : la gueule s'ouvre (« ou » → « a ») puis se referme.
+                var open = Mathf.Sin(Mathf.PI * u);
+                Filter(saw, Mathf.Lerp(400f, 800f, open), 0.25f, ref l1, ref b1);
+                Filter(saw, Mathf.Lerp(900f, 1300f, open), 0.3f, ref l2, ref b2);
+                var noise = (float)rng.NextDouble() * 2f - 1f;
+                Filter(noise, 1500f, 0.6f, ref nl, ref nb);
+                var env = Mathf.Clamp01(t / 0.15f) * Mathf.Clamp01((duration - t) / 0.5f);
+                data[i] = (b1 + b2 * 0.6f + nb * 0.08f) * env;
+            }
+            return Make("Hurlement", data);
+        }
+
+        /// <summary>Grognement : un grondement grave et rugueux (bruit modulé très bas), 0,7 s.</summary>
+        static AudioClip MakeGrowl()
+        {
+            var rng = new System.Random(5);
+            const float duration = 0.7f;
+            var data = new float[(int)(duration * Rate)];
+            float low = 0f, band = 0f, phase = 0f;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var t = (float)i / Rate;
+                phase += 70f / Rate;
+                var rattle = 0.5f + 0.5f * Mathf.Sin(Tau * 28f * t); // la gorge qui vibre
+                var noise = (float)rng.NextDouble() * 2f - 1f;
+                Filter(noise, 220f, 0.4f, ref low, ref band);
+                var tone = Mathf.Sin(Tau * phase) * 0.4f;
+                var env = Mathf.Clamp01(t / 0.08f) * Mathf.Clamp01((duration - t) / 0.25f);
+                data[i] = (float)Math.Tanh((band * 3f + tone) * rattle * 2f) * env;
+            }
+            return Make("Grognement", data);
+        }
+
+        /// <summary>Escalier : une dalle de pierre qui glisse (bruit grave filtré, avec des à-coups), 1,2 s.</summary>
+        static AudioClip MakeStairs()
+        {
+            var rng = new System.Random(23);
+            const float duration = 1.2f;
+            var data = new float[(int)(duration * Rate)];
+            float low = 0f, band = 0f;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var t = (float)i / Rate;
+                var noise = (float)rng.NextDouble() * 2f - 1f;
+                Filter(noise, 160f + 60f * Mathf.Sin(Tau * 3f * t), 0.5f, ref low, ref band);
+                var judder = 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Tau * 7f * t));
+                var env = Mathf.Clamp01(t / 0.1f) * Mathf.Clamp01((duration - t) / 0.4f);
+                data[i] = band * judder * env;
+            }
+            return Make("Escalier", data);
+        }
+
+        static float Smooth01(float t) => t * t * (3f - 2f * t);
 
         /// <summary>
         /// Pas : deux contacts étouffés, le talon puis la pointe (plus faible), faits de bruit filtré

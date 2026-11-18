@@ -20,10 +20,10 @@ Cocher (✅) chaque tâche finie et validée.
    - Affichée dans le HUD et sur la carte.
    - Une salle ne compte qu'**une fois nettoyée** : rattacher chaque monstre, piège et coffre à sa tuile (Spawner).
 4. ✅ **Brouillard de guerre** : mémoire des cases visitées, la carte se dévoile en marchant. Nécessaire pour la tâche suivante.
-5. **Salle du boss posée par le jeu** une fois la mission remplie (❓ change le GDD, voir §2)
+5. 🟡 **Salle du boss posée par le jeu** une fois la mission remplie (fait le 2026-11-18, à valider en jouant : [antre.md](antre.md))
    - Sur un emplacement **jamais visité**, loin du joueur ; peut **remplacer** une tuile posée mais inexplorée, couloir compris.
    - Signalée sur la carte (crâne rouge).
-6. **Boss loup-garou + étage suivant**
+6. 🟡 **Boss loup-garou + étage suivant** (fait le 2026-11-18, à valider en jouant : [loup-garou.md](monstres/loup-garou.md) ; animations procédurales, PV gardés et nouvelle main d'un étage à l'autre)
    - Modèle riggé et animé (pack Synty ou animations Mixamo), shader toon sur `SkinnedMeshRenderer`, vérifié par capture.
    - Mécaniques : charge en ligne droite annoncée (lueur, hurlement), 2ᵉ phase à 50 % des PV (appel de louveteaux), `BossMode` de la musique.
    - Le vaincre ouvre l'escalier : nouvel étage, nouvelle grille.
@@ -34,6 +34,7 @@ Cocher (✅) chaque tâche finie et validée.
 - **Règle du GDD à vérifier** : pas de pose de tuile en combat (monstre qui voit le joueur à 3 cases ou moins).
 - **Un 2ᵉ monstre** avant le boss (errant ou embusqué).
 - **Pioche limitée** (jalon 3) : aujourd'hui, elle est infinie.
-- **Ressenti des coups** : tremblement de caméra (Cinemachine Impulse), flash d'encre sur la cible, chiffres de dégâts gravés.
-- **Écran de fin d'étage ou de mort** avec le bilan (tours, salles, butin).
+- 🟡 **Ressenti des coups** (en partie, 2026-11-18, à valider) : chiffres de dégâts gravés, éclat d'encre à l'impact, arrêt sur image. Reste : tremblement de caméra (Cinemachine Impulse) sur la charge du boss.
+- 🟡 **Écran de mort avec le bilan** (2026-11-18, à valider) : monstres tués, coffres, boss vaincus, dégâts infligés. Reste : un écran de fin d'étage.
+- 🟡 **Tampon d'entrée** (2026-11-18, à valider) : une touche tapée pendant un pas est jouée ensuite.
 - **Les succès sur le menu** : liste des succès consultable depuis l'écran titre.

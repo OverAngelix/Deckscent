@@ -12,6 +12,10 @@ namespace Deckscent
     /// Une salle ne compte qu'**une fois nettoyée** (monstres tués, coffres ouverts ; les dalles
     /// n'ont pas à être franchies, voir <see cref="Spawner.TileContents"/>) **et visitée** (le joueur y est entré) : poser une salle
     /// loin et l'éviter ne compte pas, une salle vide compte quand on y entre.
+    ///
+    /// Mission remplie : le jeu pose l'**antre du boss** (<see cref="Dungeon.TryPlaceBossLair"/>),
+    /// loin du joueur, sur de l'inexploré. S'il n'y a pas de place tout de suite, il réessaie à
+    /// chaque tour et à chaque pose de tuile.
     /// </summary>
     public class MissionTracker : MonoBehaviour
     {
@@ -23,10 +27,15 @@ namespace Deckscent
         [SerializeField] PlayerController player;
 
         Mission _mission;
+        DungeonBoard _board;
+        /// <summary>Tour du joueur au début de l'étage : l'objectif « tours » compte les tours de l'étage.</summary>
+        int _floorStartTurn;
         readonly HashSet<TileCard> _visited = new HashSet<TileCard>();
         readonly HashSet<TileCard> _counted = new HashSet<TileCard>();
 
         public Mission Mission => _mission;
+        /// <summary>Mission remplie, antre du boss pas encore posée (faute de place).</summary>
+        public bool BossLairPending { get; private set; }
         /// <summary>Salles comptées comme nettoyées.</summary>
         public int RoomsCleared => _counted.Count;
 
@@ -71,6 +80,8 @@ namespace Deckscent
             }
             if (player != null)
                 player.TurnEnded -= OnTurnEnded;
+            if (_board != null)
+                _board.TilesChanged -= RetryBossLair;
             Unbind();
         }
 
@@ -80,6 +91,13 @@ namespace Deckscent
             Unbind();
             _visited.Clear();
             _counted.Clear();
+            BossLairPending = false;
+            _floorStartTurn = player != null ? player.Turn : 0;
+            if (_board != null)
+                _board.TilesChanged -= RetryBossLair;
+            _board = dungeon != null ? dungeon.Board : null;
+            if (_board != null)
+                _board.TilesChanged += RetryBossLair;
             _mission = dungeon != null ? dungeon.Mission : null;
             if (_mission == null)
                 return;
@@ -114,9 +132,29 @@ namespace Deckscent
 
         void OnTurnEnded(int turn)
         {
-            _mission?.SetTurn(turn);
+            _mission?.SetTurn(turn - _floorStartTurn);
             if (player != null)
                 Visit(player.Cell);
+            RetryBossLair();
+        }
+
+        /// <summary>L'antre attend une place : on réessaie (fin de tour, nouvelle tuile).</summary>
+        void RetryBossLair()
+        {
+            if (BossLairPending)
+                PlaceBossLair();
+        }
+
+        void PlaceBossLair()
+        {
+            // (la pose redessine le plateau, qui rappelle RetryBossLair : rien n'est plus en attente)
+            BossLairPending = false;
+            if (dungeon == null || player == null || dungeon.Board == null)
+                return;
+            if (dungeon.TryPlaceBossLair(player.Cell))
+                player.Notify(Loc.T("message.antre"));
+            else
+                BossLairPending = dungeon.Board.BossLair == null;
         }
 
         /// <summary>Le joueur est sur cette case : sa salle est visitée (appelé à chaque fin de tour ; public pour les tests).</summary>
@@ -127,7 +165,7 @@ namespace Deckscent
                 return;
             var card = board.GetTile(new Vector2Int(cell.x / DungeonBoard.TileCells, cell.y / DungeonBoard.TileCells));
             // La salle de départ ne compte pas : on y est déjà.
-            if (card == null || !card.IsRoom || card == board.GetTile(board.StartTile) || !_visited.Add(card))
+            if (card == null || !card.IsRoom || card.IsBossLair || card == board.GetTile(board.StartTile) || !_visited.Add(card))
                 return;
             TryCount(card);
         }
@@ -154,6 +192,8 @@ namespace Deckscent
         {
             if (player != null)
                 player.Notify(Loc.T("message.mission_remplie"));
+            // L'antre du boss apparaît (son message remplace celui de la mission).
+            PlaceBossLair();
         }
     }
 }

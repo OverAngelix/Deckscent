@@ -48,6 +48,8 @@ namespace Deckscent
             public Vector2Int[] Slots;
             /// <summary>Salle : piliers aux jonctions de 2 × 2 emplacements.</summary>
             public bool Pillars;
+            /// <summary>Antre du boss : posée par le jeu une fois la mission remplie, jamais piochée.</summary>
+            public bool Boss;
         }
 
         static Vector2Int V(int x, int y) => new Vector2Int(x, y);
@@ -76,12 +78,34 @@ namespace Deckscent
             Shape("crypte", new ShapeDef { Room = true, Pillars = true, Slots = new[] { V(0, 0), V(1, 0), V(2, 0), V(0, 1), V(1, 1), V(2, 1), V(0, 2), V(1, 2), V(2, 2) } }),
         };
 
-        static KeyValuePair<string, ShapeDef> Shape(string id, ShapeDef def)
+        /// <summary>
+        /// Formes de l'antre du boss, de la plus grande à la plus petite : le jeu essaie la plus
+        /// grande qui tient (<see cref="DungeonBoard.FindBossLair"/>). Pas dans la pioche ni sur la
+        /// planche des tuiles. Même nom affiché pour toutes (« forme.antre »).
+        /// </summary>
+        public static readonly IReadOnlyList<KeyValuePair<string, ShapeDef>> BossShapeList = new List<KeyValuePair<string, ShapeDef>>
         {
-            def.NameKey = "forme." + id;
+            Shape("antre", new ShapeDef { Room = true, Boss = true, Slots = RectSlots(3, 3) }, "forme.antre"),
+            Shape("antre_3x2", new ShapeDef { Room = true, Boss = true, Slots = RectSlots(3, 2) }, "forme.antre"),
+            Shape("antre_2x2", new ShapeDef { Room = true, Boss = true, Slots = RectSlots(2, 2) }, "forme.antre"),
+            Shape("antre_2x1", new ShapeDef { Room = true, Boss = true, Slots = RectSlots(2, 1) }, "forme.antre"),
+        };
+
+        static Vector2Int[] RectSlots(int w, int h)
+        {
+            var slots = new Vector2Int[w * h];
+            for (var y = 0; y < h; y++)
+                for (var x = 0; x < w; x++)
+                    slots[y * w + x] = V(x, y);
+            return slots;
+        }
+
+        static KeyValuePair<string, ShapeDef> Shape(string id, ShapeDef def, string nameKey = null)
+        {
+            def.NameKey = nameKey ?? "forme." + id;
             return new KeyValuePair<string, ShapeDef>(id, def);
         }
-        static readonly Dictionary<string, ShapeDef> Shapes = ShapeList.ToDictionary(kv => kv.Key, kv => kv.Value);
+        static readonly Dictionary<string, ShapeDef> Shapes = ShapeList.Concat(BossShapeList).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         public static bool HasShape(string id) => Shapes.ContainsKey(id);
         public static ShapeDef GetShape(string id) => Shapes[id];
@@ -106,7 +130,7 @@ namespace Deckscent
         /// <summary>
         /// Contenus possibles et leur niveau de danger (0 à 3), le seul indice affiché sur la carte :
         /// le joueur ne sait pas exactement ce qu'il pose. Éléments : « monstre » (slime),
-        /// « piege » (dalle à pics), « tresor » (coffre, le loot), « boss » (pas encore).
+        /// « piege » (dalle à pics), « tresor » (coffre, le loot), « boss » (le loup-garou, dans l'antre posée par le jeu).
         ///
         /// Rythme voulu (façon donjon mystère) : un couloir porte au plus un élément ; une salle est
         /// rare mais **dense et dangereuse**, d'autant plus qu'elle est grande (2 à 7 éléments).
@@ -129,6 +153,8 @@ namespace Deckscent
             ["salle_gardee"] = new ContentDef { Danger = 3, Room = true, Small = L(T, M, M), Medium = L(T, T, M, M, M), Large = L(T, T, T, M, M, M, M) },
             // Repaire : des monstres, un peu de butin.
             ["salle_monstres"] = new ContentDef { Danger = 3, Room = true, Small = L(M, M, M), Medium = L(M, M, M, M, T), Large = L(M, M, M, M, M, M, T) },
+            // Antre du boss : le loup-garou seul (son décor est posé à part par le Spawner).
+            ["antre"] = new ContentDef { Danger = 3, Room = true, Small = L("boss"), Medium = L("boss"), Large = L("boss") },
         };
 
         public string ShapeId { get; }
@@ -145,6 +171,8 @@ namespace Deckscent
         /// <summary>Masque d'ouvertures de l'ancre (pratique pour un couloir).</summary>
         public int Openings => Doors.TryGetValue(Vector2Int.zero, out var m) ? m : 0;
         public bool IsRoom => Def.Room;
+        /// <summary>Antre du boss (posée par le jeu, pas par le joueur).</summary>
+        public bool IsBossLair => Def.Boss;
         /// <summary>Nom de la forme dans la langue en cours (clé Def.NameKey).</summary>
         public string DisplayName => Loc.T(Def.NameKey);
         public ShapeDef Def => Shapes[ShapeId];
@@ -259,6 +287,9 @@ namespace Deckscent
         }
 
         void AddDoor(Vector2Int slot, int dir) => Doors[slot] = (Doors.TryGetValue(slot, out var m) ? m : 0) | dir;
+
+        /// <summary>Ouvre un passage ou une porte côté `dir` de l'emplacement `slot` (l'antre du boss perce le mur d'une tuile voisine).</summary>
+        public void OpenDoor(Vector2Int slot, int dir) => AddDoor(slot, dir);
 
         /// <summary>Nombre total d'ouvertures (portes ou passages).</summary>
         public int DoorCount => Doors.Values.Sum(CountOpenings);

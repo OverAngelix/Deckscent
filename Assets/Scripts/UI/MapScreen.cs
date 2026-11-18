@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -402,7 +403,7 @@ namespace Deckscent
             var title = Loc.T("carte.titre").ToUpperInvariant();
             texts.Label(title, panel.x + Pad + 4f, headTop, 600f, 26, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             var titleW = TextPool.Width(title, 26, FontStyle.Bold);
-            texts.Label($"{Loc.T(biomeKey)} 1", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
+            texts.Label($"{Loc.T(biomeKey)} {(dungeon != null ? dungeon.Floor : 1)}", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
             DrawStatus(panel, headTop + 6f);
             Engraving.Rule(ink, new Vector2(panel.x + Pad, panel.y + Pad + TitleHeight), panel.width - Pad * 2f, inkColor);
 
@@ -586,6 +587,16 @@ namespace Deckscent
                 }
             }
 
+            // L'antre du boss (mission remplie) : un grand crâne rouge, même dans le brouillard.
+            if (_board.BossLair != null)
+            {
+                var b = _board.BossLair.Bounds();
+                var lairRect = new Rect(_boardOrigin + (Vector2)(_board.BossLairOrigin + b.position) * tilePx, (Vector2)b.size * tilePx);
+                var size = Mathf.Min(lairRect.width, lairRect.height) * 0.5f;
+                ink.Circle(lairRect.center + new Vector2(0f, -size * 0.05f), size * 0.62f, paperColor);
+                Engraving.Skull(ink, lairRect.center, size, true, playerColor, paperColor);
+            }
+
             Engraving.DoubleFrame(ink, boardRect, 3f, inkColor);
             DrawCoordinates(boardRect, tilePx);
             DrawPlayer();
@@ -739,13 +750,20 @@ namespace Deckscent
         // --- Dessin : légende ---------------------------------------------------
 
         /// <summary>Légende en `columns` colonnes. Renvoie le bas de la légende.</summary>
+        static readonly string[] LegendKeys = { "mur", "sol", "salle", "pas_vu", "sortie", "torche", "depart", "joueur", "danger" };
+        static readonly string[] LegendNames = { "legende.roche", "legende.sol", "legende.mur_salle", "legende.pas_vu", "legende.sortie", "legende.torche", "legende.depart", "legende.vous", "legende.danger" };
+        static readonly string[] LegendKeysWithLair = LegendKeys.Concat(new[] { "antre" }).ToArray();
+        static readonly string[] LegendNamesWithLair = LegendNames.Concat(new[] { "legende.antre" }).ToArray();
+
         float DrawLegend(Rect area, int columns)
         {
             Engraving.Rule(ink, area.position, area.width, inkColor);
             texts.Label(Loc.T("legende.titre").ToUpperInvariant(), area.x, area.y + 8f, area.width, 14, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             const float sw = 14f;
-            string[] keys = { "mur", "sol", "salle", "pas_vu", "sortie", "torche", "depart", "joueur", "danger" };
-            string[] names = { "legende.roche", "legende.sol", "legende.mur_salle", "legende.pas_vu", "legende.sortie", "legende.torche", "legende.depart", "legende.vous", "legende.danger" };
+            // L'antre du boss n'entre dans la légende qu'une fois posée.
+            var lair = _board != null && _board.BossLair != null;
+            var keys = lair ? LegendKeysWithLair : LegendKeys;
+            var names = lair ? LegendNamesWithLair : LegendNames;
             var colW = area.width / columns;
             for (var i = 0; i < keys.Length; i++)
             {
@@ -781,6 +799,9 @@ namespace Deckscent
                         break;
                     case "danger":
                         Engraving.Skull(ink, box.center, 13f, true, inkColor, paperColor);
+                        break;
+                    case "antre":
+                        Engraving.Skull(ink, box.center, 14f, true, playerColor, paperColor);
                         break;
                     case "joueur":
                         var c = box.center;

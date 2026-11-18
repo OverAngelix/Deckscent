@@ -31,8 +31,12 @@ namespace Deckscent
         [SerializeField, Min(0.01f)] float turnTime = 0.18f;
         [Tooltip("Durée minimale d'un tour passé à attendre, pour ne pas enchaîner des dizaines de tours en gardant la touche enfoncée.")]
         [SerializeField, Min(0f)] float waitTime = 0.25f;
+        [Tooltip("Arrêt sur image quand un coup porte (secondes, temps réel) : le coup « pèse ». 0 = aucun.")]
+        [SerializeField, Range(0f, 0.2f)] float hitStop = 0.06f;
         [Tooltip("Coché : tourner sur place coûte un tour (les ennemis jouent après chaque quart de tour).")]
         [SerializeField] bool turningTakesTurn;
+        [Tooltip("Tampon d'entrée (secondes) : une touche tapée pendant l'animation d'un pas ou d'un tour est jouée juste après, si elle date de moins que ça. 0 = pas de tampon.")]
+        [SerializeField, Range(0f, 1f)] float inputBuffer = 0.3f;
 
         [Header("Combat")]
         [Tooltip("Points de vie au départ (et maximum).")]
@@ -105,6 +109,11 @@ namespace Deckscent
         public bool IsDead { get; private set; }
 
         bool _busy;
+        // Tampon d'entrée : la dernière action tapée pendant une animation (voir inputBuffer).
+        bool _buffered;
+        float _bufferedAt, _bufferedTurn;
+        Vector2 _bufferedMove;
+        bool _bufferedInteract;
         InputAction _move, _turn, _wait, _torch, _interact;
         Vector3 _cameraRest;
         Coroutine _shake;
@@ -218,12 +227,27 @@ namespace Deckscent
                     return;
                 _heldSincePause = false;
             }
-            if (_busy || IsDead || maze == null || _move == null || _turn == null || _wait == null)
+            if (IsDead || maze == null || _move == null || _turn == null || _wait == null)
                 return;
+            if (_busy)
+            {
+                BufferPress();
+                return;
+            }
             var forward = Grid.Dirs[Facing];
             var right = Grid.Dirs[(Facing + 1) % 4];
             var turnAxis = _turn.ReadValue<float>();
             var m = _move.ReadValue<Vector2>();
+            var interactPressed = _interact != null && _interact.WasPressedThisFrame();
+            // Rien d'enfoncé maintenant : l'action tapée pendant l'animation précédente, si elle est récente.
+            if (_buffered && Mathf.Abs(turnAxis) < stickThreshold && m.sqrMagnitude < stickThreshold * stickThreshold
+                && !interactPressed && !_wait.IsPressed() && Time.time - _bufferedAt <= inputBuffer)
+            {
+                turnAxis = _bufferedTurn;
+                m = _bufferedMove;
+                interactPressed = _bufferedInteract;
+            }
+            _buffered = false;
 
             if (turnAxis <= -stickThreshold)
                 StartCoroutine(TurnBy(-1));
@@ -237,10 +261,27 @@ namespace Deckscent
                 else
                     StartCoroutine(Step(m.x > 0f ? right : -right));
             }
-            else if (_interact != null && _interact.WasPressedThisFrame())
+            else if (interactPressed)
                 StartCoroutine(InteractAhead());
             else if (_wait.IsPressed())
                 StartCoroutine(Wait());
+        }
+
+        /// <summary>Pendant une animation : retient la dernière action tapée (pas, quart de tour, Interact).</summary>
+        void BufferPress()
+        {
+            if (inputBuffer <= 0f)
+                return;
+            var moved = _move.WasPressedThisFrame();
+            var turned = _turn.WasPressedThisFrame();
+            var interacted = _interact != null && _interact.WasPressedThisFrame();
+            if (!moved && !turned && !interacted)
+                return;
+            _buffered = true;
+            _bufferedAt = Time.time;
+            _bufferedMove = moved ? _move.ReadValue<Vector2>() : Vector2.zero;
+            _bufferedTurn = turned ? _turn.ReadValue<float>() : 0f;
+            _bufferedInteract = interacted && !moved && !turned;
         }
 
         IEnumerator TurnBy(int dir)
@@ -349,6 +390,8 @@ namespace Deckscent
             {
                 enemy.TakeDamage(attack);
                 Struck?.Invoke();
+                if (hitStop > 0f)
+                    yield return new WaitForSecondsRealtime(hitStop);
             }
             yield return Animate(moveTime * 0.55f, t => transform.position = Vector3.Lerp(end, start, t));
             transform.position = start;

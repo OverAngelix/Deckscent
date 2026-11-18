@@ -239,7 +239,7 @@ namespace Deckscent.Tests
             Assert.That(Room("grande_salle", "salle_gardee").SpawnList().Length, Is.EqualTo(5), "salle moyenne (4 emplacements)");
             Assert.That(Room("crypte", "salle_monstres").SpawnList().Length, Is.EqualTo(7), "grande salle (9 emplacements)");
             Assert.That(Room("salle", "salle_vide").SpawnList(), Is.Empty);
-            foreach (var kv in TileCard.Contents.Where(c => c.Value.Room && c.Key != "salle_vide"))
+            foreach (var kv in TileCard.Contents.Where(c => c.Value.Room && c.Key != "salle_vide" && c.Key != "antre"))
                 Assert.That(kv.Value.Small.Length, Is.GreaterThanOrEqualTo(2), kv.Key + " : même petite, une salle est dense");
         }
 

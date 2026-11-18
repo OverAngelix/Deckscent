@@ -35,6 +35,8 @@ namespace Deckscent
 
         /// <summary>Émis à l'ouverture (salles nettoyées, à venir).</summary>
         public event Action<Chest> Cleared;
+        /// <summary>Un coffre, n'importe lequel, vient d'être ouvert (bilan de la partie).</summary>
+        public static event Action<Chest> AnyOpened;
 
         public bool Opened { get; private set; }
         public override bool BlocksPlayer => !Opened;
@@ -85,6 +87,7 @@ namespace Deckscent
                         lids[i].localRotation = Quaternion.SlerpUnclamped(from[i], from[i] * open, BackOut(t));
             });
             GiveLoot(player);
+            AnyOpened?.Invoke(this);
             Retire();
             Cleared?.Invoke(this);
             StartCoroutine(Vanish());

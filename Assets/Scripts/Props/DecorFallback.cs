@@ -43,10 +43,15 @@ namespace Deckscent
             if (go == null)
                 return false;
             var filters = go.GetComponentsInChildren<MeshFilter>(true);
-            if (filters.Length == 0)
+            // Personnages riggés (loup-garou) : maillages déformés par les os.
+            var skins = go.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            if (filters.Length == 0 && skins.Length == 0)
                 return false;
             foreach (var filter in filters)
                 if (filter.sharedMesh == null)
+                    return false;
+            foreach (var skin in skins)
+                if (skin.sharedMesh == null)
                     return false;
             return true;
         }

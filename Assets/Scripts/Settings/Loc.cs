@@ -131,6 +131,7 @@ namespace Deckscent
             { "legende.depart",    "Départ" },
             { "legende.vous",      "Vous" },
             { "legende.danger",    "Danger" },
+            { "legende.antre",   "Antre du boss" },
 
             // --- Refus de pose (DungeonBoard.CheckPlacement) ---
             { "refus.hors_plateau", "Hors du plateau" },
@@ -155,6 +156,7 @@ namespace Deckscent
             { "forme.grande_salle",   "Grande salle" },
             { "forme.salle_piliers",  "Salle à piliers" },
             { "forme.crypte",         "Crypte" },
+            { "forme.antre",          "Antre du boss" },
 
             // --- HUD (Hud) ---
             { "hud.pv",        "PV" },
@@ -175,6 +177,19 @@ namespace Deckscent
             // --- Messages du jeu ---
             { "message.objectif",        "Objectif rempli : {0}" },
             { "message.mission_remplie", "Mission remplie !" },
+            { "message.antre",           "Un hurlement monte des profondeurs : l'antre du boss est sur la carte" },
+            { "message.boss_eveil",      "Le loup-garou s'éveille !" },
+            { "message.boss_charge",     "Le loup-garou se ramasse pour charger !" },
+            { "message.boss_sonne",      "Le loup-garou est sonné" },
+            { "message.boss_louveteaux", "Le loup-garou appelle sa meute !" },
+            { "message.boss_vaincu",     "Le loup-garou est vaincu : l'escalier s'ouvre" },
+            { "message.etage",           "Étage {0}" },
+            { "boss.loup_garou",         "Loup-garou" },
+            { "hud.etage",               "Étage {0}" },
+            { "bilan.monstres",          "Monstres tués : {0}" },
+            { "bilan.coffres",           "Coffres ouverts : {0}" },
+            { "bilan.boss",              "Boss vaincus : {0}" },
+            { "bilan.degats",            "Dégâts infligés : {0}" },
             { "message.piege_franchi", "Piège franchi" },
             { "message.coffre_carte",  "Coffre : une carte de plus dans la main" },
             { "message.coffre_pv",     "Coffre : +{0} PV" },
@@ -271,6 +286,7 @@ namespace Deckscent
             { "legende.depart",    "Start" },
             { "legende.vous",      "You" },
             { "legende.danger",    "Danger" },
+            { "legende.antre",   "Boss lair" },
 
             // --- Refus de pose (DungeonBoard.CheckPlacement) ---
             { "refus.hors_plateau", "Off the board" },
@@ -295,6 +311,7 @@ namespace Deckscent
             { "forme.grande_salle",   "Great hall" },
             { "forme.salle_piliers",  "Pillared hall" },
             { "forme.crypte",         "Crypt" },
+            { "forme.antre",          "Boss lair" },
 
             // --- HUD (Hud) ---
             { "hud.pv",        "HP" },
@@ -315,6 +332,19 @@ namespace Deckscent
             // --- Messages du jeu ---
             { "message.objectif",        "Goal reached: {0}" },
             { "message.mission_remplie", "Mission complete!" },
+            { "message.antre",           "A howl rises from the depths: the boss lair is on the map" },
+            { "message.boss_eveil",      "The werewolf awakens!" },
+            { "message.boss_charge",     "The werewolf crouches to charge!" },
+            { "message.boss_sonne",      "The werewolf is stunned" },
+            { "message.boss_louveteaux", "The werewolf calls its pack!" },
+            { "message.boss_vaincu",     "The werewolf is slain: the stairs open" },
+            { "message.etage",           "Floor {0}" },
+            { "boss.loup_garou",         "Werewolf" },
+            { "hud.etage",               "Floor {0}" },
+            { "bilan.monstres",          "Monsters slain: {0}" },
+            { "bilan.coffres",           "Chests opened: {0}" },
+            { "bilan.boss",              "Bosses slain: {0}" },
+            { "bilan.degats",            "Damage dealt: {0}" },
             { "message.piege_franchi", "Trap crossed" },
             { "message.coffre_carte",  "Chest: one more card in hand" },
             { "message.coffre_pv",     "Chest: +{0} HP" },

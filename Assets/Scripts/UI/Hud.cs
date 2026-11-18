@@ -9,6 +9,10 @@ namespace Deckscent
     /// l'étage en haut à droite (<see cref="Dungeon.Mission"/>), message
     /// éphémère en haut au centre (<see cref="PlayerController.Notify"/>), voile rouge quand on est
     /// touché, écran de mort (Entrée ou bouton du bas pour recommencer, Échap pour revenir au menu).
+    /// Chaque coup porté fait monter un chiffre de dégâts gravé au-dessus de l'ennemi, avec un éclat
+    /// d'encre à l'impact ; les dégâts reçus s'affichent à côté des PV.
+    /// Le boss éveillé a sa barre de vie gravée en bas au centre ; le passage d'un étage à l'autre
+    /// voile l'écran d'encre (<see cref="FadeOut"/>, <see cref="FadeIn"/>) avec le numéro de l'étage.
     ///
     /// Canvas en surimpression : le post-process gravure ne le touche pas, couleurs libres.
     /// </summary>
@@ -38,6 +42,8 @@ namespace Deckscent
         [SerializeField, Range(0f, 1f)] float hurtFlash = 0.35f;
         [Tooltip("Durée d'affichage d'un message (secondes), hors apparition et effacement.")]
         [SerializeField, Min(0.1f)] float toastTime = 1.8f;
+        [Tooltip("Durée d'un chiffre de dégâts, qui monte puis s'efface (secondes).")]
+        [SerializeField, Min(0.1f)] float popupTime = 0.9f;
         [Tooltip("Délai avant d'accepter « recommencer » sur l'écran de mort (évite un redémarrage involontaire).")]
         [SerializeField, Min(0f)] float restartDelay = 1f;
 
@@ -55,6 +61,25 @@ namespace Deckscent
         bool _dirty = true;
         Mission _shownMission;
         int _shownVersion = -1;
+        float _fade;
+        int _bossHealth = -1;
+
+        /// <summary>Un chiffre de dégâts : au-dessus d'un ennemi (point du monde) ou près des PV (écran).</summary>
+        struct Popup
+        {
+            public Vector3 World;
+            public bool OnScreen;
+            public Vector2 Screen;
+            public string Text;
+            public float Age;
+            public bool Burst;
+        }
+
+        readonly System.Collections.Generic.List<Popup> _popups = new System.Collections.Generic.List<Popup>();
+        Camera _camera;
+
+        /// <summary>Chiffres de dégâts en cours (tests).</summary>
+        public int PopupCount => _popups.Count;
 
         void Awake()
         {
@@ -73,6 +98,7 @@ namespace Deckscent
         void OnEnable()
         {
             GameSettings.Changed += MarkDirty;
+            Enemy.Damaged += OnEnemyDamaged;
             ControlDevice.Listen();
             ControlDevice.Changed += MarkDirty;
             if (player == null)
@@ -87,6 +113,7 @@ namespace Deckscent
         void OnDisable()
         {
             GameSettings.Changed -= MarkDirty;
+            Enemy.Damaged -= OnEnemyDamaged;
             ControlDevice.Changed -= MarkDirty;
             if (player == null)
                 return;
@@ -100,7 +127,21 @@ namespace Deckscent
         void MarkDirty() => _dirty = true;
         void OnHealthChanged(int health, int max) => _dirty = true;
         void OnTurnEnded(int turn) => _dirty = true;
-        void OnHurt(int amount) => _flashAge = 0f;
+        void OnHurt(int amount)
+        {
+            _flashAge = 0f;
+            // Les dégâts reçus : à droite du cartouche des PV.
+            var x = Margin + 4f + 34f + player.MaxHealth * 18f + 40f;
+            _popups.Add(new Popup { OnScreen = true, Screen = new Vector2(x, Margin + 24f), Text = "−" + amount });
+        }
+
+        void OnEnemyDamaged(Enemy enemy, int amount)
+        {
+            // Au-dessus de la tête (un loup-garou est plus grand qu'un slime).
+            var top = enemy.transform.position + Vector3.up * (enemy is Werewolf ? 2.6f : 1.3f);
+            _popups.Add(new Popup { World = top, Text = "−" + amount, Burst = true });
+            _dirty = true;
+        }
         void OnDied() => _deadTime = 0f;
 
         /// <summary>Affiche un message en haut de l'écran pendant ~2 s, puis l'efface.</summary>
@@ -119,6 +160,19 @@ namespace Deckscent
                 _toastAge += dt;
                 if (_toastAge > ToastIn + toastTime + ToastOut)
                     _toastAge = -1f;
+                _dirty = true;
+            }
+            if (_popups.Count > 0)
+            {
+                for (var i = _popups.Count - 1; i >= 0; i--)
+                {
+                    var popup = _popups[i];
+                    popup.Age += dt;
+                    if (popup.Age > popupTime)
+                        _popups.RemoveAt(i);
+                    else
+                        _popups[i] = popup;
+                }
                 _dirty = true;
             }
             if (_flashAge >= 0f)
@@ -146,8 +200,45 @@ namespace Deckscent
                 _shownVersion = mission != null ? mission.Version : -1;
                 _dirty = true;
             }
+            // Barre du boss : redessinée quand ses PV bougent, qu'il arrive ou qu'il meurt.
+            var boss = Werewolf.Current;
+            var bossHealth = boss != null ? boss.Health : -1;
+            if (bossHealth != _bossHealth)
+            {
+                _bossHealth = bossHealth;
+                _dirty = true;
+            }
             if (_dirty)
                 Redraw();
+        }
+
+        /// <summary>Voile l'écran d'encre en `duration` secondes (temps réel), pour changer d'étage.</summary>
+        public System.Collections.IEnumerator FadeOut(float duration)
+        {
+            for (var t = 0f; t < duration; t += Time.unscaledDeltaTime)
+            {
+                _fade = t / duration;
+                _dirty = true;
+                yield return null;
+            }
+            _fade = 1f;
+            _dirty = true;
+        }
+
+        /// <summary>Lève le voile d'encre (après <see cref="FadeOut"/>), en montrant le numéro de l'étage.</summary>
+        public System.Collections.IEnumerator FadeIn(float duration)
+        {
+            // Le numéro de l'étage reste un instant sur le noir.
+            for (var t = 0f; t < 0.9f; t += Time.unscaledDeltaTime)
+                yield return null;
+            for (var t = 0f; t < duration; t += Time.unscaledDeltaTime)
+            {
+                _fade = 1f - t / duration;
+                _dirty = true;
+                yield return null;
+            }
+            _fade = 0f;
+            _dirty = true;
         }
 
         static bool Pressed(InputAction action)
@@ -184,7 +275,13 @@ namespace Deckscent
             DrawHealth();
             if (_shownMission != null)
                 DrawMission(screen, _shownMission);
+            if (Werewolf.Current != null)
+                DrawBoss(screen, Werewolf.Current);
+            if (_popups.Count > 0)
+                DrawPopups(screen);
             DrawToast(screen);
+            if (_fade > 0f)
+                DrawFade(screen);
             if (_deadTime >= 0f)
                 DrawDeath(screen);
         }
@@ -207,7 +304,8 @@ namespace Deckscent
                     ink.Rect(pip, healthColor);
                 ink.RectOutline(pip, inkColor, 1.5f);
             }
-            var stats = $"{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
+            var floor = dungeon != null ? Loc.F("hud.etage", dungeon.Floor) + "   ·   " : "";
+            var stats = $"{floor}{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
         }
 
@@ -273,6 +371,85 @@ namespace Deckscent
             texts.Label(_toast, box.x, box.y + (box.height - size * 1.4f) * 0.5f, box.width, size, frameInk, TextAnchor.MiddleCenter);
         }
 
+        /// <summary>
+        /// Barre de vie du boss, en bas au centre : son nom dans un bandeau gravé, une jauge rouge
+        /// découpée en traits (un par PV), comme les PV du joueur.
+        /// </summary>
+        void DrawBoss(Vector2 screen, Werewolf boss)
+        {
+            const float w = 420f, h = 14f;
+            var bar = new Rect((screen.x - w) * 0.5f, screen.y - Margin - 30f, w, h);
+            var banner = new Rect(bar.x + w * 0.25f, bar.y - 30f, w * 0.5f, 20f);
+            Engraving.Banner(ink, texts, banner, Loc.T("boss.loup_garou").ToUpperInvariant(), paperColor, inkColor);
+            ink.Rect(new Rect(bar.x - 4f, bar.y - 4f, bar.width + 8f, bar.height + 8f), paperColor);
+            var filled = boss.MaxHealth > 0 ? (float)boss.Health / boss.MaxHealth : 0f;
+            ink.Rect(new Rect(bar.x, bar.y, bar.width * filled, bar.height), healthColor);
+            // Un trait par PV.
+            for (var i = 1; i < boss.MaxHealth; i++)
+            {
+                var x = bar.x + bar.width * i / boss.MaxHealth;
+                ink.Line(new Vector2(x, bar.y), new Vector2(x, bar.yMax), Engraving.Fade(inkColor, paperColor, 0.4f), 1f);
+            }
+            Engraving.DoubleFrame(ink, bar, 3f, inkColor);
+        }
+
+        /// <summary>
+        /// Chiffres de dégâts : un éclat d'encre (traits papier rayonnants) au moment du coup, puis le
+        /// chiffre dans un petit cartouche papier qui monte et s'efface.
+        /// </summary>
+        void DrawPopups(Vector2 screen)
+        {
+            if (_camera == null)
+                _camera = Camera.main;
+            var scale = UnityEngine.Screen.width > 0 ? screen.x / UnityEngine.Screen.width : 1f;
+            foreach (var popup in _popups)
+            {
+                Vector2 at;
+                if (popup.OnScreen)
+                    at = popup.Screen;
+                else
+                {
+                    if (_camera == null)
+                        continue;
+                    var sp = _camera.WorldToScreenPoint(popup.World);
+                    if (sp.z <= 0f)
+                        continue; // derrière la caméra
+                    at = new Vector2(sp.x * scale, screen.y - sp.y * scale);
+                }
+                var t = popup.Age / popupTime;
+                // Éclat : huit traits qui jaillissent du point d'impact, le premier dixième de seconde.
+                if (popup.Burst && popup.Age < 0.15f)
+                {
+                    var b = popup.Age / 0.15f;
+                    for (var k = 0; k < 8; k++)
+                    {
+                        var a = k * Mathf.PI / 4f + 0.3f;
+                        var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                        var inner = 10f + 18f * b;
+                        var outer = inner + 14f * (1f - b) + 6f;
+                        ink.Line(at + dir * inner, at + dir * outer, WithAlpha(paperColor, 1f - b), 3f);
+                    }
+                }
+                var rise = 34f * (1f - (1f - t) * (1f - t));
+                var alpha = t < 0.7f ? 1f : 1f - (t - 0.7f) / 0.3f;
+                const int size = 28;
+                var w = TextPool.Width(popup.Text, size, FontStyle.Bold) + 16f;
+                var box = new Rect(at.x - w * 0.5f, at.y - rise - 36f, w, 34f);
+                ink.Rect(box, WithAlpha(paperColor, alpha));
+                ink.RectOutline(box, WithAlpha(inkColor, alpha), 1.5f);
+                texts.Label(popup.Text, box.x, box.y + 1f, box.width, size, WithAlpha(healthColor, alpha), TextAnchor.UpperCenter, FontStyle.Bold);
+            }
+        }
+
+        /// <summary>Voile d'encre du changement d'étage, avec « Étage N » au milieu.</summary>
+        void DrawFade(Vector2 screen)
+        {
+            ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, _fade));
+            if (dungeon != null)
+                texts.Label(Loc.F("hud.etage", dungeon.Floor).ToUpperInvariant(), 0f, screen.y * 0.5f - 24f, screen.x, 40,
+                    WithAlpha(paperColor, _fade), TextAnchor.UpperCenter, FontStyle.Bold);
+        }
+
         /// <summary>L'écran s'assombrit, « Vous êtes mort », puis l'invitation à recommencer.</summary>
         void DrawDeath(Vector2 screen)
         {
@@ -280,14 +457,24 @@ namespace Deckscent
             ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, 0.75f * a));
             var cy = screen.y * 0.5f;
             texts.Label(Loc.T("hud.mort"), 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
-            texts.Label(Loc.F("hud.tour", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            var reached = dungeon != null ? Loc.F("hud.etage", dungeon.Floor) + "   ·   " : "";
+            texts.Label(reached + Loc.F("hud.tour", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            // Le bilan de la partie, tous étages confondus, dans un cartouche papier.
+            var line1 = $"{Loc.F("bilan.monstres", RunStats.Kills)}   ·   {Loc.F("bilan.coffres", RunStats.Chests)}";
+            var line2 = $"{Loc.F("bilan.boss", RunStats.Bosses)}   ·   {Loc.F("bilan.degats", RunStats.DamageDealt)}";
+            var w = Mathf.Max(TextPool.Width(line1, 16), TextPool.Width(line2, 16)) + 48f;
+            var card = new Rect((screen.x - w) * 0.5f, cy + 50f, w, 54f);
+            ink.Rect(new Rect(card.x - 4f, card.y - 4f, card.width + 8f, card.height + 8f), WithAlpha(paperColor, a));
+            Engraving.DoubleFrame(ink, card, 3f, WithAlpha(inkColor, a));
+            texts.Label(line1, card.x, card.y + 7f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
+            texts.Label(line2, card.x, card.y + 29f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
             if (_deadTime >= restartDelay)
             {
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
                 // Recommencer : Entrée au clavier (Player/Wait), le bouton du bas à la manette (Player/Interact, L3 est peu parlant).
                 var restartKeys = KeyPrompts.Of(ControlDevice.IsGamepad ? "Player/Interact" : "Player/Wait");
                 KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.recommencer"), new Hint(KeyPrompts.Back(), "aide.menu") },
-                    0f, cy + 52f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
+                    0f, cy + 122f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
             }
         }
 

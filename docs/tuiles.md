@@ -85,14 +85,14 @@ Chaque carte porte un **contenu**. Seul son **danger** (0 à 3 crânes) est affi
 | Gardée | 3 | 1 trésor, 2 monstres | 2 trésors, 3 monstres | 3 trésors, 4 monstres |
 | Repaire | 3 | 3 monstres | 4 monstres, 1 trésor | 6 monstres, 1 trésor |
 
-Le boss viendra avec la recette d'étage.
+Le boss vient avec la mission de l'étage : une fois remplie, le jeu pose lui-même l'**antre du boss** (formes à part, `TileCard.BossShapeList`, jamais piochées), voir [antre.md](antre.md).
 
 ### Ce qui apparaît
 
 Le **Spawner** (`Assets/Scripts/Tiles/Spawner.cs`, objet *Contenu* des scènes Main et Test_Donjon) suit les poses du plateau (`DungeonBoard.TilePlaced`) et fait apparaître la liste de la carte (`TileCard.SpawnList()`) :
 
 - un élément par case de sol de la tuile, cases tirées au hasard, **jamais sur une porte** de salle (`DungeonBoard.TileFloorCells`) ;
-- monstre : un slime vert, rouge ou bleu, à chances égales ; piège : une dalle, et les dalles d'une même tuile sont décalées (elles ne sortent pas au même tour) ; trésor : un coffre (son butin « carte » pioche dans la main du Donjon) ; boss : rien pour l'instant (avertissement) ;
+- monstre : un slime vert, rouge ou bleu, à chances égales ; piège : une dalle, et les dalles d'une même tuile sont décalées (elles ne sortent pas au même tour) ; trésor : un coffre (son butin « carte » pioche dans la main du Donjon) ; boss : le loup-garou (dans l'antre, avec son décor, voir [antre.md](antre.md)) ;
 - chaque élément est une **instance de son prefab** (`Prefabs/Enemies/Slime`, `Prefabs/Traps/DallePics`, `Prefabs/Props/Coffre`), enfant de l'objet *Contenu* ;
 - chaque élément est **rattaché à sa tuile** (`Spawner.TileContents`, `ContentsOf(carte)`) : la tuile est nettoyée quand ses monstres sont morts et ses coffres ouverts, les dalles n'ont pas à être franchies (`TileCleared`, pour la [mission de l'étage](mission.md)) ;
 - au lancement, les tuiles déjà posées sont remplies aussi : le **donjon de démo** (`Test_Donjon`) a du contenu sur ses tuiles (`DemoDungeon.Contents` : une dalle au nord du départ, un slime au sud, des salles de chaque thème) pour essayer combat, pièges et coffres sans rien poser ;

@@ -18,6 +18,17 @@ namespace Deckscent.Tests
         }
 
         [Test]
+        public void LesSonsDuBossSontFabriques()
+        {
+            foreach (var clip in new[] { SoundBank.Howl, SoundBank.Growl, SoundBank.Stairs })
+            {
+                Assert.That(clip, Is.Not.Null);
+                Assert.That(clip.length, Is.InRange(0.5f, 2.5f), clip.name + " : plus long qu'un pas");
+                Assert.That(SoundBank.Peak(clip), Is.InRange(0.5f, 0.95f), clip.name + " : ni muet ni saturé");
+            }
+        }
+
+        [Test]
         public void LesSonsSontGardes()
         {
             Assert.That(SoundBank.Slurp, Is.SameAs(SoundBank.Slurp), "fabriqué une seule fois");

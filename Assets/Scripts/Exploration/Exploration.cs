@@ -43,6 +43,18 @@ namespace Deckscent
         }
 
         /// <summary>
+        /// Oublie tout ce qui a été vu sur ces emplacements (l'antre du boss remplace des tuiles
+        /// inexplorées : elle reste à découvrir).
+        /// </summary>
+        public void Forget(IEnumerable<Vector2Int> slots)
+        {
+            var forget = new HashSet<Vector2Int>(slots);
+            if (_seen.RemoveWhere(c => forget.Contains(SlotOf(c))) > 0)
+                Version++;
+            _seenSlots.ExceptWith(forget);
+        }
+
+        /// <summary>
         /// Le joueur est sur `cell` : ce qu'il voit devient connu. `canStep(case, direction)` dit si
         /// on passe d'une case à sa voisine (<see cref="Maze.CanStep"/>). `board` (facultatif) :
         /// toute la salle où il se trouve est vue.

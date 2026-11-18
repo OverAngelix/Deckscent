@@ -36,7 +36,7 @@ On part de la surface (hub), on descend, on récupère du butin, et on choisit d
 1. On arrive sur une **nouvelle grille** avec une tuile de départ.
 2. On pose des tuiles et on explore. Chaque étage a une **recette** affichée : les types de salles à poser avant d'obtenir le boss, par exemple **2 salles de monstre, 1 piège et 1 trésor**.
 3. Une fois la recette remplie, la **carte boss** arrive dans la main. On choisit où la poser.
-   **❓ À décider** (idée de l'utilisateur, 2026-11-16) : le jeu pose lui-même la salle du boss sur un emplacement **jamais visité**, loin du joueur, quitte à remplacer une tuile posée mais inexplorée (même un couloir). Ça force à aller vers l'inexploré.
+   **Décidé** (idée de l'utilisateur, 2026-11-16, faite le 2026-11-18) : plutôt qu'une carte boss en main, le jeu pose lui-même l'**antre du boss** sur des emplacements **jamais visités**, le plus loin possible du joueur, quitte à remplacer des tuiles posées mais inexplorées (même un couloir), contre le labyrinthe (porte libre ou mur percé). Ça force à aller vers l'inexploré. Voir [antre.md](antre.md).
 4. Le **boss est l'escalier** : le vaincre ouvre l'étage suivant.
 
 - Une salle ne compte qu'**une fois nettoyée** : monstres tués, piège traversé ou désamorcé, trésor ouvert. Impossible de tricher en posant loin et en évitant.

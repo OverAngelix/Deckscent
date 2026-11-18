@@ -36,8 +36,12 @@ namespace Deckscent
         /// <summary>Mémoire de l'étage (cases vues, emplacements visités), neuve à chaque partie (<see cref="ExplorationTracker"/>).</summary>
         public Exploration Exploration { get; private set; }
         public Maze Maze => maze;
-        /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées).</summary>
+        /// <summary>Étage en cours (1 = le premier). Monte à chaque boss vaincu (<see cref="NextFloor"/>).</summary>
+        public int Floor { get; private set; } = 1;
+        /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées). Aussi à chaque nouvel étage.</summary>
         public event System.Action GameStarted;
+        /// <summary>Le jeu vient de poser l'antre du boss (mission remplie).</summary>
+        public event System.Action<TileCard> BossLairPlaced;
 
 #if UNITY_EDITOR
         bool _refreshQueued;
@@ -88,15 +92,55 @@ namespace Deckscent
         }
 #endif
 
-        /// <summary>Nouveau plateau : le départ (et le donjon de démo si coché), une main neuve.</summary>
+        /// <summary>Nouvelle partie : premier étage.</summary>
         public void NewGame()
+        {
+            Floor = 1;
+            if (Application.isPlaying)
+                RunStats.Reset();
+            StartFloor();
+        }
+
+        /// <summary>
+        /// Étage suivant (le boss est vaincu, on descend) : nouveau plateau, nouveau départ, nouvelle
+        /// main et nouvelle mission. Le joueur garde ses PV (choix de l'utilisateur), c'est à lui de
+        /// se replacer au départ (<see cref="GameStarted"/>).
+        /// </summary>
+        public void NextFloor()
+        {
+            Floor++;
+            StartFloor();
+        }
+
+        /// <summary>
+        /// Pose l'antre du boss (mission remplie) : sur des emplacements jamais visités, le plus loin
+        /// possible du joueur (<see cref="DungeonBoard.FindBossLair"/>). Faux s'il n'y a pas de place
+        /// pour l'instant (à réessayer quand le plateau ou le joueur bouge) ou si elle est déjà posée.
+        /// </summary>
+        public bool TryPlaceBossLair(Vector2Int playerCell)
+        {
+            if (Board == null || Board.BossLair != null)
+                return false;
+            var plan = Board.FindBossLair(Exploration.SlotOf(playerCell), s => Exploration != null && Exploration.IsSlotVisited(s));
+            if (plan == null)
+                return false;
+            // Ce qui avait été vu des tuiles remplacées est oublié : l'antre reste à découvrir.
+            Exploration?.Forget(plan.Card.Slots.ConvertAll(o => plan.Anchor + o));
+            Board.PlaceBossLair(plan);
+            BossLairPlaced?.Invoke(plan.Card);
+            return true;
+        }
+
+        void StartFloor()
         {
             if (Board != null)
                 Board.TilesChanged -= Apply;
-            var rng = seed != 0 ? new System.Random(seed) : new System.Random();
+            // Graine fixe : chaque étage a quand même son propre tirage.
+            var floorSeed = seed != 0 ? seed + (Floor - 1) * 7919 : 0;
+            var rng = floorSeed != 0 ? new System.Random(floorSeed) : new System.Random();
             Board = new DungeonBoard(boardSize);
-            Board.NewGame(demo ? DemoDungeon.Starter : starterIndex, rng);
-            if (demo)
+            Board.NewGame(demo && Floor == 1 ? DemoDungeon.Starter : Floor == 1 ? starterIndex : -1, rng);
+            if (demo && Floor == 1)
                 foreach (var refusal in DemoDungeon.Build(Board))
                     Debug.LogWarning("Donjon de démo : tuile refusée, " + refusal, this);
             Board.TilesChanged += Apply;
@@ -104,16 +148,16 @@ namespace Deckscent
             foreach (var pos in Board.TilePositions)
                 if (Board.GetTile(pos).IsRoom)
                     rooms.Add(Board.GetTile(pos));
-            Deck = new TileDeck(deck, seed, rooms.Count);
-            // Plafond de salles par étage : la pioche compte celles qu'on pose.
+            Deck = new TileDeck(deck, floorSeed, rooms.Count);
+            // Plafond de salles par étage : la pioche compte celles qu'on pose (pas l'antre du boss).
             Board.TilePlaced += (_, card) =>
             {
-                if (card.IsRoom)
+                if (card.IsRoom && !card.IsBossLair)
                     Deck.RoomsPlaced++;
             };
             // Hasard à part pour la mission : le tirage des cartes n'en dépend pas.
             Exploration = new Exploration();
-            Mission = Mission.Draw(seed != 0 ? new System.Random(seed * 31 + 7) : new System.Random(), mission);
+            Mission = Mission.Draw(floorSeed != 0 ? new System.Random(floorSeed * 31 + 7) : new System.Random(), mission);
             Apply();
             GameStarted?.Invoke();
         }

@@ -113,6 +113,12 @@ Assets/Scripts/Mission/MissionTracker.cs  Suit la mission en jeu (objet « Conte
 docs/mission.md                        Doc de la mission de l'étage
 Assets/Scripts/Exploration/Exploration.cs  Mémoire de l'étage (brouillard) : cases vues, emplacements visités (Dungeon.Exploration)
 Assets/Scripts/Exploration/ExplorationTracker.cs  Nourrit la mémoire en jeu (ligne de vue, 5 cases, salle entière ; objet « Contenu »)
+Assets/Scripts/Enemies/Werewolf.cs     Boss loup-garou (réveil, coup armé, charge annoncée, louveteaux) ; WolfCub.cs ; WerewolfRig.cs = poses procédurales os par os
+Assets/Scripts/Props/LairDecor.cs      Décor de l'antre (obstacles) et sa disposition ; Stairs.cs = escalier vers l'étage suivant
+Assets/Scripts/Editor/BossBuilder.cs   Menus Deckscent > Construire les prefabs du boss / Ajouter le boss aux scènes
+Assets/Scripts/Editor/WerewolfPlate.cs Menu Deckscent > Planche du loup-garou (→ docs/images/loup_garou.png)
+Assets/Prefabs/Enemies/LoupGarou, Louveteau ; Props/Escalier ; Props/Antre/ (Brasero, Trone, Cage, Os, Ossements)
+docs/antre.md, docs/monstres/loup-garou.md   Antre du boss posée par le jeu, escalier, étages ; le boss
 ```
 
 **Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
@@ -181,6 +187,7 @@ Voir `README.md` (packs, versions, réimport).
 - **Touches affichées selon l'appareil** (`docs/menu.md`) : jamais de nom de touche en dur dans un texte ; une aide se construit avec `KeyPrompts` (`Of("Map/Place")`, `Confirm()`, `Back()`, `Navigate(axe)`) et se dessine avec `KeyPrompts.DrawHints` (libellés `aide.…`). Un écran qui affiche des touches appelle `ControlDevice.Listen()` à son activation et se redessine sur `ControlDevice.Changed`.
 - **Tout texte affiché est un code clé passé à `Loc.T`** (FR / EN, option du menu ; demande de l'utilisateur) : jamais de texte affiché en dur dans le code. Clé `domaine.nom` (minuscules, sans accents, `_`), ajoutée dans `Loc.Fr` **et** `Loc.En` ; `Loc.F` pour les `{0}`. Formes : `forme.<identifiant>` ; refus de pose : `refus.…`. `LocTests` vérifie que les deux dictionnaires ont les mêmes clés et que toute clé du code existe. Les tests qui vérifient des textes forcent le français (`GameSettings.SetLocale("fr", false)`).
 - **Aucun ennemi ni piège fixe dans la scène de jeu** : tout vient du contenu des cartes posées (Spawner). Le donjon de démo (`Test_Donjon`) a du contenu sur ses tuiles (`DemoDungeon.Contents`) pour essayer le combat sans rien poser.
+- **Antre du boss et étages** (`docs/antre.md`) : mission remplie → le jeu pose l'antre (`DungeonBoard.FindBossLair` : jamais visité, le plus loin du joueur, peut écraser des tuiles inexplorées, contre le labyrinthe, tout reste relié). Boss vaincu → escalier → `Dungeon.NextFloor` (PV gardés, nouvelle main, nouvelle mission ; choix de l'utilisateur). Le loup-garou est animé **par code** (`WerewolfRig`, choix de l'utilisateur : pas d'animations dans les packs) ; régler ses poses sur la planche (*Deckscent > Planche du loup-garou*). Dans l'éditeur, un maillage riggé n'est redéformé qu'une fois par image : pour un rendu hors Play mode, le cuire (`BakeMesh`).
 - **Mission de l'étage** (`docs/mission.md`) : objectifs tirés au hasard, affichés dans le HUD et sur la carte. Le Spawner rattache chaque élément à sa tuile (`TileContents`) ; une salle ne compte qu'une fois **nettoyée** (monstres tués, coffres ouverts ; pas besoin de franchir ses dalles, objectif à part) **et visitée**.
 - **Tour par tour** (`docs/tour-par-tour.md`) : ce qui joue après le joueur hérite de `GridEntity` (liste `GridEntity.All`, dans l'ordre d'apparition) ; un ennemi qui meurt appelle `Retire()` avant son animation. Prefabs du contenu construits par `ContentBuilder` (relancer écrase les réglages faits à la main).
 

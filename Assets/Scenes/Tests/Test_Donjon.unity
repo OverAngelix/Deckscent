@@ -329,6 +329,14 @@ MonoBehaviour:
   slimePrefab: {fileID: 8827586163420759954, guid: 7dc1d44a4595fb14b873f9253ef33147, type: 3}
   spikeTrapPrefab: {fileID: 6223508927463085906, guid: 7f30c979c6fb2734a828addec31c2612, type: 3}
   chestPrefab: {fileID: 7766835309634020633, guid: 66820116c90928046b25d85476cd103a, type: 3}
+  werewolfPrefab: {fileID: 7638935935819276164, guid: 239db9c9baeef5c4190682fc62d9886a, type: 3}
+  cubPrefab: {fileID: 2014842790049198225, guid: 2f51fa35fab7a1a40a0cc8718479f59b, type: 3}
+  stairsPrefab: {fileID: 6004886544445118938, guid: 0776a98685d76304481e9fa261a29d2d, type: 3}
+  braseroPrefab: {fileID: 8011386386695505892, guid: 74ce293be53c0064186daf0d6a5cca3d, type: 3}
+  tronePrefab: {fileID: 2542163871147839582, guid: bb0d24d2b62e63b479015c0fad4bf411, type: 3}
+  cagePrefab: {fileID: 7884253990623406644, guid: 56d9294c2d4bb0b4fa334425a7e964a3, type: 3}
+  osPrefab: {fileID: 7908964536312126342, guid: 23793523300fc6e48bd9ac509ef46e70, type: 3}
+  ossementsPrefab: {fileID: 7917518955634234015, guid: c91e1f874a574624a93ee4f77e37fc09, type: 3}
   spawnOnPlace: 1
   seed: 0
 --- !u!4 &608445422

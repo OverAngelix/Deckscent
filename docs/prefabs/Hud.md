@@ -2,7 +2,7 @@
 
 `Assets/Prefabs/UI/Hud.prefab` · [← liste des prefabs](README.md)
 
-Interface en jeu, dessinée en gravure (InkCanvas + TextPool) : PV, Tour / ATQ / DÉF, messages, voile rouge quand on est touché, écran de mort. Canvas en surimpression sous la carte. Voir docs/tour-par-tour.md.
+Interface en jeu, dessinée en gravure (InkCanvas + TextPool) : PV, Étage / Tour / ATQ / DÉF, mission, messages, barre de vie du boss, voile rouge quand on est touché, voile d'encre entre deux étages, écran de mort. Canvas en surimpression sous la carte. Voir docs/tour-par-tour.md.
 
 *Pas d'image : ce prefab n'a rien de visible (caméra, lumières, scripts).*
 
@@ -24,6 +24,7 @@ Hud  [Canvas, CanvasScaler, Hud]
 - **CanvasScaler**
 - **Hud**
   - `player` = (vide) — Le joueur suivi. Vide : cherché dans la scène.
+  - `dungeon` = (vide) — Le donjon (mission de l'étage, en haut à droite). Vide : cherché dans la scène ; sans donjon, pas de mission.
   - `ink` = `Encre`
   - `texts` = `Textes`
   - `restart` = `Player/Wait` — Recommencer après la mort (Player/Wait : Entrée, L3).
@@ -34,6 +35,7 @@ Hud  [Canvas, CanvasScaler, Hud]
   - `healthColor` = (0.85, 0.1, 0.1) — Le rouge des PV, du voile quand on est touché et de « Vous êtes mort ».
   - `hurtFlash` = 0.35 — Opacité du voile rouge au moment du coup (il s'efface ensuite).
   - `toastTime` = 1.8 — Durée d'affichage d'un message (secondes), hors apparition et effacement.
+  - `popupTime` = 0.9 — Durée d'un chiffre de dégâts, qui monte puis s'efface (secondes).
   - `restartDelay` = 1 — Délai avant d'accepter « recommencer » sur l'écran de mort (évite un redémarrage involontaire).
 
 ### Hud / Encre

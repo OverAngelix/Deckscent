@@ -25,7 +25,9 @@ Player  [PlayerController, AudioSource, SoundEmitter]
   - `moveTime` = 0.22 — Durée d'un pas (secondes).
   - `turnTime` = 0.18 — Durée d'un quart de tour (secondes).
   - `waitTime` = 0.25 — Durée minimale d'un tour passé à attendre, pour ne pas enchaîner des dizaines de tours en gardant la touche enfoncée.
+  - `hitStop` = 0.06 — Arrêt sur image quand un coup porte (secondes, temps réel) : le coup « pèse ». 0 = aucun.
   - `turningTakesTurn` = non — Coché : tourner sur place coûte un tour (les ennemis jouent après chaque quart de tour).
+  - `inputBuffer` = 0.3 — Tampon d'entrée (secondes) : une touche tapée pendant l'animation d'un pas ou d'un tour est jouée juste après, si elle date de moins que ça. 0 = pas de tampon.
   - `maxHealth` = 10 — Points de vie au départ (et maximum).
   - `attack` = 1 — Dégâts d'une attaque (avancer vers un ennemi droit devant), avant sa défense.
   - `defense` = 0 — Retirée des dégâts reçus (coups, pièges). Un coup fait toujours au moins 1.

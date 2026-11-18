@@ -20,6 +20,10 @@ namespace Deckscent
 
         /// <summary>L'ennemi vient de mourir (avant son animation de sortie).</summary>
         public event Action<Enemy> Died;
+        /// <summary>Un ennemi, n'importe lequel, vient de perdre des PV (le HUD affiche les dégâts au-dessus de lui).</summary>
+        public static event Action<Enemy, int> Damaged;
+        /// <summary>Un ennemi, n'importe lequel, vient de mourir (bilan de la partie).</summary>
+        public static event Action<Enemy> Killed;
 
         public int Health { get; protected set; }
         public int MaxHealth => maxHealth;
@@ -29,16 +33,33 @@ namespace Deckscent
 
         protected virtual void Awake() => Health = maxHealth;
 
+        /// <summary>
+        /// Renforce l'ennemi pour un étage plus profond (GDD : la difficulté monte avec la
+        /// profondeur) : +1 PV par étage sous le premier, +1 d'attaque tous les 3 étages.
+        /// À appeler à l'apparition, avant qu'il ne joue.
+        /// </summary>
+        public virtual void ScaleForFloor(int floor)
+        {
+            var extra = Mathf.Max(0, floor - 1);
+            maxHealth += extra;
+            damage += extra / 3;
+            Health = maxHealth;
+        }
+
         public void TakeDamage(int amount)
         {
             if (!IsActive || amount <= 0)
                 return;
-            Health -= Combat.DamageAfterDefense(amount, defense);
+            // Pas plus que ce qu'il lui reste (bilan, chiffres de dégâts).
+            var dealt = Mathf.Min(Combat.DamageAfterDefense(amount, defense), Health);
+            Health -= dealt;
+            Damaged?.Invoke(this, dealt);
             if (Health <= 0)
             {
                 Health = 0;
                 Retire();
                 Died?.Invoke(this);
+                Killed?.Invoke(this);
                 OnDeath();
             }
             else
