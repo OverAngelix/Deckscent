@@ -93,9 +93,9 @@ LoupGarou  [AudioSource, SoundEmitter, Werewolf]
   - `chargeRange` = 6 — Distance maximale de la charge (cases). Il ne charge qu'à partir de 2 cases.
   - `chargeCooldown` = 0 — Tours d'attente entre deux charges.
   - `heavyDamage` = 3 — Dégâts du coup chargé (annoncé un tour à l'avance, porté au tour suivant même dans le vide). Le coup de base (sans annonce) fait les dégâts « Damage ».
-  - `basicWeight` = 2 — Poids du coup de base (2 dégâts, tout de suite, à côté du joueur). 1 sur 6.
-  - `heavyWeight` = 2 — Poids du coup chargé (3 dégâts, annoncé, porté au tour suivant même dans le vide). 3 sur 6.
-  - `chargeWeight` = 3 — Poids de la charge (4 dégâts, annoncée, en ligne droite). 2 sur 6. Joueur pas aligné : il s'approche à la place.
+  - `basicWeight` = 1 — Poids du coup de base (2 dégâts, tout de suite, à côté du joueur). 1 sur 6.
+  - `heavyWeight` = 3 — Poids du coup chargé (3 dégâts, annoncé, porté au tour suivant même dans le vide). 3 sur 6.
+  - `chargeWeight` = 2 — Poids de la charge (4 dégâts, annoncée, en ligne droite). 2 sur 6. Joueur pas aligné : il s'approche à la place.
   - `cubs` = 2 — Louveteaux appelés à la moitié de ses PV.
   - `chaseRange` = 40 — Distance de poursuite (en pas, murs contournés).
   - `rig` = `Modèle` — Les poses du modèle (WerewolfRig, sur le modèle).

@@ -141,7 +141,7 @@ La tuile de base fait **1×1 emplacement** du plateau (comme aujourd'hui). S'y a
 |---|---|
 | **Monstres + trésor** | Salle gardée : plus le monstre est dur, meilleur est le butin. |
 | **Pièges** | Dalles piégées, fléchettes, fosses… parfois avec un coffre au bout. |
-| **Repos / sanctuaire** | Tuile sûre : rallumer la torche, manger, soigner. Rare. |
+| **Repos / sanctuaire** | Tuile sûre : rallumer la torche, manger, soigner. Rare. Une fontaine a été essayée puis retirée (2026-11-20), voir [decor.md](decor.md). |
 | **Marchand / autel** | Échanger du butin contre des cartes, objets ou bénédictions. |
 | **Boss (escalier)** | La sortie de l'étage, obtenue en remplissant la recette. |
 

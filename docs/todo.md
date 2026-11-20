@@ -31,10 +31,12 @@ Cocher (✅) chaque tâche finie et validée.
 
 ## En plus (recommandé)
 
-- **Règle du GDD à vérifier** : pas de pose de tuile en combat (monstre qui voit le joueur à 3 cases ou moins).
-- **Un 2ᵉ monstre** avant le boss (errant ou embusqué).
+- 🟡 **Règle du GDD** (2026-11-18, à valider) : pas de pose de tuile en combat (monstre éveillé à 3 pas ou moins, murs contournés : `Combat.InCombat`).
+- 🟡 **Un 2ᵉ monstre** (2026-11-18, à valider) : la [mimique](monstres/mimique.md), embusquée dans les coffres des salles.
 - **Pioche limitée** (jalon 3) : aujourd'hui, elle est infinie.
+- 🟡 **Effets de particules** (2026-11-20, à valider) : pack POLYGON Particle FX, gardés après essai : étoiles du boss sonné, poussière (charge, mort, escalier, mimique, louveteaux), vases et caisses brisés. Retirés : feu, coup porté, giclée, soin ; pièces d'or des coffres gardées en idée (quand il y aura de l'or). Voir [effets.md](effets.md).
 - 🟡 **Ressenti des coups** (en partie, 2026-11-18, à valider) : chiffres de dégâts gravés, éclat d'encre à l'impact, arrêt sur image. Reste : tremblement de caméra (Cinemachine Impulse) sur la charge du boss.
-- 🟡 **Écran de mort avec le bilan** (2026-11-18, à valider) : monstres tués, coffres, boss vaincus, dégâts infligés. Reste : un écran de fin d'étage.
+- 🟡 **Écran de mort avec le bilan** (2026-11-18, à valider) : monstres tués, coffres, boss vaincus, dégâts infligés. Le bilan du sous-sol quitté s'affiche aussi pendant la descente.
+- 🟡 **Décor d'ambiance et petits éléments de jeu** (2026-11-18, à valider) : vases et caisses qui explosent (potion, carte), statues, bougies allumées, crânes (la fontaine est retirée pour le moment), voir [decor.md](decor.md).
 - 🟡 **Tampon d'entrée** (2026-11-18, à valider) : une touche tapée pendant un pas est jouée ensuite.
 - **Les succès sur le menu** : liste des succès consultable depuis l'écran titre.

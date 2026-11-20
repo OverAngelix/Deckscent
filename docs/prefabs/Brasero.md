@@ -17,7 +17,7 @@ Brasero  [DecorFallback, LairDecor]
 │  ├─ Pied  [MeshFilter, MeshRenderer]
 │  └─ Vasque  [MeshFilter, MeshRenderer]
 ├─ Flamme  [MeshFilter, MeshRenderer]
-└─ Lumière  [Light, TorchFlicker]
+└─ Lumière  [Light, UniversalAdditionalLightData, TorchFlicker]
 ```
 
 ## Contenu
@@ -80,7 +80,9 @@ Brasero  [DecorFallback, LairDecor]
 - **Transform**
   - position (0, 1.7, 0)
 - **Light**
-  - Point, couleur (1, 1, 1), intensité 3, portée 9 m, ombres None
+  - Point, couleur (1, 1, 1), intensité 3, portée 9 m, ombres Hard
+- **UniversalAdditionalLightData**
 - **TorchFlicker**
   - `baseIntensity` = 2.5 — Intensité moyenne de la torche.
   - `flicker` = 0.35 — Amplitude du vacillement.
+  - `howlReach` = 20 — Quand un loup-garou hurle à moins de cette distance (mètres), la flamme s'embrase un instant. 0 = jamais.
