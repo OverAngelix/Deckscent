@@ -113,8 +113,7 @@ namespace Deckscent
             if (left && !IsCleared)
             {
                 IsCleared = true;
-                Cleared?.Invoke(this);
-                player.Notify(Loc.T("message.piege_franchi"));
+                Cleared?.Invoke(this); // sans message : « Piège franchi » n'apportait rien (retour de l'utilisateur)
             }
             _turn = player.Turn;
             SetState(StateFor(_turn));

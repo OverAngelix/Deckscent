@@ -23,7 +23,7 @@ Une grille au sol (Synty `SM_Trap_Spears_Grate_01`) d'où sortent des piques (`S
 - **Les ennemis aussi** prennent les pics : on peut y attirer un slime.
 - Tourner ne coûte pas de tour, donc ne fait pas avancer le cycle. Pour passer : avancer au tour de repos, ou attendre (Entrée) le bon moment.
 - La dalle ne bloque jamais la case.
-- **Nettoyée** : la première fois que le joueur en ressort, elle est marquée nettoyée (`IsCleared`, événement `Cleared`) et le HUD affiche « Piège franchi ». Ça comptera pour la recette d'étage. Elle reste dangereuse ensuite.
+- **Nettoyée** : la première fois que le joueur en ressort, elle est marquée nettoyée (`IsCleared`, événement `Cleared`), sans message au HUD (retiré à la demande de l'utilisateur). Ça compte pour l'objectif « Pièges franchis » de la [mission](mission.md). Elle reste dangereuse ensuite.
 - Le Spawner décale le cycle des dalles d'une même tuile (`Phase Offset`) : une salle piégée se traverse en rythme.
 
 ### Réglages (prefab `DallePics`)

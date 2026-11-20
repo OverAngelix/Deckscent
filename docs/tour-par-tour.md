@@ -48,10 +48,10 @@ Le comportement du slime est décrit dans [monstres/slime.md](monstres/slime.md)
 Prefab `Assets/Prefabs/UI/Hud.prefab` ([doc](prefabs/Hud.md)), dessiné en gravure comme la carte (`InkCanvas` + `TextPool`), dans toutes les scènes :
 
 - en haut à gauche, un cartouche papier à double filet : **PV**, une case par point de vie (rouge pleine), et dessous **Tour N · ATQ · DÉF** ;
-- en haut au centre, un **message** de 2 secondes quand il se passe quelque chose (« Piège franchi », « Coffre : +3 PV »…). N'importe quel script l'affiche avec `player.Notify(texte)` ;
+- en haut au centre, un **message** de 2 secondes quand il se passe quelque chose (« Coffre : +3 PV »…). N'importe quel script l'affiche avec `player.Notify(texte)` ;
 - le voile rouge, l'écran de mort.
 
-Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s). Textes traduits (`Loc`, option Langue du menu) : les messages aussi, traduits par le script qui appelle `Notify` (`Loc.T("message.piege_franchi")`).
+Canvas en surimpression (ordre 50, sous la carte à 100) : le post-process gravure ne le touche pas, d'où le rouge franc. Il tourne en temps réel (`unscaledDeltaTime`) : la pause de la carte ne le fige pas. Réglages : couleurs (papier, encre, rouge), `Hurt Flash` (0,35), `Toast Time` (1,8 s), `Restart Delay` (1 s). Textes traduits (`Loc`, option Langue du menu) : les messages aussi, traduits par le script qui appelle `Notify` (`Loc.F("message.coffre_pv", …)`).
 
 ## Réglages du joueur (prefab `Player`)
 

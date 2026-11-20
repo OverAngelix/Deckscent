@@ -196,7 +196,6 @@ namespace Deckscent
             { "bilan.coffres",           "Coffres ouverts : {0}" },
             { "bilan.boss",              "Boss vaincus : {0}" },
             { "bilan.degats",            "Dégâts infligés : {0}" },
-            { "message.piege_franchi", "Piège franchi" },
             { "message.coffre_carte",  "Coffre : une carte de plus dans la main" },
             { "message.coffre_pv",     "Coffre : +{0} PV" },
         };
@@ -357,7 +356,6 @@ namespace Deckscent
             { "bilan.coffres",           "Chests opened: {0}" },
             { "bilan.boss",              "Bosses slain: {0}" },
             { "bilan.degats",            "Damage dealt: {0}" },
-            { "message.piege_franchi", "Trap crossed" },
             { "message.coffre_carte",  "Chest: one more card in hand" },
             { "message.coffre_pv",     "Chest: +{0} HP" },
         };

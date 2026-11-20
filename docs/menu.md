@@ -75,7 +75,7 @@ Le code n'écrit jamais un texte affiché, mais son **code clé**, traduit au mo
 - Une clé absente de la langue en cours retombe sur le **français** ; absente partout, la **clé elle-même** s'affiche (on la repère tout de suite à l'écran).
 - `Loc.In("fr", clé)` donne le texte dans une langue précise sans toucher à l'option (la planche des tuiles l'utilise).
 
-Sont traduits : le menu, le **menu pause**, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (piège franchi, coffre). Les noms de formes ont pour clé `forme.` + l'identifiant de la forme (`TileCard.DisplayName` les traduit) ; les raisons de refus sont des clés `refus.…` renvoyées par `DungeonBoard.CheckPlacement`.
+Sont traduits : le menu, le **menu pause**, l'**écran de carte** (titre, étage, main, légende, aide, noms des formes de tuiles, raisons de refus de pose, messages), le **HUD** (PV, tour, ATQ, DÉF, écran de mort) et les **messages** du jeu (coffre, butin). Les noms de formes ont pour clé `forme.` + l'identifiant de la forme (`TileCard.DisplayName` les traduit) ; les raisons de refus sont des clés `refus.…` renvoyées par `DungeonBoard.CheckPlacement`.
 
 Tests (`LocTests`) : `Fr` et `En` ont exactement les mêmes clés, les `{0}` se correspondent, les clés sont bien formées, et **toute clé écrite dans le code** (`Loc.T("…")` ou un texte `"domaine.nom"`) existe : une faute de frappe dans une clé fait échouer les tests.
 

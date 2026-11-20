@@ -247,7 +247,7 @@ namespace Deckscent.Tests
 
             yield return Tap(_keyboard.sKey); // tour 3 : on ressort
             Assert.That(trap.IsCleared, Is.True);
-            Assert.That(_messages, Does.Contain("Piège franchi"));
+            Assert.That(_messages, Is.Empty, "pas de message « Piège franchi »");
         }
 
         [UnityTest]
