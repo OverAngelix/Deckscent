@@ -18,6 +18,7 @@ Les packs sous licence ne sont **pas versionnés** (`.gitignore`) : la licence i
 | POLYGON Fantasy Characters | 1.6.1 | `Assets/Synty/PolygonFantasyCharacters` | Personnages : PNJ du hub, héros des classes. |
 | POLYGON Fantasy Rivals | 1.4.2 | `Assets/Synty/PolygonFantasyRivals` | Ennemis humanoïdes (rivaux, boss). |
 | POLYGON Icons | 1.2.2 | `Assets/Synty/PolygonIcons` | Icônes 3D (objets, butin, UI). |
+| POLYGON Particle FX | 1.4.1 | `Assets/Synty/PolygonParticleFX` | Effets de particules (poussière, étoiles, éclats), voir `docs/effets.md`. Après réimport : *Deckscent > Construire les effets de particules*. |
 
 Fichiers d'origine : `POLYGON_<Pack>_Unity_2022_3_v<version>.unitypackage` (achetés sur le site Synty). Ils sont faits pour Unity 2022.3 et s'importent tels quels dans Unity 6.
 

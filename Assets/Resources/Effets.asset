@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efe916af9c082a342929be6840911537, type: 3}
+  m_Name: Effets
+  m_EditorClassIdentifier: Deckscent::Deckscent.FxLibrary
+  puff: {fileID: 8330095670513618164, guid: 505ee4872ff01874a97e680e0c0986dd, type: 3}
+  stunned: {fileID: 7246275563499544726, guid: e2d7143be01c61141be58e034eb8b971, type: 3}
+  bigDust: {fileID: 3507990804119360177, guid: 28ff547b5b192b2458c9791e06b3fe52, type: 3}
+  vaseBreak: {fileID: 9159853478819130173, guid: 6e806801efd50b94fb68a18f8b76a6e7, type: 3}
+  crateBreak: {fileID: 6201554376632516358, guid: 10728d8e10fccd442a20eeee10900e69, type: 3}
