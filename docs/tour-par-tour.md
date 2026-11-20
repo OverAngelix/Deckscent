@@ -32,6 +32,7 @@ On a donc le temps de se tourner face à un monstre avant de frapper, et poser d
 - **Attaquer** : avancer vers un ennemi juste devant. Petit élan, le coup part au bout de l'élan. Seulement **devant soi** : un ennemi sur le côté ou derrière, il faut d'abord se tourner (gratuit).
 - **Dégâts** fixes, pas de hasard : `Attack` du joueur, `Damage` de l'ennemi.
 - **Défense** : retirée des dégâts reçus, mais un coup qui porte fait **toujours au moins 1** (défense 1 contre 3 = 2, contre 1 = 1). Vaut aussi pour les pièges. Tout le monde a 0 par défaut (`Combat.DamageAfterDefense`).
+- **Cartouche des PV** : les cases de PV, puis « Tour · ATQ · DÉF » (le sous-sol n'y est pas : il est sur la carte et à la descente) ; il s'élargit si la ligne s'allonge.
 - **Touché** : l'écran se voile de rouge et la caméra tremble.
 - **Coup porté** : le **chiffre des dégâts** (« −2 », en rouge, sans cadre : choix de l'utilisateur) monte au-dessus de l'ennemi et s'efface, avec un court **arrêt sur image** (`Hit Stop`, 0,06 s) : le coup « pèse ».
 - **Tampon d'entrée** : un pas, un quart de tour ou Interact tapé **pendant** l'animation précédente est joué juste après (s'il date de moins de `Input Buffer` = 0,3 s), au lieu d'être perdu. On enchaîne les déplacements sans attendre la fin de chaque pas.

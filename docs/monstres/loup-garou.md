@@ -31,6 +31,8 @@ Tout est **annoncé un tour à l'avance** : le joueur a toujours de quoi réagir
 3. **2ᵉ phase** à la moitié de ses PV : il hurle et appelle **2 louveteaux** sur les cases libres les plus proches (une fois).
 4. Il s'approche d'une case par le chemin le plus court (murs et autres monstres contournés) quand son attaque ne peut pas partir.
 
+**Hurlement** : les braseros et les torches proches s'embrasent un instant ([antre.md](../antre.md#son-décor)).
+
 **Touché** : rejeté en arrière, blanchi un instant. **Mort** : la meute fuit (les louveteaux meurent), il bascule en arrière et s'enfonce dans le sol ; la musique quitte le mode boss ; **l'escalier** sort du sol à sa place ([antre.md](../antre.md#lescalier)).
 
 ## Louveteau

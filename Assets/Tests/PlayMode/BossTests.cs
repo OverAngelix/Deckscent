@@ -193,6 +193,60 @@ namespace Deckscent.Tests
         }
 
         [UnityTest]
+        public IEnumerator LaFontaineSoigneUneSeuleFois()
+        {
+            yield return LoadScene();
+            var spawner = Object.FindAnyObjectByType<Spawner>();
+            var shrine = (Shrine)spawner.SpawnElement("sanctuaire", _player.Cell);
+            Assert.That(shrine, Is.Not.Null);
+            Assert.That(shrine.BlocksPlayer, Is.False, "on passe dessus");
+            _player.TakeDamage(5);
+            var health = _player.Health;
+            yield return shrine.TakeTurn(_player);
+            Assert.That(_player.Health, Is.EqualTo(Mathf.Min(_player.MaxHealth, health + shrine.Heal)));
+            Assert.That(shrine.Used, Is.True);
+            _player.TakeDamage(2);
+            health = _player.Health;
+            yield return shrine.TakeTurn(_player);
+            Assert.That(_player.Health, Is.EqualTo(health), "tarie");
+        }
+
+        [UnityTest]
+        public IEnumerator LeDecorAmbianceApparaitEtLesVasesSeBrisent()
+        {
+            yield return LoadScene();
+            Assert.That(GridEntity.AllOf<LairDecor>().Count, Is.GreaterThan(0), "décor dans les salles et couloirs");
+            var vase = GridEntity.AllOf<Breakable>().FirstOrDefault();
+            Assert.That(vase, Is.Not.Null, "un vase ou une caisse dans les coins des salles");
+            Assert.That(vase.BlocksPlayer, Is.True);
+            vase.TakeDamage(1);
+            Assert.That(vase.IsBroken, Is.True);
+            Assert.That(vase.BlocksPlayer, Is.False, "la case se libère");
+        }
+
+        [UnityTest]
+        public IEnumerator LaMimiqueMordQuandOnVeutLOuvrir()
+        {
+            yield return LoadScene();
+            var spawner = Object.FindAnyObjectByType<Spawner>();
+            var maze = _dungeon.Maze;
+            var dir = -1;
+            for (var d = 0; d < 4 && dir < 0; d++)
+                if (maze.CanStep(_player.Cell, d) && GridEntity.At<GridEntity>(_player.Cell + Grid.Dirs[d]) == null)
+                    dir = d;
+            Assert.That(dir, Is.GreaterThanOrEqualTo(0));
+            var mimic = (Mimic)spawner.SpawnElement("mimique", _player.Cell + Grid.Dirs[dir]);
+            Assert.That(mimic.IsHidden, Is.True);
+            Assert.That(mimic.Threatens, Is.False, "cachée : pas de combat");
+            Assert.That(mimic.CanInteract, Is.True, "elle se fait passer pour un coffre");
+            var health = _player.Health;
+            yield return mimic.Interact(_player);
+            Assert.That(mimic.IsHidden, Is.False, "révélée");
+            Assert.That(_player.Health, Is.LessThan(health), "la morsure de surprise");
+            Assert.That(Combat.InCombat(_player), Is.True, "révélée, à côté : en combat");
+        }
+
+        [UnityTest]
         public IEnumerator LesMonstresSontPlusFortsPlusBas()
         {
             yield return LoadScene();

@@ -127,7 +127,7 @@ namespace Deckscent.Tests
             Assert.That(throne, Is.EqualTo(new Vector2Int(4, 5)));
             Assert.That(boss, Is.EqualTo(new Vector2Int(4, 4)));
             // Tout ce qui ne bloque pas reste relié à la porte.
-            var blocking = decor.Where(d => d.kind != "ossements").Select(d => d.cell).ToHashSet();
+            var blocking = decor.Where(d => d.kind != "ossements" && d.kind != "chaines").Select(d => d.cell).ToHashSet();
             var free = cells.Where(c => !blocking.Contains(c)).ToHashSet();
             var seen = new HashSet<Vector2Int> { door };
             var queue = new Queue<Vector2Int>(seen);

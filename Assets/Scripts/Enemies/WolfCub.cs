@@ -138,6 +138,7 @@ namespace Deckscent
         protected override void OnDeath()
         {
             _dying = true;
+            Fx.Play(Fx.Get(l => l.puff), transform.position + Vector3.up * 0.3f);
             rig?.SetPose(WerewolfRig.Pose.Mort, 0.2f);
             StartCoroutine(Shrink());
         }

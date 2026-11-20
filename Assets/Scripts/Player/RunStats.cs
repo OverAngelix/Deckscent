@@ -15,12 +15,26 @@ namespace Deckscent
         public static int Bosses { get; private set; }
         public static int DamageDealt { get; private set; }
 
+        /// <summary>Monstres tués et coffres ouverts au début du sous-sol en cours (bilan de fin d'étage).</summary>
+        public static int FloorStartKills { get; private set; }
+        public static int FloorStartChests { get; private set; }
+        public static int FloorStartTurn { get; private set; }
+
         public static void Reset()
         {
             Kills = 0;
             Chests = 0;
             Bosses = 0;
             DamageDealt = 0;
+            BeginFloor(0);
+        }
+
+        /// <summary>Un nouveau sous-sol commence (au tour `turn`) : le bilan de l'étage repart de là.</summary>
+        public static void BeginFloor(int turn)
+        {
+            FloorStartKills = Kills;
+            FloorStartChests = Chests;
+            FloorStartTurn = turn;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

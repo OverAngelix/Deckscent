@@ -74,6 +74,9 @@ namespace Deckscent
         static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         static readonly int Glow = Shader.PropertyToID("_Glow");
 
+        /// <summary>Un loup-garou hurle (position) : les flammes proches s'embrasent (<see cref="TorchFlicker"/>).</summary>
+        public static event Action<Vector3> Howled;
+
         /// <summary>Le boss vient de se réveiller (musique du boss).</summary>
         public event Action<Werewolf> Woke;
         /// <summary>2ᵉ phase : il appelle des louveteaux (le Spawner les fait apparaître autour de lui).</summary>
@@ -85,6 +88,7 @@ namespace Deckscent
         /// <summary>Cases de son antre (pour le réveil). Données par le Spawner.</summary>
         public HashSet<Vector2Int> Lair { get; set; }
         public bool IsAwake => _state != State.Dormant;
+        public override bool Threatens => IsActive && IsAwake;
         /// <summary>Direction de la charge annoncée (indice de <see cref="Grid.Dirs"/>), -1 sinon.</summary>
         public int AnnouncedCharge => _state == State.Crouched ? _chargeDir : -1;
         public bool IsArmed => _state == State.Armed;
@@ -257,6 +261,7 @@ namespace Deckscent
                     yield break;
                 case State.Stunned:
                     _state = State.Awake;
+                    StopStars();
                     rig?.SetPose(WerewolfRig.Pose.Garde, 0.4f);
                     yield break;
                 case State.Crouched:
@@ -315,6 +320,7 @@ namespace Deckscent
         {
             rig?.SetPose(WerewolfRig.Pose.Hurle, 0.3f);
             sounds?.Play(SoundBank.Howl, 1f);
+            Howled?.Invoke(transform.position);
             yield return Animate(1.1f, _ => { });
             rig?.SetPose(WerewolfRig.Pose.Garde, 0.4f);
         }
@@ -421,6 +427,9 @@ namespace Deckscent
                 yield return Animate(0.2f, t => transform.position = Vector3.Lerp(end, start, Smooth(t)));
                 _state = State.Stunned;
                 rig?.SetPose(WerewolfRig.Pose.Sonne, 0.2f);
+                Fx.Play(Fx.Get(l => l.bigDust), transform.position + WorldDir(step) * 1.2f);
+                StopStars();
+                _stars = Fx.Play(Fx.Get(l => l.stunned), transform.position + Vector3.up * 2.9f, Quaternion.identity, null, transform);
                 _player?.Notify(Loc.T("message.boss_sonne"));
             }
         }
@@ -448,9 +457,19 @@ namespace Deckscent
             rig?.SetPose(keep == WerewolfRig.Pose.Touche ? WerewolfRig.Pose.Garde : keep, 0.2f);
         }
 
+        GameObject _stars;
+
+        void StopStars()
+        {
+            if (_stars != null)
+                Destroy(_stars);
+            _stars = null;
+        }
+
         protected override void OnDeath()
         {
             _dying = true;
+            StopStars();
             if (Current == this)
                 Current = null;
             if (_music != null)
@@ -469,6 +488,7 @@ namespace Deckscent
             yield return Animate(0.6f, t => transform.rotation = Quaternion.Slerp(from, to, t * t));
             yield return new WaitForSeconds(0.8f);
             var start = transform.position;
+            Fx.Play(Fx.Get(l => l.bigDust), start);
             yield return Animate(1f, t => transform.position = start + Vector3.down * 1.2f * t);
             Destroy(gameObject);
         }

@@ -131,11 +131,19 @@ namespace Deckscent
         public void Open() => SetOpen(true);
         public void Close() => SetOpen(false);
 
+        bool _inCombat;
+
+        /// <summary>Carte ouverte en plein combat : la pose est refusée.</summary>
+        public bool InCombat => _inCombat;
+
         void SetOpen(bool open)
         {
             if (IsOpen && !open)
                 ClosedFrame = Time.frameCount;
             IsOpen = open;
+            // En combat (un monstre à 3 pas), on regarde la carte mais on ne pose rien (GDD §2).
+            // Le monde est en pause carte ouverte : on le calcule une fois.
+            _inCombat = open && Combat.InCombat(player);
             if (_canvas != null)
                 _canvas.enabled = open;
             // Le joueur ne connaît pas la carte : le monde est en pause tant qu'elle est ouverte.
@@ -335,7 +343,7 @@ namespace Deckscent
             var card = SelectedCard;
             if (card == null || _board == null)
                 return false;
-            var reason = _board.CheckPlacement(slot, card);
+            var reason = Combat.InCombat(player) ? "refus.combat" : _board.CheckPlacement(slot, card);
             if (reason != "")
             {
                 ShowMessage(Loc.T(reason), true);
@@ -473,7 +481,7 @@ namespace Deckscent
             var card = SelectedCard;
             if (card != null && _board.IsInside(_hover) && !_board.HasTile(_hover))
             {
-                var reason = _board.CheckPlacement(_hover, card);
+                var reason = _inCombat ? "refus.combat" : _board.CheckPlacement(_hover, card);
                 text = reason != "" ? Loc.T(reason) : Loc.T("carte.pose_possible");
                 isError = reason != "";
             }
@@ -527,7 +535,7 @@ namespace Deckscent
                     var slot = new Vector2Int(x, y);
                     if (_board.HasTile(slot))
                         DrawFloor(_boardOrigin + (Vector2)slot * tilePx, _cellPx, _board.CellsAt(slot), inkColor, slot * DungeonBoard.TileCells);
-                    else if (card != null && _board.CanPlace(slot, card))
+                    else if (card != null && !_inCombat && _board.CanPlace(slot, card))
                         validAnchors.Add(slot);
                 }
             DrawEdges(_boardOrigin, _cellPx, _board.ToLayout().Split('\n'), true, inkColor, 2f, true);
@@ -566,7 +574,7 @@ namespace Deckscent
             // Aperçu de la carte sous le curseur : tout son plan le suit.
             if (card != null && _board.IsInside(_hover) && !_board.HasTile(_hover))
             {
-                var ok = _board.CanPlace(_hover, card);
+                var ok = !_inCombat && _board.CanPlace(_hover, card);
                 var color = ok ? validColor : invalidColor;
                 var b = card.Bounds();
                 var pos = _boardOrigin + (Vector2)(_hover + b.position) * tilePx;

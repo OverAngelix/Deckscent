@@ -16,7 +16,7 @@ Tâches 5 et 6 de la [todo](todo.md). Une fois la [mission](mission.md) remplie,
 
 Chaque essai se fait sur une copie du plateau (≈ 80 ancres × 6 formes, quelques millisecondes). S'il n'y a pas de place (tout est visité), `MissionTracker` réessaie à chaque tour et à chaque tuile posée.
 
-Ce qui avait été vu des emplacements de l'antre est **oublié** (`Exploration.Forget`) : elle reste à découvrir, en esquisse sur la carte. Elle y est marquée d'un **grand crâne rouge**, même dans le brouillard, et entre dans la légende (« Antre du boss »). Message : « Un hurlement monte des profondeurs : l'antre du boss est sur la carte ».
+Ce qui avait été vu des emplacements de l'antre est **oublié** (`Exploration.Forget`) : elle reste à découvrir, en esquisse sur la carte. Elle y est marquée d'un **grand crâne rouge**, même dans le brouillard, et entre dans la légende (« Antre du boss »). Message : « Un hurlement monte des profondeurs : l'antre du boss est sur la carte », **avec le hurlement du loup-garou**, entendu où que soit le joueur (`PlayerController.PlaySound`).
 
 L'antre ne compte ni dans le plafond de salles de la pioche, ni comme salle nettoyée pour la mission (déjà remplie). Formes : `TileCard.BossShapeList` (`antre`, `antre_3x2`, `antre_2x2`, `antre_2x1`, nom affiché « Antre du boss »), contenu `antre`. Elles ne sont jamais piochées.
 
@@ -26,10 +26,15 @@ L'antre ne compte ni dans le plafond de salles de la pioche, ni comme salle nett
 
 | Pièce | Où | Bloque |
 |---|---|---|
-| **Brasero** (flamme et lumière blanche, sans ombre) | les quatre coins, et de part et d'autre du trône | oui |
+| **Brasero** (flamme et lumière blanche, ombres en basse résolution pour ne pas traverser les murs) | les quatre coins, et de part et d'autre du trône | oui |
 | **Trône** (`SM_Prop_Skeleton_Knight_Throne_01`) | milieu du mur le plus loin des portes (à vol d'oiseau), **adossé au mur** ; le boss dort devant | oui |
 | **Cage** de torture, **tas d'os** | le long des murs des grandes antres (≥ 36 cases), une case sur trois, jamais deux côte à côte | oui |
 | **Ossements** épars | au sol, au milieu, une case libre sur huit | non |
+| **Chaînes** (`SM_Prop_Chain_03`) | pendues au plafond au-dessus de la salle, une case libre sur dix | non |
+
+**Le hurlement fait ronfler les flammes** : quand le loup-garou hurle (réveil, appel des louveteaux, mort), braseros et torches à moins de 20 m s'embrasent d'un coup puis retombent (`TorchFlicker`, réglage `Howl Reach`).
+
+**Le trésor du boss** : à sa mort, un coffre apparaît à côté de l'escalier. Il donne toujours des PV (6, réglage `Boss Chest Heal` du Spawner) : de quoi descendre.
 
 Les pièces du bord tournent le dos au mur et s'y collent (`Spawner.PlaceAgainstWall`), celles des coins se calent dans l'angle. Jamais sur une porte ni juste devant, jamais au milieu : l'antre reste traversable d'une porte à l'autre. Une pièce qui bloque est un `LairDecor` (objet de grille sans tour) : le joueur, les monstres et la charge du boss s'y arrêtent.
 
@@ -37,7 +42,7 @@ Les pièces du bord tournent le dos au mur et s'y collent (`Spawner.PlaceAgainst
 
 À la mort du boss, le sol **s'effondre** à sa place (si le joueur s'est avancé sur la case, à côté de lui) : la dalle tombe dans un **puits** avec un raclement de pierre, et découvre un **escalier qui descend** (`Stairs`, prefab `Assets/Prefabs/Props/Escalier.prefab`, en formes simples : rebord de pierre, parois, marches qui plongent, une lueur blanche qui monte du fond). Le sol de la case est percé par `Maze.AddHole` (rebouché au sous-sol suivant, `ClearHoles`). On le prend en avançant dessus ou avec Interact :
 
-1. l'écran se voile d'encre, « Sous-sol 2 » s'affiche au milieu (`Hud.FadeOut` / `FadeIn`) ;
+1. l'écran se voile d'encre, « Sous-sol 2 » s'affiche au milieu, avec dessous le **bilan du sous-sol quitté** (monstres tués, coffres ouverts, tours passés : `RunStats.BeginFloor`) (`Hud.FadeOut` / `FadeIn`) ;
 2. le Donjon passe à l'**étage suivant** (`Dungeon.NextFloor`) : nouveau plateau, départ tiré au hasard, **nouvelle main** et nouvelle mission, mémoire de l'étage neuve ;
 3. le joueur repart du départ **avec ses PV** (choix de l'utilisateur : PV gardés, nouvelle main).
 

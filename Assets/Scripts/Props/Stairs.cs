@@ -55,6 +55,7 @@ namespace Deckscent
         IEnumerator Collapse()
         {
             sounds?.Play(SoundBank.Stairs, 1f);
+            Fx.Play(Fx.Get(l => l.bigDust), transform.position + Vector3.up * 0.3f);
             if (slab == null)
                 yield break;
             slab.gameObject.SetActive(true);
@@ -78,7 +79,14 @@ namespace Deckscent
             var dungeon = Dungeon != null ? Dungeon : FindAnyObjectByType<Dungeon>();
             var hud = FindAnyObjectByType<Hud>();
             if (hud != null)
+            {
+                // Le bilan du sous-sol qu'on quitte, affiché pendant la descente.
+                var floor = dungeon != null ? dungeon.Floor : 1;
+                hud.FloorSummary = Loc.F("bilan.etage", floor, RunStats.Kills - RunStats.FloorStartKills,
+                    RunStats.Chests - RunStats.FloorStartChests, player.Turn - RunStats.FloorStartTurn);
                 yield return hud.FadeOut(0.6f);
+            }
+            RunStats.BeginFloor(player.Turn);
             if (dungeon != null)
             {
                 dungeon.NextFloor();

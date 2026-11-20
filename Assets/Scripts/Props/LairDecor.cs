@@ -20,7 +20,8 @@ namespace Deckscent
         /// - **Braseros** dans les quatre coins de l'antre et de part et d'autre du trône (lumière : on y voit le combat) ;
         /// - le **trône** au milieu du mur le plus loin des portes (à vol d'oiseau), le boss dort devant ;
         /// - des **cages** et des **tas d'os** çà et là le long des murs (une case sur trois, jamais deux côte à côte) ;
-        /// - des **ossements** épars au sol, au milieu (décor de passage, ils ne bloquent pas).
+        /// - des **ossements** épars au sol, au milieu (décor de passage, ils ne bloquent pas) ;
+        /// - des **chaînes** qui pendent du plafond au-dessus de la salle (on passe dessous).
         /// Jamais sur une porte ni devant (la case juste à l'intérieur), ni au milieu de la salle :
         /// tout l'intérieur reste libre, l'antre reste traversable d'une porte à l'autre.
         /// `cells` : sol de l'antre ; `isDoor(case)` : porte de l'antre ; `inside(case)` : case de l'antre.
@@ -123,6 +124,10 @@ namespace Deckscent
             foreach (var c in cells)
                 if (!OnEdge(c) && !keep.Contains(c) && rng.Next(8) == 0)
                     Add(c, "ossements");
+            // Chaînes qui pendent du plafond, au-dessus de la salle (on passe dessous) : une case sur dix.
+            foreach (var c in cells)
+                if (!OnEdge(c) && !used.Contains(c) && rng.Next(10) == 0)
+                    Add(c, "chaines");
             return decor;
         }
     }

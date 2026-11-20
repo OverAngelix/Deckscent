@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 namespace Deckscent.Editor
@@ -80,6 +81,7 @@ namespace Deckscent.Editor
             so.FindProperty("cagePrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LairDecor>(DecorPath("Cage"));
             so.FindProperty("osPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LairDecor>(DecorPath("Os"));
             so.FindProperty("ossementsPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LairDecor>(DecorPath("Ossements"));
+            so.FindProperty("chainesPrefab").objectReferenceValue = AssetDatabase.LoadAssetAtPath<LairDecor>(DecorPath("Chaines"));
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -316,8 +318,8 @@ namespace Deckscent.Editor
                 light.color = Color.white;
                 light.intensity = 3f;
                 light.range = 9f;
-                // Sans ombre : jusqu'à six braseros par antre, en plus des torches (atlas d'ombres saturé).
-                light.shadows = LightShadows.None;
+                // Ombres en basse résolution : sans ombre, la lumière traversait les murs.
+                LowShadows(light);
                 lightGo.AddComponent<TorchFlicker>();
                 SaveDecor(root, true);
             }
@@ -351,6 +353,18 @@ namespace Deckscent.Editor
                 Pair(root, FitSynty("Décor", SyntyDungeon + "Environments/Bones/SM_Env_BonePile_01.prefab", 1.6f, 1.2f), fallback);
                 SaveDecor(root, true);
             }
+            // Chaînes qui pendent du plafond (de passage) : la pièce est accrochée à 3,5 m.
+            {
+                var root = new GameObject("Chaines");
+                var fallback = new GameObject("Secours");
+                for (var i = 0; i < 6; i++)
+                    Shape("Maillon", PrimitiveType.Cylinder, grey, fallback.transform, new Vector3(0f, 3.4f - i * 0.25f, 0f), new Vector3(0.06f, 0.12f, 0.06f))
+                        .transform.localRotation = Quaternion.Euler(0f, i * 90f, 0f);
+                var decor = FitSynty("Décor", SyntyDungeon + "Props/SM_Prop_Chain_03.prefab", 0.6f, 1.8f);
+                Pair(root, decor, fallback);
+                decor.transform.localPosition = Vector3.up * (3.5f - 1.8f);
+                SaveDecor(root, false);
+            }
             // Ossements épars (de passage).
             {
                 var root = new GameObject("Ossements");
@@ -375,10 +389,24 @@ namespace Deckscent.Editor
         // --- Outils ----------------------------------------------------------------------------
 
         /// <summary>
+        /// Ombres dures en basse résolution (palier « Low » d'URP, 256) : une lumière sans ombre
+        /// traverse les murs fins du labyrinthe (retour de l'utilisateur, 2026-11-20). Basse
+        /// résolution : il y a beaucoup de bougies et de braseros, l'atlas d'ombres ne déborde pas.
+        /// </summary>
+        internal static void LowShadows(Light light)
+        {
+            light.shadows = LightShadows.Hard;
+            var data = light.GetComponent<UniversalAdditionalLightData>() ?? light.gameObject.AddComponent<UniversalAdditionalLightData>();
+            var so = new SerializedObject(data);
+            so.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierLow;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
         /// Pièce Synty copiée (maillages seuls, matériau toon de l'atlas), mise à l'échelle pour tenir
         /// dans `width` × `height` mètres, centrée sur sa base. Vide si le pack manque.
         /// </summary>
-        static GameObject FitSynty(string name, string path, float width, float height, float glow = 0f)
+        internal static GameObject FitSynty(string name, string path, float width, float height, float glow = 0f)
         {
             var go = PrototypeBuilder.FromSynty(name, path, Vector3.zero, Quaternion.identity, Vector3.one);
             var renderers = go.GetComponentsInChildren<MeshRenderer>(true);
@@ -435,7 +463,7 @@ namespace Deckscent.Editor
             return result;
         }
 
-        static void Pair(GameObject root, GameObject decor, GameObject fallback)
+        internal static void Pair(GameObject root, GameObject decor, GameObject fallback)
         {
             decor.transform.SetParent(root.transform, false);
             fallback.transform.SetParent(root.transform, false);
@@ -451,7 +479,7 @@ namespace Deckscent.Editor
             fallback.SetActive(!synty);
         }
 
-        static GameObject Shape(string name, PrimitiveType type, Material material, Transform parent, Vector3 position, Vector3 scale)
+        internal static GameObject Shape(string name, PrimitiveType type, Material material, Transform parent, Vector3 position, Vector3 scale)
         {
             var go = GameObject.CreatePrimitive(type);
             go.name = name;

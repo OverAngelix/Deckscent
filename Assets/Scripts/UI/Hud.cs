@@ -62,6 +62,9 @@ namespace Deckscent
         Mission _shownMission;
         int _shownVersion = -1;
         float _fade;
+
+        /// <summary>Bilan du sous-sol qu'on vient de quitter, affiché sous le titre pendant la descente.</summary>
+        public string FloorSummary { get; set; } = "";
         int _bossHealth = -1;
 
         /// <summary>Un chiffre de dégâts au-dessus d'un ennemi (point du monde).</summary>
@@ -222,8 +225,8 @@ namespace Deckscent
         /// <summary>Lève le voile d'encre (après <see cref="FadeOut"/>), en montrant le numéro de l'étage.</summary>
         public System.Collections.IEnumerator FadeIn(float duration)
         {
-            // Le numéro de l'étage reste un instant sur le noir.
-            for (var t = 0f; t < 0.9f; t += Time.unscaledDeltaTime)
+            // Le numéro du sous-sol et le bilan du précédent restent un instant sur le noir.
+            for (var t = 0f; t < 1.6f; t += Time.unscaledDeltaTime)
                 yield return null;
             for (var t = 0f; t < duration; t += Time.unscaledDeltaTime)
             {
@@ -285,7 +288,11 @@ namespace Deckscent
         {
             var max = player.MaxHealth;
             var pipsW = max * (PipW + PipGap) - PipGap;
-            var box = new Rect(Margin + 4f, Margin + 4f, LabelW + pipsW + 22f, PipH + 34f);
+            // Pas le sous-sol ici (demande de l'utilisateur) : il est sur la carte et à la descente.
+            var stats = $"{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
+            // Assez large pour les cases de PV et pour la ligne du dessous (qui s'allonge avec les tours).
+            var width = Mathf.Max(LabelW + pipsW + 22f, TextPool.Width(stats, 12, FontStyle.Italic) + 28f);
+            var box = new Rect(Margin + 4f, Margin + 4f, width, PipH + 34f);
             ink.Rect(new Rect(box.x - 4f, box.y - 4f, box.width + 8f, box.height + 8f), paperColor);
             Engraving.DoubleFrame(ink, box, 4f, inkColor);
             var x = box.x + 10f;
@@ -298,8 +305,6 @@ namespace Deckscent
                     ink.Rect(pip, healthColor);
                 ink.RectOutline(pip, inkColor, 1.5f);
             }
-            var floor = dungeon != null ? Loc.F("hud.etage", dungeon.Floor) + "   ·   " : "";
-            var stats = $"{floor}{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
         }
 
@@ -414,8 +419,13 @@ namespace Deckscent
         {
             ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, _fade));
             if (dungeon != null)
+            {
                 texts.Label(Loc.F("hud.etage", dungeon.Floor).ToUpperInvariant(), 0f, screen.y * 0.5f - 24f, screen.x, 40,
                     WithAlpha(paperColor, _fade), TextAnchor.UpperCenter, FontStyle.Bold);
+                if (!string.IsNullOrEmpty(FloorSummary))
+                    texts.Label(FloorSummary, 0f, screen.y * 0.5f + 34f, screen.x, 16,
+                        WithAlpha(paperColor, _fade * 0.75f), TextAnchor.UpperCenter, FontStyle.Italic);
+            }
         }
 
         /// <summary>L'écran s'assombrit, « Vous êtes mort », puis l'invitation à recommencer.</summary>

@@ -102,6 +102,9 @@ namespace Deckscent.Tests
         public IEnumerator PoserUneTuileReecritLeLabyrintheEtRemplaceLaCarte()
         {
             yield return LoadScene();
+            // Pas de monstre près du départ : sinon, en combat, la pose est refusée (test à part).
+            Object.FindAnyObjectByType<Spawner>().Clear();
+            yield return null;
             _map.Open();
             yield return null;
             Assert.That(FindPlacement(out var slot), "la main de départ peut se poser quelque part");
@@ -116,6 +119,29 @@ namespace Deckscent.Tests
             Assert.That(_dungeon.Maze.IsWalkable(center), Is.True, "le labyrinthe a été reconstruit avec la tuile");
             Assert.That(_dungeon.Deck.Hand, Has.No.Member(card), "la carte posée quitte la main");
             Assert.That(_dungeon.Deck.Hand.Count, Is.EqualTo(handSize), "une nouvelle carte la remplace");
+        }
+
+        [UnityTest]
+        public IEnumerator EnCombatOnNePosePasDeTuile()
+        {
+            yield return LoadScene();
+            Object.FindAnyObjectByType<Spawner>().Clear();
+            yield return null;
+            var player = Object.FindAnyObjectByType<PlayerController>();
+            // Un slime à deux pas du joueur : en combat.
+            var maze = _dungeon.Maze;
+            Vector2Int? near = null;
+            for (var d = 0; d < 4 && near == null; d++)
+                if (maze.CanStep(player.Cell, d) && maze.CanStep(player.Cell + Grid.Dirs[d], d))
+                    near = player.Cell + Grid.Dirs[d] * 2;
+            Assert.That(near, Is.Not.Null);
+            Object.FindAnyObjectByType<Spawner>().SpawnSlime(near.Value, Slime.Variant.Vert);
+            _map.Open();
+            yield return null;
+            Assert.That(_map.InCombat, Is.True);
+            Assert.That(FindPlacement(out var slot), "une pose serait possible hors combat");
+            Assert.That(_map.TryPlace(slot), Is.False, "refusée en combat");
+            Assert.That(_dungeon.Board.HasTile(slot), Is.False);
         }
 
         [UnityTest]

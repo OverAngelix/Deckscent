@@ -152,7 +152,11 @@ namespace Deckscent
             if (dungeon == null || player == null || dungeon.Board == null)
                 return;
             if (dungeon.TryPlaceBossLair(player.Cell))
+            {
                 player.Notify(Loc.T("message.antre"));
+                // Le hurlement monte des profondeurs : entendu partout, comme le dit le message.
+                player.PlaySound(SoundBank.Howl, 0.7f);
+            }
             else
                 BossLairPending = dungeon.Board.BossLair == null;
         }
