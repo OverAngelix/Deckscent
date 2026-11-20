@@ -169,7 +169,7 @@ namespace Deckscent
             TrackDungeon();
             // Mort : la carte ne s'ouvre plus (l'écran de mort attend « recommencer »). Pas non plus
             // par-dessus le menu pause.
-            if (_toggle != null && _toggle.WasPressedThisFrame() && (IsOpen || ((player == null || !player.IsDead) && !PauseScreen.IsPaused)))
+            if (_toggle != null && _toggle.WasPressedThisFrame() && (IsOpen || ((player == null || !player.IsDead) && !PauseScreen.IsPaused && !LevelUpScreen.IsShown)))
             {
                 SetOpen(!IsOpen);
                 if (!IsOpen)

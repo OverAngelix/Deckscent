@@ -29,6 +29,8 @@ namespace Deckscent
         public int MaxHealth => maxHealth;
         public int Damage => damage;
         public int Defense => defense;
+        /// <summary>XP rapportée au joueur à sa mort : PV max + attaque (les monstres durs en donnent plus).</summary>
+        public virtual int ExperienceReward => Experience.RewardFor(maxHealth, damage);
         public override bool BlocksPlayer => true;
         /// <summary>Menace le joueur (combat, GDD §2) : faux pour un monstre endormi ou caché.</summary>
         public virtual bool Threatens => IsActive;

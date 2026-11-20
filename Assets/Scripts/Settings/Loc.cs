@@ -165,6 +165,17 @@ namespace Deckscent
             { "hud.atq",       "ATQ {0}" },
             { "hud.def",       "DÉF {0}" },
             { "hud.mort",      "Vous êtes mort" },
+            { "hud.niveau",    "Niv. {0}" },
+            { "hud.xp",        "{0} / {1} XP" },
+
+            // --- Montée de niveau (LevelUpScreen) ---
+            { "niveau.titre",       "Niveau {0} !" },
+            { "niveau.choisir",     "Choisissez un bienfait" },
+            { "niveau.attaque",     "Attaque" },
+            { "niveau.defense",     "Défense" },
+            { "niveau.vie",         "Vie" },
+            { "niveau.avant_apres", "{0} → {1}" },
+            { "niveau.atteint",     "Niveau {0}" },
 
             // --- Mission de l'étage (Mission, Hud, MapScreen) ---
             { "mission.titre",    "Mission" },
@@ -325,6 +336,17 @@ namespace Deckscent
             { "hud.atq",       "ATK {0}" },
             { "hud.def",       "DEF {0}" },
             { "hud.mort",      "You are dead" },
+            { "hud.niveau",    "Lv. {0}" },
+            { "hud.xp",        "{0} / {1} XP" },
+
+            // --- Montée de niveau (LevelUpScreen) ---
+            { "niveau.titre",       "Level {0}!" },
+            { "niveau.choisir",     "Choose a boon" },
+            { "niveau.attaque",     "Attack" },
+            { "niveau.defense",     "Defense" },
+            { "niveau.vie",         "Health" },
+            { "niveau.avant_apres", "{0} → {1}" },
+            { "niveau.atteint",     "Level {0}" },
 
             // --- Mission de l'étage (Mission, Hud, MapScreen) ---
             { "mission.titre",    "Mission" },

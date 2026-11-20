@@ -94,6 +94,8 @@ docs/tour-par-tour.md, docs/monstres/slime.md, docs/pieges.md, docs/coffres.md
 Assets/Scripts/Settings/GameSettings.cs  Options (volume, langue), PlayerPrefs, appliquées avant la 1re scène
 Assets/Scripts/Settings/Loc.cs         Traduction par codes clés : Loc.T("menu.descendre") / Loc.F(…{0}…), dictionnaires Loc.Fr et Loc.En
 Assets/Scripts/Audio/MenuMusic.cs      Musique du menu synthétisée (OnAudioFilterRead)
+Assets/Scripts/Player/Experience.cs    XP et niveaux (logique pure) : paliers, bienfaits (ATQ, DÉF, PV max) ; PlayerController.Experience
+Assets/Scripts/UI/LevelUpScreen.cs     Écran de montée de niveau (pause, 3 cartes gravées) ; prefab UI/MonteeDeNiveau (LevelUpBuilder.cs) ; docs/niveaux.md
 Assets/Scripts/UI/MainMenu.cs          Scène du menu (caméra qui tourne, fondu) ; MenuScreen.cs = écran titre (prefab UI/EcranTitre)
 Assets/Scripts/UI/SceneFlow.cs         Menu → jeu, recommencer, retour au menu, quitter
 Assets/Scripts/UI/PauseScreen.cs       Menu pause (Échap / Start) : Continuer, Options, Sauvegarder (à venir), menu, bureau ; prefab UI/MenuPause (PauseBuilder.cs)

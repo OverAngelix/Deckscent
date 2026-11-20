@@ -48,6 +48,8 @@ namespace Deckscent
         [SerializeField, Min(0f)] float restartDelay = 1f;
 
         const float Margin = 16f, PipW = 14f, PipH = 18f, PipGap = 4f, LabelW = 34f;
+        /// <summary>Largeur du cartouche des PV, en cases (les PV de départ).</summary>
+        const int PipSlots = 10;
         const float ToastIn = 0.15f, ToastOut = 0.5f, FlashTime = 0.4f;
 
         public string Toast => _toast;
@@ -108,6 +110,7 @@ namespace Deckscent
             player.Died += OnDied;
             player.Notified += ShowToast;
             player.TurnEnded += OnTurnEnded;
+            player.ExperienceChanged += MarkDirty;
         }
 
         void OnDisable()
@@ -122,6 +125,7 @@ namespace Deckscent
             player.Died -= OnDied;
             player.Notified -= ShowToast;
             player.TurnEnded -= OnTurnEnded;
+            player.ExperienceChanged -= MarkDirty;
         }
 
         void MarkDirty() => _dirty = true;
@@ -283,16 +287,23 @@ namespace Deckscent
                 DrawDeath(screen);
         }
 
-        /// <summary>Cartouche des PV : « PV » puis une case par point de vie, Tour / ATQ / DÉF dessous.</summary>
+        /// <summary>
+        /// Cartouche des PV : « PV » puis une case par point de vie, Tour / ATQ / DÉF dessous. Le
+        /// cartouche garde la largeur de <see cref="PipSlots"/> cases : au-delà (bienfait Vie), les
+        /// cases s'amincissent au lieu de l'allonger (choix de l'utilisateur).
+        /// </summary>
         void DrawHealth()
         {
             var max = player.MaxHealth;
-            var pipsW = max * (PipW + PipGap) - PipGap;
+            var pipsW = PipSlots * (PipW + PipGap) - PipGap;
+            var scale = Mathf.Min(1f, pipsW / (max * (PipW + PipGap) - PipGap));
+            var pipW = PipW * scale;
+            var gap = PipGap * scale;
             // Pas le sous-sol ici (demande de l'utilisateur) : il est sur la carte et à la descente.
             var stats = $"{Loc.F("hud.tour", player.Turn)}   ·   {Loc.F("hud.atq", player.Attack)}   ·   {Loc.F("hud.def", player.Defense)}";
             // Assez large pour les cases de PV et pour la ligne du dessous (qui s'allonge avec les tours).
             var width = Mathf.Max(LabelW + pipsW + 22f, TextPool.Width(stats, 12, FontStyle.Italic) + 28f);
-            var box = new Rect(Margin + 4f, Margin + 4f, width, PipH + 34f);
+            var box = new Rect(Margin + 4f, Margin + 4f, width, PipH + 54f);
             ink.Rect(new Rect(box.x - 4f, box.y - 4f, box.width + 8f, box.height + 8f), paperColor);
             Engraving.DoubleFrame(ink, box, 4f, inkColor);
             var x = box.x + 10f;
@@ -300,12 +311,28 @@ namespace Deckscent
             texts.Label(Loc.T("hud.pv"), x, y - 1f, LabelW, 16, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             for (var i = 0; i < max; i++)
             {
-                var pip = new Rect(x + LabelW + i * (PipW + PipGap), y, PipW, PipH);
+                var pip = new Rect(x + LabelW + i * (pipW + gap), y, pipW, PipH);
                 if (i < player.Health)
                     ink.Rect(pip, healthColor);
-                ink.RectOutline(pip, inkColor, 1.5f);
+                ink.RectOutline(pip, inkColor, scale < 0.6f ? 1f : 1.5f);
             }
             texts.Label(stats, x, y + PipH + 4f, box.width - 20f, 12, Engraving.Fade(inkColor, paperColor, 0.15f), TextAnchor.UpperLeft, FontStyle.Italic);
+            DrawExperience(new Rect(x, y + PipH + 23f, box.width - 20f, 12f));
+        }
+
+        /// <summary>Niveau et jauge d'XP vers le suivant (hachurée), sous Tour / ATQ / DÉF.</summary>
+        void DrawExperience(Rect row)
+        {
+            var xp = player.Experience;
+            texts.Label(Loc.F("hud.niveau", xp.Level), row.x, row.y - 2f, LabelW + 8f, 12, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
+            var bar = new Rect(row.x + LabelW + 8f, row.y + 2f, row.width - LabelW - 8f, 8f);
+            var fill = xp.Pending > 0 ? 1f : Mathf.Clamp01(xp.Xp / (float)Mathf.Max(1, xp.ToNext));
+            if (fill > 0f)
+            {
+                var filled = new Rect(bar.x, bar.y, bar.width * fill, bar.height);
+                ink.Hatch(filled, 3f, inkColor, 1f);
+            }
+            ink.RectOutline(bar, inkColor, 1f);
         }
 
         /// <summary>
@@ -436,7 +463,7 @@ namespace Deckscent
             var cy = screen.y * 0.5f;
             texts.Label(Loc.T("hud.mort"), 0f, cy - 40f, screen.x, 48, WithAlpha(healthColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
             var reached = dungeon != null ? Loc.F("hud.etage", dungeon.Floor) + "   ·   " : "";
-            texts.Label(reached + Loc.F("hud.tour", player.Turn), 0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            texts.Label(reached + Loc.F("niveau.atteint", player.Experience.Level) + "   ·   " + Loc.F("hud.tour", player.Turn),0f, cy + 22f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
             // Le bilan de la partie, tous étages confondus, dans un cartouche papier.
             var line1 = $"{Loc.F("bilan.monstres", RunStats.Kills)}   ·   {Loc.F("bilan.coffres", RunStats.Chests)}";
             var line2 = $"{Loc.F("bilan.boss", RunStats.Bosses)}   ·   {Loc.F("bilan.degats", RunStats.DamageDealt)}";

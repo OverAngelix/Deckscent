@@ -46,6 +46,10 @@ namespace Deckscent
         [Tooltip("Retirée des dégâts reçus (coups, pièges). Un coup fait toujours au moins 1.")]
         [SerializeField, Range(0, 20)] int defense;
 
+        [Header("Niveaux")]
+        [Tooltip("XP pour monter de niveau et bienfaits gagnés (ATQ, DÉF, PV max). Voir docs/niveaux.md.")]
+        [SerializeField] ExperienceSettings experience = new ExperienceSettings();
+
         // Actions de la map Player d'InputSystem_Actions (Assets/InputSystem_Actions.inputactions),
         // où se règlent les touches. Clavier en position physique (ZQSD en AZERTY) et manette.
         // Vides : prises par leur nom dans les actions du projet.
@@ -92,6 +96,8 @@ namespace Deckscent
         public event Action Died;
         /// <summary>Un court message à afficher au HUD (piège franchi, butin…).</summary>
         public event Action<string> Notified;
+        /// <summary>XP gagnée ou bienfait choisi (HUD, écran de niveau).</summary>
+        public event Action ExperienceChanged;
 
         public Vector2Int Cell { get; private set; }
         /// <summary>0 = nord, 1 = est, 2 = sud, 3 = ouest.</summary>
@@ -107,6 +113,9 @@ namespace Deckscent
         public int Attack => attack;
         public int Defense => defense;
         public bool IsDead { get; private set; }
+        /// <summary>XP et niveaux de la partie (gardés d'un étage à l'autre, perdus à la mort).</summary>
+        public Experience Experience => _experience ??= new Experience(experience);
+        Experience _experience;
 
         bool _busy;
         // Tampon d'entrée : la dernière action tapée pendant une animation (voir inputBuffer).
@@ -144,10 +153,12 @@ namespace Deckscent
                 action?.Enable();
             if (_torch != null)
                 _torch.performed += OnTorch;
+            Enemy.Killed += OnEnemyKilled;
         }
 
         void OnDisable()
         {
+            Enemy.Killed -= OnEnemyKilled;
             if (_torch != null)
                 _torch.performed -= OnTorch;
             foreach (var action in Actions)
@@ -531,6 +542,43 @@ namespace Deckscent
                 return;
             Health = Mathf.Min(maxHealth, Health + amount);
             HealthChanged?.Invoke(Health, maxHealth);
+        }
+
+        // --- XP et niveaux ------------------------------------------------------
+
+        /// <summary>Tout monstre tué rapporte de l'XP (même par un piège : c'est le joueur qui l'y a mené).</summary>
+        void OnEnemyKilled(Enemy enemy) => GainExperience(enemy.ExperienceReward);
+
+        /// <summary>Ajoute de l'XP ; un niveau gagné attend son bienfait (écran de niveau).</summary>
+        public void GainExperience(int amount)
+        {
+            if (IsDead || amount <= 0)
+                return;
+            Experience.Gain(amount);
+            ExperienceChanged?.Invoke();
+        }
+
+        /// <summary>Applique le bienfait choisi pour un niveau en attente.</summary>
+        public void ApplyBonus(LevelBonus bonus)
+        {
+            var amount = Experience.Amount(bonus);
+            switch (bonus)
+            {
+                case LevelBonus.Attack:
+                    attack += amount;
+                    break;
+                case LevelBonus.Defense:
+                    defense += amount;
+                    break;
+                case LevelBonus.Health:
+                    // Les nouvelles cases arrivent pleines.
+                    maxHealth += amount;
+                    Health = Mathf.Min(maxHealth, Health + amount);
+                    HealthChanged?.Invoke(Health, maxHealth);
+                    break;
+            }
+            Experience.Consume();
+            ExperienceChanged?.Invoke();
         }
 
         /// <summary>Joue un son sur l'émetteur du joueur (piste Effets), à son oreille : hurlement lointain…</summary>

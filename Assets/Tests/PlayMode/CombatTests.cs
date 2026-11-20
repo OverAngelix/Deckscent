@@ -103,6 +103,7 @@ namespace Deckscent.Tests
             yield return Tap(_keyboard.wKey);
             Assert.That(slime.IsActive, Is.False, "mort au troisième coup");
             Assert.That(_player.Health, Is.EqualTo(8), "mort, il ne riposte plus");
+            Assert.That(_player.Experience.Xp, Is.EqualTo(4), "XP : 3 PV max + 1 d'attaque");
             yield return WaitSeconds(0.6f);
             Assert.That(slime == null, "détruit après son animation");
 

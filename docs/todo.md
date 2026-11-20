@@ -27,7 +27,13 @@ Cocher (✅) chaque tâche finie et validée.
    - Modèle riggé et animé (pack Synty ou animations Mixamo), shader toon sur `SkinnedMeshRenderer`, vérifié par capture.
    - Mécaniques : charge en ligne droite annoncée (lueur, hurlement), 2ᵉ phase à 50 % des PV (appel de louveteaux), `BossMode` de la musique.
    - Le vaincre ouvre l'escalier : nouvel étage, nouvelle grille.
-7. **Sauvegarde de suspension** (roguelike) : on sauvegarde en quittant, on reprend, la sauvegarde est effacée au chargement. Plateau, pioche, joueur, entités. À faire quand le contenu de l'étage est stable.
+7. 🟡 **XP et niveaux** (choix de l'utilisateur, 2026-11-21, à valider en jouant : [niveaux.md](niveaux.md))
+   - XP des monstres tués (PV max + attaque), paliers 10, 15, 20…
+   - À chaque niveau, un bienfait parmi trois : ATQ +1, DÉF +1, PV max +2. Les compétences de classe viendront plus tard s'ajouter au tirage.
+   - Jauge d'XP au HUD, niveau atteint sur l'écran de mort.
+8. **Boucle d'expédition** (jalon 3 du GDD, avant le hub) : pioche limitée et cartes en butin, or, lumière qui s'use, remontée en fin de sous-biome (tous les 3 étages), butin perdu à la mort.
+9. **Hub minimal** (jalon 4) : le menu devient le hub, premiers déblocages permanents contre l'or (cartes, sac), sauvegarde de la progression.
+10. **Sauvegarde de suspension** (roguelike) : on sauvegarde en quittant, on reprend, la sauvegarde est effacée au chargement. Plateau, pioche, joueur, entités. À faire quand le contenu de l'étage est stable.
 
 ## En plus (recommandé)
 
