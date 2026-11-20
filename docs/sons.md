@@ -29,9 +29,11 @@ Master            ← option « Général »         (paramètre exposé VolumeG
 | **Coup reçu** (impact sourd) | chaque fois que le joueur perd des PV, monstre ou piège (`PlayerController.TakeDamage`) | `Hit Volume` du joueur, 0,8 |
 | **Slurp** | quand un slime attaque | `Slurp Volume` du slime, 0,9 |
 | **Pics** (raclement + tintement métallique) | quand les pics d'une dalle sortent, qu'on soit dessus ou non (pas à l'alerte) | `Spikes Volume` de la dalle, 0,7 |
-| **Hurlement** (voix nasale qui monte d'une quinte, tient puis retombe, 2,2 s) | réveil du loup-garou, appel des louveteaux, sa mort (plus bas) | 1 (0,6 à la mort) |
+| **Hurlement** (voix nasale qui monte d'une quinte, tient puis retombe, 2,2 s) | l'antre du boss apparaît (entendu partout, 0,7), réveil du loup-garou, appel des louveteaux, sa mort (plus bas) | 1 (0,6 à la mort) |
 | **Grognement** (grondement grave et rugueux, 0,7 s) | le loup-garou arme son coup ou se ramasse pour charger ; morsure d'un louveteau | 0,8 à 1 (0,5 louveteau) |
-| **Escalier** (dalle de pierre qui glisse, 1,2 s) | l'escalier sort du sol à la mort du boss | 1 |
+| **Escalier** (dalle de pierre qui glisse, 1,2 s) | le sol s'effondre sur l'escalier à la mort du boss | 1 |
+| **Casse** (claquement puis éclats qui tintent, 0,6 s) | un vase ou une caisse se brise | 0,9 |
+| **Gorgées** (trois « glouc », 0,7 s) | le joueur boit à une fontaine (retirée pour le moment) | 0,8 |
 
 Une attaque s'entend donc en deux temps : le slurp ou les pics, puis le coup reçu. Tourner, se cogner, attendre : pas de son pour l'instant.
 

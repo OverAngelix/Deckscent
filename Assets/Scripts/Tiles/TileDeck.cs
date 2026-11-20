@@ -134,7 +134,11 @@ namespace Deckscent
                 card.Content = Weighted(Settings.roomThemeWeights, "salle_vide");
             }
             else
+            {
                 card.Content = Weighted(Settings.contentWeights, "vide");
+                // Fontaine (« sanctuaire ») retirée de la pioche pour le moment (demande de
+                // l'utilisateur, 2026-11-20 : « moche ») ; Shrine et son prefab restent pour plus tard.
+            }
             return card;
         }
 

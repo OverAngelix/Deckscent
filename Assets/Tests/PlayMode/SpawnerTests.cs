@@ -81,6 +81,8 @@ namespace Deckscent.Tests
         public IEnumerator UneCarteVideNeFaitRienApparaitre()
         {
             yield return LoadScene();
+            // Le contenu seulement : le décor d'ambiance (tiré au hasard) a ses propres tests.
+            Object.FindAnyObjectByType<Spawner>().Ambience = false;
             var before = GridEntity.All.Count;
             foreach (var exit in _dungeon.Board.OpenExits())
                 if (_dungeon.Place(exit, new TileCard("carrefour")))

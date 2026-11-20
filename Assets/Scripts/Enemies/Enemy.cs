@@ -30,6 +30,8 @@ namespace Deckscent
         public int Damage => damage;
         public int Defense => defense;
         public override bool BlocksPlayer => true;
+        /// <summary>Menace le joueur (combat, GDD §2) : faux pour un monstre endormi ou caché.</summary>
+        public virtual bool Threatens => IsActive;
 
         protected virtual void Awake() => Health = maxHealth;
 

@@ -44,7 +44,7 @@ namespace Deckscent
         /// <summary>La pioche, pour le butin « carte ». Null : toujours des PV.</summary>
         public TileDeck Deck { get; set; }
         public float CardChance { get => cardChance; set => cardChance = Mathf.Clamp01(value); }
-        public int HealAmount => healAmount;
+        public int HealAmount { get => healAmount; set => healAmount = Mathf.Max(0, value); }
 
         Renderer[] _renderers;
 

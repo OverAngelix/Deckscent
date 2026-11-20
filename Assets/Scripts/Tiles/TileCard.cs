@@ -142,6 +142,8 @@ namespace Deckscent
             ["piege"] = new ContentDef { Danger = 1, Spawn = L(P) },
             ["monstre"] = new ContentDef { Danger = 2, Spawn = L(M) },
             ["boss"] = new ContentDef { Danger = 3, Spawn = L("boss") },
+            // Sanctuaire : une fontaine qui soigne (GDD §5, rare : DeckSettings.shrineChance).
+            ["sanctuaire"] = new ContentDef { Danger = 0, Spawn = L("sanctuaire") },
             // Salle vide : une respiration, rare.
             ["salle_vide"] = new ContentDef { Danger = 0, Room = true },
             // Salle au trésor : du loot, à peine gardé.

@@ -17,7 +17,7 @@ namespace Deckscent
         const float Tau = Mathf.PI * 2f;
 
         static AudioClip[] _steps;
-        static AudioClip _attack, _slurp, _spikes, _hit, _howl, _growl, _stairs;
+        static AudioClip _attack, _slurp, _spikes, _hit, _howl, _growl, _stairs, _shatter, _drink;
 
         /// <summary>Quatre variantes de pas sur la pierre (tirer au hasard pour ne pas répéter le même son).</summary>
         public static AudioClip[] Steps => _steps != null && _steps[0] != null ? _steps : _steps = new[] { Step(1), Step(2), Step(3), Step(4) };
@@ -45,6 +45,12 @@ namespace Deckscent
 
         /// <summary>L'escalier s'ouvre : un raclement de pierre grave.</summary>
         public static AudioClip Stairs => Keep(ref _stairs, MakeStairs);
+
+        /// <summary>Un vase ou une caisse qui se brise : un craquement sec puis des éclats qui tintent.</summary>
+        public static AudioClip Shatter => Keep(ref _shatter, MakeShatter);
+
+        /// <summary>Le joueur boit à une fontaine : quelques gorgées d'eau (bulles qui montent).</summary>
+        public static AudioClip Drink => Keep(ref _drink, MakeDrink);
 
         /// <summary>
         /// Le clip gardé, ou un neuf s'il n'existe pas ou a été détruit (un clip fait en Play mode
@@ -125,6 +131,49 @@ namespace Deckscent
                 data[i] = band * judder * env;
             }
             return Make("Escalier", data);
+        }
+
+        /// <summary>Casse : un claquement de bruit large, puis des tintements aigus épars (éclats), 0,6 s.</summary>
+        static AudioClip MakeShatter()
+        {
+            var rng = new System.Random(31);
+            const float duration = 0.6f;
+            var data = new float[(int)(duration * Rate)];
+            float low = 0f, band = 0f;
+            var chips = new (float at, float freq)[9];
+            for (var k = 0; k < chips.Length; k++)
+                chips[k] = (0.02f + (float)rng.NextDouble() * 0.4f, 2200f + (float)rng.NextDouble() * 2800f);
+            for (var i = 0; i < data.Length; i++)
+            {
+                var t = (float)i / Rate;
+                var noise = (float)rng.NextDouble() * 2f - 1f;
+                Filter(noise, 900f, 0.7f, ref low, ref band);
+                var crack = band * Contact(t, 0.05f) * 2.5f;
+                var tinkle = 0f;
+                foreach (var (at, freq) in chips)
+                    if (t > at)
+                        tinkle += Mathf.Sin(Tau * freq * (t - at)) * Mathf.Exp(-(t - at) / 0.04f) * 0.35f;
+                data[i] = crack + tinkle;
+            }
+            return Make("Casse", data);
+        }
+
+        /// <summary>Gorgées : trois « glouc » (sinus qui montent vite), 0,7 s.</summary>
+        static AudioClip MakeDrink()
+        {
+            const float duration = 0.7f;
+            var data = new float[(int)(duration * Rate)];
+            var phase = 0f;
+            for (var i = 0; i < data.Length; i++)
+            {
+                var t = (float)i / Rate;
+                var k = Mathf.Floor(t / 0.22f);
+                var local = t - k * 0.22f;
+                var freq = 260f + 900f * local + 40f * k;
+                phase += freq / Rate;
+                data[i] = Mathf.Sin(Tau * phase) * Contact(local, 0.06f);
+            }
+            return Make("Gorgées", data);
         }
 
         static float Smooth01(float t) => t * t * (3f - 2f * t);

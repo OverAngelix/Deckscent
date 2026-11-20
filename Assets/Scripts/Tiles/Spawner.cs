@@ -44,6 +44,29 @@ namespace Deckscent
         [Tooltip("L'escalier vers l'étage suivant, laissé par le boss vaincu.")]
         [SerializeField] Stairs stairsPrefab;
 
+        [Tooltip("Mimique : un monstre qui se fait passer pour un coffre.")]
+        [SerializeField] Mimic mimicPrefab;
+        [Tooltip("Chance qu'un coffre de salle soit une mimique.")]
+        [SerializeField, Range(0f, 1f)] float mimicChance = 0.15f;
+        [Tooltip("« sanctuaire » : une fontaine qui soigne, dans un couloir.")]
+        [SerializeField] Shrine shrinePrefab;
+
+        [Header("Décor d'ambiance (salles et couloirs, voir Ambience)")]
+        [Tooltip("Décoché : pas de décor d'ambiance (tests, essais).")]
+        [SerializeField] bool ambience = true;
+        [Tooltip("Vase à briser (coins des salles).")]
+        [SerializeField] Breakable vasePrefab;
+        [Tooltip("Caisse à briser (coins des salles).")]
+        [SerializeField] Breakable caissePrefab;
+        [Tooltip("Statue (coins des salles, bloque).")]
+        [SerializeField] LairDecor statuePrefab;
+        [Tooltip("Bougies au pied d'un mur (de passage).")]
+        [SerializeField] LairDecor bougiesPrefab;
+        [Tooltip("Crâne au pied d'un mur (de passage).")]
+        [SerializeField] LairDecor cranePrefab;
+        [Tooltip("Quelques os au pied d'un mur (de passage).")]
+        [SerializeField] LairDecor osPetitsPrefab;
+
         [Header("Décor de l'antre")]
         [Tooltip("Brasero (coins de l'antre, avec sa lumière).")]
         [SerializeField] LairDecor braseroPrefab;
@@ -55,6 +78,8 @@ namespace Deckscent
         [SerializeField] LairDecor osPrefab;
         [Tooltip("Ossements épars au sol (décor de passage, ne bloque pas).")]
         [SerializeField] LairDecor ossementsPrefab;
+        [Tooltip("Chaînes qui pendent du plafond (décor de passage, ne bloque pas).")]
+        [SerializeField] LairDecor chainesPrefab;
 
         [Header("Réglages")]
         [Tooltip("Décoché : plus rien n'apparaît (tests, essais).")]
@@ -78,7 +103,7 @@ namespace Deckscent
             public readonly HashSet<GridEntity> Cleared = new HashSet<GridEntity>();
 
             /// <summary>Monstres morts et coffres ouverts (les dalles ne comptent pas).</summary>
-            public bool IsCleared => Elements.TrueForAll(e => e is SpikeTrap || Cleared.Contains(e));
+            public bool IsCleared => Elements.TrueForAll(e => e is SpikeTrap || e is Shrine || Cleared.Contains(e));
         }
 
         readonly Dictionary<TileCard, TileContents> _contents = new Dictionary<TileCard, TileContents>();
@@ -87,6 +112,10 @@ namespace Deckscent
         public TileContents ContentsOf(TileCard card) => card != null && _contents.TryGetValue(card, out var c) ? c : null;
 
         public bool SpawnOnPlace { get => spawnOnPlace; set => spawnOnPlace = value; }
+        public bool Ambience { get => ambience; set => ambience = value; }
+
+        /// <summary>Décor d'ambiance posé sur chaque carte (retiré avec elle si l'antre la remplace).</summary>
+        readonly Dictionary<TileCard, List<GameObject>> _ambience = new Dictionary<TileCard, List<GameObject>>();
 
         DungeonBoard _board;
         System.Random _rng;
@@ -153,6 +182,13 @@ namespace Deckscent
         /// <summary>Une tuile inexplorée est remplacée par l'antre du boss : son contenu disparaît avec elle.</summary>
         void OnTileRemoved(Vector2Int pos, TileCard card)
         {
+            if (_ambience.TryGetValue(card, out var decor))
+            {
+                _ambience.Remove(card);
+                foreach (var go in decor)
+                    if (go != null)
+                        Destroy(go);
+            }
             if (!_contents.TryGetValue(card, out var contents))
                 return;
             _contents.Remove(card);
@@ -165,6 +201,7 @@ namespace Deckscent
         public void Clear()
         {
             _contents.Clear();
+            _ambience.Clear();
             _cubs.Clear();
             for (var i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
@@ -181,8 +218,13 @@ namespace Deckscent
             if (card.IsBossLair && _board != null)
                 return SpawnLair(pos, card);
             var elements = card.SpawnList();
-            if (elements.Length == 0 || _board == null)
+            if (_board == null)
                 return created;
+            if (elements.Length == 0)
+            {
+                SpawnAmbience(pos, card);
+                return created;
+            }
             var cells = _board.TileFloorCells(pos);
             for (var i = cells.Count - 1; i > 0; i--)
             {
@@ -193,7 +235,9 @@ namespace Deckscent
             var contents = new TileContents { Origin = pos, Card = card };
             for (var i = 0; i < Mathf.Min(elements.Length, cells.Count); i++)
             {
-                var entity = SpawnElement(elements[i], cells[i]);
+                // Dans une salle, un coffre sur quelques-uns est une mimique.
+                var element = card.IsRoom && elements[i] == "tresor" && mimicPrefab != null && _rng.NextDouble() < mimicChance ? "mimique" : elements[i];
+                var entity = SpawnElement(element, cells[i]);
                 if (entity == null)
                     continue;
                 if (entity is SpikeTrap trap)
@@ -203,7 +247,64 @@ namespace Deckscent
             }
             if (contents.Elements.Count > 0)
                 _contents[card] = contents;
+            SpawnAmbience(pos, card);
             return created;
+        }
+
+        /// <summary>
+        /// Le décor d'ambiance d'une carte (<see cref="Deckscent.Ambience.Layout"/>), sur les cases
+        /// restées libres : ni contenu, ni joueur, ni portes de salle. Pas dans l'antre (elle a le sien).
+        /// </summary>
+        void SpawnAmbience(Vector2Int pos, TileCard card)
+        {
+            if (!ambience || card.IsBossLair || _board == null)
+                return;
+            var maze = dungeon != null ? dungeon.Maze : FindAnyObjectByType<Maze>();
+            if (maze == null)
+                return;
+            var cells = _board.TileFloorCells(pos);
+            var taken = new HashSet<Vector2Int>();
+            foreach (var e in GridEntity.All)
+                taken.Add(e.Cell);
+            taken.Add(maze.StartCell);
+            var player = FindAnyObjectByType<PlayerController>();
+            if (player != null)
+                taken.Add(player.Cell);
+            var list = new List<GameObject>();
+            foreach (var piece in Deckscent.Ambience.Layout(cells, card.IsRoom, maze.CanStep, taken, _rng))
+            {
+                GridEntity entity = piece.Kind switch
+                {
+                    "vase" => Spawn(vasePrefab, piece.Cell, "Vase"),
+                    "caisse" => Spawn(caissePrefab, piece.Cell, "Caisse"),
+                    "statue" => Spawn(statuePrefab, piece.Cell, "Statue"),
+                    "bougies" => Spawn(bougiesPrefab, piece.Cell, "Bougies"),
+                    "crane" => Spawn(cranePrefab, piece.Cell, "Crâne"),
+                    _ => Spawn(osPetitsPrefab, piece.Cell, "Os"),
+                };
+                if (entity == null)
+                    continue;
+                if (entity is Breakable breakable)
+                    breakable.Deck = dungeon != null ? dungeon.Deck : null;
+                Lean(entity.transform, piece, maze.CellSize);
+                list.Add(entity.gameObject);
+            }
+            if (list.Count > 0)
+                _ambience[card] = list;
+        }
+
+        /// <summary>Calé contre son mur (ou dans l'angle de ses deux murs), un peu tourné au hasard.</summary>
+        void Lean(Transform t, Deckscent.Ambience.Piece piece, float cellSize)
+        {
+            if (piece.Wall < 0)
+                return;
+            var back = Grid.ToWorldDir(Grid.Dirs[piece.Wall]);
+            if (piece.Wall2 >= 0)
+                back += Grid.ToWorldDir(Grid.Dirs[piece.Wall2]);
+            var gap = piece.Blocks ? 0.7f : 0.45f;
+            var outward = Grid.ToWorldDir(Grid.Dirs[piece.Wall]);
+            t.rotation = Quaternion.LookRotation(-outward) * Quaternion.Euler(0f, (float)(_rng.NextDouble() * 40.0 - 20.0), 0f);
+            t.position += back * (cellSize * 0.5f - gap);
         }
 
         /// <summary>Rattache un élément à sa tuile et suit sa fin (mort, ouverture, franchissement).</summary>
@@ -258,6 +359,7 @@ namespace Deckscent
                     "trone" => tronePrefab,
                     "cage" => cagePrefab,
                     "os" => osPrefab,
+                    "chaines" => chainesPrefab,
                     _ => ossementsPrefab,
                 };
                 var decor = Spawn(prefab, cell, "Décor_" + kind);
@@ -297,6 +399,11 @@ namespace Deckscent
                 if (!lair.Contains(cell + d))
                     wall += d;
             var cellSize = dungeon != null && dungeon.Maze != null ? dungeon.Maze.CellSize : 3f;
+            if (kind == "chaines")
+            {
+                decor.rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                return;
+            }
             if (wall == Vector2Int.zero || kind == "ossements")
             {
                 var to = (Vector2)(bossCell - cell);
@@ -380,6 +487,29 @@ namespace Deckscent
             var stairs = Spawn(stairsPrefab, cell, "Escalier");
             if (stairs != null)
                 stairs.Dungeon = dungeon;
+            SpawnBossChest(cell, maze);
+        }
+
+        [Header("Trésor du boss")]
+        [Tooltip("PV rendus par le coffre que laisse le boss (toujours des PV : de quoi descendre).")]
+        [SerializeField, Range(0, 20)] int bossChestHeal = 6;
+
+        /// <summary>Le trésor du boss : un coffre sur une case libre voisine de l'escalier, qui soigne bien.</summary>
+        void SpawnBossChest(Vector2Int stairsCell, Maze maze)
+        {
+            var player = FindAnyObjectByType<PlayerController>();
+            for (var d = 0; d < Grid.Dirs.Length; d++)
+            {
+                var n = stairsCell + Grid.Dirs[d];
+                if (!maze.CanStep(stairsCell, d) || GridEntity.At<GridEntity>(n) != null || (player != null && player.Cell == n))
+                    continue;
+                var chest = Spawn(chestPrefab, n, "CoffreDuBoss");
+                if (chest == null)
+                    return;
+                chest.CardChance = 0f;
+                chest.HealAmount = bossChestHeal;
+                return;
+            }
         }
 
         /// <summary>Un élément (« monstre », « piege », « tresor ») sur cette case. Null pour un élément pas encore géré.</summary>
@@ -396,6 +526,12 @@ namespace Deckscent
                     if (chest != null)
                         chest.Deck = dungeon != null ? dungeon.Deck : null;
                     return chest;
+                case "mimique":
+                    var mimic = Spawn(mimicPrefab, cell, "Coffre");
+                    mimic?.ScaleForFloor(Floor);
+                    return mimic;
+                case "sanctuaire":
+                    return Spawn(shrinePrefab, cell, "Fontaine");
                 case "boss":
                     var boss = Spawn(werewolfPrefab, cell, "LoupGarou");
                     boss?.ScaleForFloor(Floor);

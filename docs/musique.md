@@ -35,6 +35,7 @@ Le prefab `Assets/Prefabs/Audio/MusiqueDonjon.prefab` porte trois composants, po
   - **Niveau de menace** : `Threat One Monster` (0,5) pour un monstre, plus `Threat Per Extra Monster` (0,25) pour chaque monstre en plus.
   - **Combat** : il commence au premier coup (`PlayerController.Struck` ou `Hurt`) et s'arrête après `Calm Turns` (2) tours sans aucun coup.
   - **Coffre** : un coffre fermé en vue à moins de `Chest Radius` cases (3).
+  - Le **combat** se déclenche aux coups échangés avec un **ennemi** (`PlayerController.Struck`, `Hurt`) : briser un vase ou une caisse ne compte pas.
   - **Boss** : `BossMode`, que le [loup-garou](monstres/loup-garou.md) allume à son réveil et éteint à sa mort. La case **`Force Boss`** permet de l'essayer en Play mode sans lui.
 - **`DungeonMusic`**, le **musicien** (`Assets/Scripts/Audio/DungeonMusic.cs`). Il reçoit la situation et joue, dans `OnAudioFilterRead` d'une `AudioSource` sans clip. Il porte les réglages :
   - `Tempo` ;

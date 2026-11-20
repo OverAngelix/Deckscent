@@ -305,17 +305,17 @@ namespace Deckscent
             var ahead = dir == Grid.Dirs[Facing];
             var open = maze.CanStep(Cell, dirIndex);
             var blocker = open ? Blocker(target) : null;
-            if (blocker is IDamageable enemy && ahead)
+            if (blocker is IInteractable thing && ahead && thing.CanInteract)
             {
-                // Avancer vers un ennemi droit devant : l'attaquer.
-                yield return Strike(enemy, dir);
-                yield return EndTurn();
-            }
-            else if (blocker is IInteractable thing && ahead && thing.CanInteract)
-            {
-                // Avancer vers un coffre : l'ouvrir.
+                // Avancer vers un coffre : l'ouvrir (une mimique cachée se fait passer pour un coffre).
                 yield return Lunge(dir, 0.35f, moveTime * 0.4f);
                 yield return thing.Interact(this);
+                yield return EndTurn();
+            }
+            else if (blocker is IDamageable enemy && ahead)
+            {
+                // Avancer vers un ennemi droit devant (ou un vase) : le frapper.
+                yield return Strike(enemy, dir);
                 yield return EndTurn();
             }
             else if (open && blocker == null)
@@ -389,7 +389,9 @@ namespace Deckscent
             if (enemy is UnityEngine.Object o && o != null)
             {
                 enemy.TakeDamage(attack);
-                Struck?.Invoke();
+                // Un coup sur un ennemi (pas sur un vase) : la musique passe au combat.
+                if (enemy is Enemy)
+                    Struck?.Invoke();
                 if (hitStop > 0f)
                     yield return new WaitForSecondsRealtime(hitStop);
             }
@@ -529,6 +531,13 @@ namespace Deckscent
                 return;
             Health = Mathf.Min(maxHealth, Health + amount);
             HealthChanged?.Invoke(Health, maxHealth);
+        }
+
+        /// <summary>Joue un son sur l'émetteur du joueur (piste Effets), à son oreille : hurlement lointain…</summary>
+        public void PlaySound(AudioClip clip, float volume = 1f)
+        {
+            if (sounds != null && clip != null)
+                sounds.Play(clip, volume);
         }
 
         /// <summary>Affiche un court message au HUD (pièges, coffres…).</summary>

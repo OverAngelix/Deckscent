@@ -133,8 +133,17 @@ namespace Deckscent
             if (player != null && player.Maze != null && !player.IsDead)
             {
                 foreach (var enemy in GridEntity.AllOf<Enemy>())
+                {
+                    // Une mimique cachée se fait passer pour un coffre jusque dans la musique.
+                    if (enemy is Mimic mimic && mimic.IsHidden)
+                    {
+                        if (Sees(player.Maze, player.Cell, enemy.Cell, chestRadius))
+                            ChestNear = true;
+                        continue;
+                    }
                     if (enemy.IsActive && Sees(player.Maze, player.Cell, enemy.Cell, sightRadius))
                         VisibleMonsters++;
+                }
                 foreach (var chest in GridEntity.AllOf<Chest>())
                     if (chest.IsActive && !chest.Opened && Sees(player.Maze, player.Cell, chest.Cell, chestRadius))
                         ChestNear = true;
