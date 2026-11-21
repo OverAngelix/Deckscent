@@ -83,7 +83,8 @@ namespace Deckscent
 
         void OnAudioFilterRead(float[] data, int channels)
         {
-            if (_echoL == null)
+            // Après une recompilation en Play mode, Unity garde les tableaux mais pas le hasard.
+            if (_echoL == null || _rng == null)
                 return;
             var dt = 1f / _sampleRate;
             for (var i = 0; i < data.Length; i += channels)
