@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,6 +38,7 @@ namespace Deckscent.Editor
             ["Coffre"] = "Coffre doré (Synty `SM_Prop_Chest_03`, ou blocs si le pack manque), couvercle sur charnière. S'ouvre en avançant dessus ou avec Interact (un tour) : une carte de plus dans la main ou +3 PV, puis il s'enfonce dans le sol. Posé par le Spawner (contenu « tresor »). Voir docs/coffres.md.",
             ["MusiqueDonjon"] = "Musique du donjon, à couches (exploration, menace, coffre, combat, boss), synthétisée en temps réel sur la piste Musique du mixer. `MusicDirector` regarde la situation du joueur, `DungeonMusic` joue. Voir docs/musique.md.",
             ["Hud"] = "Interface en jeu, dessinée en gravure (InkCanvas + TextPool) : PV, Étage / Tour / ATQ / DÉF, mission, messages, barre de vie du boss, voile rouge quand on est touché, voile d'encre entre deux étages, écran de mort. Canvas en surimpression sous la carte. Voir docs/tour-par-tour.md.",
+            ["Remontee"] = "Écran de remontée, dessiné en gravure : sur l'escalier du boss du dernier étage d'un sous-biome (tous les 3 étages), le jeu se met en pause et propose deux cartes : Remonter (fin de l'expédition, tout l'or porté va au camp) ou Descendre. Retour : on reste à l'étage. Canvas en surimpression entre l'écran de niveau et la pause. Construit par *Deckscent > Construire l'écran de remontée*. Voir docs/remontee.md.",
             ["MonteeDeNiveau"] = "Écran de montée de niveau, dessiné en gravure : dès qu'un niveau attend son bienfait et que le joueur a fini son tour, le jeu se met en pause et propose trois cartes (ATQ +1, DÉF +1, PV max +2). Choix à la souris, aux flèches / stick, aux chiffres 1-3. Canvas en surimpression entre la carte et la pause. Construit par *Deckscent > Construire l'écran de niveau*. Voir docs/niveaux.md.",
             ["MenuPause"] ="Menu pause, dessiné en gravure (InkCanvas + TextPool) : Continuer, Options (le panneau du menu titre : son, langue), Sauvegarder (à venir), Retour au menu, Quitter le jeu. Ouvert par Échap / Start (la carte passe d'abord), met le jeu en pause. Canvas en surimpression au-dessus de la carte. Construit par *Deckscent > Construire le menu pause*. Voir docs/menu.md.",
             ["EcranTitre"] = "Écran titre du menu, dessiné en gravure (InkCanvas + TextPool) : le nom dans un cartouche, l'accroche, et les choix en main de cartes agrandies (Descendre, Options, Commandes, Quitter), avec les panneaux Options (son, langue FR / EN) et Commandes. Calques : Fond, une toile par carte (échelle 1,3), Dessus (panneaux, fondu). Construit par *Deckscent > Construire la scène du menu*. Voir docs/menu.md.",

@@ -109,6 +109,69 @@ namespace Deckscent.Tests
             Assert.That(Werewolf.Current, Is.Null);
         }
 
+        /// <summary>Met le donjon au sous-sol `floor`, tue le boss et attend l'escalier.</summary>
+        IEnumerator StairsAtFloor(int floor)
+        {
+            typeof(Dungeon).GetProperty("Floor").SetValue(_dungeon, floor);
+            yield return CompleteMission();
+            GridEntity.AllOf<Werewolf>().Single().TakeDamage(999);
+            yield return new WaitForSeconds(1.6f);
+        }
+
+        [UnityTest]
+        public IEnumerator AuTroisiemeSousSolLEscalierProposeDeRemonterOuDeDescendre()
+        {
+            yield return LoadScene();
+            Assert.That(_dungeon.IsSubBiomeEnd, Is.False, "le sous-sol 1 n'est pas une fin de sous-biome");
+            yield return StairsAtFloor(3);
+            Assert.That(_dungeon.IsSubBiomeEnd, Is.True);
+            var stairs = GridEntity.AllOf<Stairs>().Single();
+            var screen = Object.FindAnyObjectByType<AscentScreen>();
+
+            // Retour : on reste à l'étage, l'escalier reste ouvert.
+            var run = _player.StartCoroutine(stairs.Interact(_player));
+            yield return null;
+            Assert.That(screen.IsOpen, Is.True, "le choix s'ouvre");
+            Assert.That(Time.timeScale, Is.Zero, "le jeu est en pause");
+            screen.Stay();
+            yield return run;
+            Assert.That(stairs.Used, Is.False, "l'escalier reste ouvert");
+            Assert.That(_dungeon.Floor, Is.EqualTo(3));
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            // Descendre : le sous-sol suivant, comme d'habitude.
+            run = _player.StartCoroutine(stairs.Interact(_player));
+            yield return null;
+            screen.Choose(1);
+            yield return run;
+            Assert.That(_dungeon.Floor, Is.EqualTo(4), "on descend au sous-sol 4");
+            Assert.That(_dungeon.IsSubBiomeEnd, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator RemonterMetToutLOrALAbriEtFinitLExpedition()
+        {
+            yield return LoadScene();
+            yield return StairsAtFloor(3);
+            var stairs = GridEntity.AllOf<Stairs>().Single();
+            var screen = Object.FindAnyObjectByType<AscentScreen>();
+            var camp = Progression.Gold;
+            Gold.Add(40);
+            var carried = Gold.Carried;
+
+            _player.StartCoroutine(stairs.Interact(_player));
+            yield return null;
+            screen.Choose(0);
+            yield return null;
+            yield return null;
+            Assert.That(Gold.Carried, Is.Zero);
+            Assert.That(Progression.Gold, Is.EqualTo(camp + carried), "tout l'or porté va au camp");
+            Assert.That(Object.FindAnyObjectByType<Hud>().SurfaceTime, Is.GreaterThanOrEqualTo(0f), "« De retour à la surface »");
+            Assert.That(Time.timeScale, Is.Zero, "le jeu reste figé");
+            Assert.That(_dungeon.Floor, Is.EqualTo(3), "on ne descend pas");
+            Time.timeScale = 1f;
+        }
+
         /// <summary>Pose le joueur sur une case (sans animation ni tour).</summary>
         void PutPlayer(Vector2Int cell)
         {

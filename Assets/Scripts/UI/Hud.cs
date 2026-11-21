@@ -54,12 +54,24 @@ namespace Deckscent
 
         public string Toast => _toast;
         public float DeadTime => _deadTime;
+        /// <summary>Temps (réel) depuis l'écran de retour à la surface, -1 s'il n'est pas affiché.</summary>
+        public float SurfaceTime => _surfaceTime;
+
+        /// <summary>Remontée réussie : l'écran se voile, « De retour à la surface », l'or ramené, puis le menu.</summary>
+        public void ShowSurface(int broughtGold)
+        {
+            _surfaceGold = broughtGold;
+            _surfaceTime = 0f;
+            _dirty = true;
+        }
 
         InputAction _restart, _restartAlt, _toMenu;
         string _toast = "";
         float _toastAge = -1f;
         float _flashAge = -1f;
         float _deadTime = -1f;
+        float _surfaceTime = -1f;
+        int _surfaceGold;
         bool _dirty = true;
         Mission _shownMission;
         int _shownVersion = -1;
@@ -194,6 +206,15 @@ namespace Deckscent
                 else if (_deadTime >= restartDelay && Pressed(_toMenu))
                     SceneFlow.LoadMenu();
             }
+            if (_surfaceTime >= 0f)
+            {
+                var before = _surfaceTime;
+                _surfaceTime += dt;
+                if (before < restartDelay + 1f)
+                    _dirty = true;
+                if (_surfaceTime >= restartDelay && (Pressed(_restart) || Pressed(_restartAlt) || Pressed(_toMenu)))
+                    SceneFlow.LoadMenu();
+            }
             var mission = dungeon != null ? dungeon.Mission : null;
             if (mission != _shownMission || (mission != null && mission.Version != _shownVersion))
             {
@@ -285,6 +306,8 @@ namespace Deckscent
                 DrawFade(screen);
             if (_deadTime >= 0f)
                 DrawDeath(screen);
+            if (_surfaceTime >= 0f)
+                DrawSurface(screen);
         }
 
         /// <summary>
@@ -481,6 +504,33 @@ namespace Deckscent
                 // Recommencer : Entrée au clavier (Player/Wait), le bouton du bas à la manette (Player/Interact, L3 est peu parlant).
                 var restartKeys = KeyPrompts.Of(ControlDevice.IsGamepad ? "Player/Interact" : "Player/Wait");
                 KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.recommencer"), new Hint(KeyPrompts.Back(), "aide.menu") },
+                    0f, cy + 144f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
+            }
+        }
+
+        /// <summary>Remontée : voile d'encre, « De retour à la surface », bilan et or ramené, puis l'invitation à continuer.</summary>
+        void DrawSurface(Vector2 screen)
+        {
+            var a = Mathf.Clamp01(_surfaceTime / 0.8f);
+            ink.Rect(new Rect(Vector2.zero, screen), WithAlpha(inkColor, 0.85f * a));
+            var cy = screen.y * 0.5f;
+            texts.Label(Loc.T("hud.surface"), 0f, cy - 40f, screen.x, 44, WithAlpha(paperColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
+            var reached = dungeon != null ? Loc.F("hud.etage", dungeon.Floor) + "   ·   " : "";
+            texts.Label(reached + Loc.F("niveau.atteint", player.Experience.Level) + "   ·   " + Loc.F("hud.tour", player.Turn), 0f, cy + 18f, screen.x, 16, WithAlpha(paperColor, a * 0.7f), TextAnchor.UpperCenter, FontStyle.Italic);
+            var line1 = $"{Loc.F("bilan.monstres", RunStats.Kills)}   ·   {Loc.F("bilan.coffres", RunStats.Chests)}";
+            var line2 = $"{Loc.F("bilan.boss", RunStats.Bosses)}   ·   {Loc.F("bilan.degats", RunStats.DamageDealt)}";
+            var line3 = Loc.F("bilan.or_ramene", _surfaceGold, Progression.Gold);
+            var w = Mathf.Max(TextPool.Width(line1, 16), TextPool.Width(line2, 16), TextPool.Width(line3, 16, FontStyle.Bold)) + 48f;
+            var card = new Rect((screen.x - w) * 0.5f, cy + 50f, w, 76f);
+            ink.Rect(new Rect(card.x - 4f, card.y - 4f, card.width + 8f, card.height + 8f), WithAlpha(paperColor, a));
+            Engraving.DoubleFrame(ink, card, 3f, WithAlpha(inkColor, a));
+            texts.Label(line1, card.x, card.y + 7f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
+            texts.Label(line2, card.x, card.y + 29f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
+            texts.Label(line3, card.x, card.y + 51f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter, FontStyle.Bold);
+            if (_surfaceTime >= restartDelay)
+            {
+                var b = Mathf.Clamp01((_surfaceTime - restartDelay) / 0.4f);
+                KeyPrompts.DrawHints(ink, texts, new[] { new Hint(KeyPrompts.Confirm(), "aide.continuer") },
                     0f, cy + 144f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
             }
         }

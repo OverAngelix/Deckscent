@@ -28,6 +28,8 @@ namespace Deckscent
         [SerializeField] DeckSettings deck = new DeckSettings();
         [Tooltip("Tirage de la mission de l'étage : nombre d'objectifs et comptes visés.")]
         [SerializeField] MissionSettings mission = new MissionSettings();
+        [Tooltip("Étages par sous-biome (GDD §6) : le boss du dernier étage d'une tranche propose de remonter à la surface. Voir docs/remontee.md.")]
+        [SerializeField, Min(1)] int floorsPerSubBiome = 3;
 
         public DungeonBoard Board { get; private set; }
         public TileDeck Deck { get; private set; }
@@ -38,6 +40,10 @@ namespace Deckscent
         public Maze Maze => maze;
         /// <summary>Étage en cours (1 = le premier). Monte à chaque boss vaincu (<see cref="NextFloor"/>).</summary>
         public int Floor { get; private set; } = 1;
+        /// <summary>Étages par sous-biome : tous les combien on peut remonter.</summary>
+        public int FloorsPerSubBiome => floorsPerSubBiome;
+        /// <summary>Dernier étage d'un sous-biome : son escalier propose de remonter (<see cref="AscentScreen"/>).</summary>
+        public bool IsSubBiomeEnd => Floor % floorsPerSubBiome == 0;
         /// <summary>Nouveau plateau et nouvelle main (le Spawner remplit alors les tuiles déjà posées). Aussi à chaque nouvel étage.</summary>
         public event System.Action GameStarted;
         /// <summary>Le jeu vient de poser l'antre du boss (mission remplie).</summary>

@@ -8,7 +8,7 @@ Décidé avec l'utilisateur le 2026-11-21 (premier pas vers le hub, voir [todo.m
 - L'or ramassé pendant l'expédition est **porté** : il n'est à l'abri qu'une fois au hub.
 - **À la mort**, on n'en garde que **10 %** (arrondi en dessous) : de quoi s'améliorer au hub et aller plus loin. Le reste est perdu.
 - **Quitter** l'expédition en cours (menu, recommencer, bureau) compte comme une mort.
-- **En remontant** (après le boss du 3ᵉ étage, à venir), on garde tout.
+- **En remontant** (après le boss du 3ᵉ étage, voir [remontee.md](remontee.md)), on garde tout.
 
 ## Où on le voit
 

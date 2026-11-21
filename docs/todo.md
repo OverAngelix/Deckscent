@@ -31,8 +31,8 @@ Cocher (✅) chaque tâche finie et validée.
    - XP des monstres tués (PV max + attaque), paliers 10, 15, 20…
    - À chaque niveau, un bienfait parmi trois : ATQ +1, DÉF +1, PV max +2. Les compétences de classe viendront plus tard s'ajouter au tirage.
    - Jauge d'XP au HUD, niveau atteint sur l'écran de mort.
-8. **Or** (décidé le 2026-11-21) : on en trouve dans les coffres, les vases et caisses, et sur les monstres. Compteur au HUD et sur la carte. À la mort, on ne garde que **10 %** de l'or de l'expédition (de quoi s'améliorer et aller plus loin).
-9. **Remontée** : après le boss du 3ᵉ étage (fin de sous-biome), l'escalier propose de **remonter** (on garde tout son or) ou de **descendre**. Boss par étage du sous-biome : 1 loup-garou, 2 golem élémentaire, 3 Slayer (modèles de POLYGON Fantasy Rivals, mécaniques à décider).
+8. ✅ **Or** (décidé et validé le 2026-11-21, [or.md](or.md)) : on en trouve dans les coffres, les vases et caisses, et sur les monstres. Compteur au HUD et sur la carte. À la mort, on ne garde que **10 %** de l'or de l'expédition (de quoi s'améliorer et aller plus loin).
+9. 🟡 **Remontée** (faite le 2026-11-21, à valider en jouant : [remontee.md](remontee.md)) : après le boss du 3ᵉ étage (fin de sous-biome), l'escalier propose de **remonter** (on garde tout son or) ou de **descendre**. Boss par étage du sous-biome : 1 loup-garou, 2 golem élémentaire, 3 Slayer (modèles de POLYGON Fantasy Rivals, mécaniques à décider).
 10. **Hub minimal** (jalon 4) : **camp 3D en surface** (packs Nature, Meadow Forest, Farm), parcouru en grille comme le donjon. On y dépense l'or pour **débloquer des cartes** (nouvelles formes et salles ajoutées à la pioche) ; on lance l'expédition depuis le hub ; progression sauvegardée.
    - La pioche **reste illimitée** pour l'instant (utile pour tester) : les déblocages ajoutent des cartes à son tirage.
 11. **Sauvegarde de suspension** (roguelike) : on sauvegarde en quittant, on reprend, la sauvegarde est effacée au chargement. Plateau, pioche, joueur, entités. À faire quand le contenu de l'étage est stable.

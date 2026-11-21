@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -10,6 +10,10 @@ namespace Deckscent
     /// découvre un puits où des marches **descendent** ; une lueur monte du fond. On le prend en
     /// avançant dessus ou avec Interact : l'écran se voile, le Donjon passe au sous-sol suivant
     /// (<see cref="Dungeon.NextFloor"/>) et le joueur repart du départ, avec ses PV.
+    ///
+    /// Au dernier étage d'un sous-biome (<see cref="Dungeon.IsSubBiomeEnd"/>), il propose d'abord de
+    /// **remonter** (<see cref="AscentScreen"/>) : fin de l'expédition, tout l'or porté va au camp
+    /// (docs/remontee.md). Ni l'un ni l'autre : l'escalier reste ouvert.
     /// </summary>
     public class Stairs : GridEntity, IInteractable
     {
@@ -24,6 +28,8 @@ namespace Deckscent
 
         /// <summary>Le joueur prend l'escalier (avant le changement d'étage).</summary>
         public static event Action<Stairs> Taken;
+        /// <summary>Le joueur a choisi de remonter : l'expédition est finie.</summary>
+        public static event Action<Stairs> Ascended;
 
         public Dungeon Dungeon { get; set; }
         public bool Used { get; private set; }
@@ -73,11 +79,31 @@ namespace Deckscent
         {
             if (!CanInteract)
                 yield break;
+            var dungeon = Dungeon != null ? Dungeon : FindAnyObjectByType<Dungeon>();
+            var hud = FindAnyObjectByType<Hud>();
+            if (dungeon != null && dungeon.IsSubBiomeEnd)
+            {
+                var screen = FindAnyObjectByType<AscentScreen>();
+                if (screen != null)
+                {
+                    screen.Open(dungeon.Floor, Gold.Carried);
+                    while (screen.IsOpen)
+                        yield return null;
+                    if (screen.Result == AscentScreen.Choice.None)
+                        yield break; // on reste à l'étage : l'escalier reste ouvert
+                    if (screen.Result == AscentScreen.Choice.Ascend)
+                    {
+                        Used = true;
+                        Retire();
+                        Taken?.Invoke(this);
+                        yield return Ascend(hud);
+                        yield break;
+                    }
+                }
+            }
             Used = true;
             Retire();
             Taken?.Invoke(this);
-            var dungeon = Dungeon != null ? Dungeon : FindAnyObjectByType<Dungeon>();
-            var hud = FindAnyObjectByType<Hud>();
             if (hud != null)
             {
                 // Le bilan du sous-sol qu'on quitte, affiché pendant la descente.
@@ -95,6 +121,26 @@ namespace Deckscent
             }
             if (hud != null)
                 yield return hud.FadeIn(0.8f);
+        }
+
+        /// <summary>
+        /// Remontée : tout l'or porté va au camp, le jeu se fige et le HUD montre le retour à la
+        /// surface ; de là, on revient à l'écran titre (en attendant le hub).
+        /// </summary>
+        IEnumerator Ascend(Hud hud)
+        {
+            var brought = Gold.EndOnReturn();
+            Ascended?.Invoke(this);
+            if (hud == null)
+            {
+                SceneFlow.LoadMenu();
+                yield break;
+            }
+            hud.ShowSurface(brought);
+            Time.timeScale = 0f;
+            // Le HUD ramène au menu : la scène change, la coroutine s'arrête avec elle.
+            while (true)
+                yield return null;
         }
     }
 }
