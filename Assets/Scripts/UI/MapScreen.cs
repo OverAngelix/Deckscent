@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -48,6 +48,8 @@ namespace Deckscent
         [SerializeField] Color hatchColor = new Color(0.42f, 0.42f, 0.43f);
         [SerializeField] Color validColor = new Color(0.15f, 0.6f, 0.25f);
         [SerializeField] Color invalidColor = new Color(0.85f, 0.12f, 0.1f);
+        [Tooltip("L'or de la pièce gravée (or porté, dans l'en-tête).")]
+        [SerializeField] Color goldColor = new Color(0.9f, 0.68f, 0.12f);
         [Tooltip("Flèche du joueur et carte choisie (rouge d'accent, comme en jeu).")]
         [SerializeField] Color playerColor = new Color(0.85f, 0.1f, 0.1f);
         [Tooltip("Voile sombre derrière la carte.")]
@@ -61,6 +63,8 @@ namespace Deckscent
         const float CardGap = 16f, CardNote = 16f;
         /// <summary>Largeur maximale de la colonne de légende.</summary>
         const float LegendWidth = 130f;
+        /// <summary>Hauteur du centre de la pièce d'or sous le haut de l'en-tête : au milieu des chiffres du montant.</summary>
+        const float CoinCenterY = 13f;
         const int CardsPerRow = 3;
         const float CursorRepeat = 0.18f;
         static readonly Vector2Int NoSlot = new Vector2Int(-1, -1);
@@ -411,7 +415,13 @@ namespace Deckscent
             var title = Loc.T("carte.titre").ToUpperInvariant();
             texts.Label(title, panel.x + Pad + 4f, headTop, 600f, 26, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             var titleW = TextPool.Width(title, 26, FontStyle.Bold);
-            texts.Label($"{Loc.T(biomeKey)} {(dungeon != null ? dungeon.Floor : 1)}", panel.x + Pad + 4f + titleW + 20f, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
+            var floorLabel = $"{Loc.T(biomeKey)} {(dungeon != null ? dungeon.Floor : 1)}";
+            var floorX = panel.x + Pad + 4f + titleW + 20f;
+            texts.Label(floorLabel, floorX, headTop + 7f, 300f, 17, Faded(0.4f), TextAnchor.UpperLeft, FontStyle.Italic);
+            // L'or porté, après l'étage : pièce gravée et montant.
+            var coinX = floorX + TextPool.Width(floorLabel, 17, FontStyle.Italic) + 24f;
+            Engraving.Coin(ink, new Vector2(coinX + 8f, headTop + CoinCenterY), 8f, goldColor, inkColor);
+            texts.Label(Gold.Carried.ToString(), coinX + 22f, headTop + 6f, 120f, 18, inkColor, TextAnchor.UpperLeft, FontStyle.Bold);
             DrawStatus(panel, headTop + 6f);
             Engraving.Rule(ink, new Vector2(panel.x + Pad, panel.y + Pad + TitleHeight), panel.width - Pad * 2f, inkColor);
 

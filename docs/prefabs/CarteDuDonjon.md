@@ -41,6 +41,7 @@ CarteDuDonjon  [Canvas, CanvasScaler, MapScreen]
   - `hatchColor` = (0.42, 0.42, 0.43) — Couleur des hachures du plateau : un gris encre, plus doux que l'encre pleine (des traits noirs serrés sur toute la carte papillotent).
   - `validColor` = (0.15, 0.6, 0.25)
   - `invalidColor` = (0.85, 0.12, 0.1)
+  - `goldColor` = (0.9, 0.68, 0.12) — L'or de la pièce gravée (or porté, dans l'en-tête).
   - `playerColor` = (0.85, 0.1, 0.1) — Flèche du joueur et carte choisie (rouge d'accent, comme en jeu).
   - `backdropColor` = (0.02, 0.02, 0.03) — Voile sombre derrière la carte.
   - `screenFill` = 0.95 — Part de l'écran occupée par la carte.

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Deckscent
 {
@@ -198,6 +198,8 @@ namespace Deckscent
             { "message.etage",           "Sous-sol {0}" },
             { "message.vase_potion",     "Une potion était cachée dedans : +{0} PV" },
             { "message.vase_carte",      "Une carte était cachée dedans" },
+            { "message.vase_or",         "Quelques pièces cachées dedans : +{0} or" },
+            { "bilan.or",                "Or ramassé : {0}   ·   Or pour le camp : {1}" },
             { "message.fontaine",        "Vous buvez à la fontaine : +{0} PV" },
             { "message.mimique",         "Ce coffre a des dents !" },
             { "boss.loup_garou",         "Loup-garou" },
@@ -207,8 +209,8 @@ namespace Deckscent
             { "bilan.coffres",           "Coffres ouverts : {0}" },
             { "bilan.boss",              "Boss vaincus : {0}" },
             { "bilan.degats",            "Dégâts infligés : {0}" },
-            { "message.coffre_carte",  "Coffre : une carte de plus dans la main" },
-            { "message.coffre_pv",     "Coffre : +{0} PV" },
+            { "message.coffre_carte",  "Coffre : {0} or et une carte de plus dans la main" },
+            { "message.coffre_pv",     "Coffre : {1} or et +{0} PV" },
         };
 
         /// <summary>Anglais : mêmes clés que Fr.</summary>
@@ -369,6 +371,8 @@ namespace Deckscent
             { "message.etage",           "Basement {0}" },
             { "message.vase_potion",     "A potion was hidden inside: +{0} HP" },
             { "message.vase_carte",      "A card was hidden inside" },
+            { "message.vase_or",         "A few coins were hidden inside: +{0} gold" },
+            { "bilan.or",                "Gold collected: {0}   ·   Gold for the camp: {1}" },
             { "message.fontaine",        "You drink from the fountain: +{0} HP" },
             { "message.mimique",         "This chest has teeth!" },
             { "boss.loup_garou",         "Werewolf" },
@@ -378,8 +382,8 @@ namespace Deckscent
             { "bilan.coffres",           "Chests opened: {0}" },
             { "bilan.boss",              "Bosses slain: {0}" },
             { "bilan.degats",            "Damage dealt: {0}" },
-            { "message.coffre_carte",  "Chest: one more card in hand" },
-            { "message.coffre_pv",     "Chest: +{0} HP" },
+            { "message.coffre_carte",  "Chest: {0} gold and one more card in hand" },
+            { "message.coffre_pv",     "Chest: {1} gold and +{0} HP" },
         };
     }
 }

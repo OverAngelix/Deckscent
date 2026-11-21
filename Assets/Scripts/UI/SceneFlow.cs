@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Deckscent
@@ -25,6 +25,7 @@ namespace Deckscent
         static void Load(string path)
         {
             Time.timeScale = 1f;
+            AbandonRun();
 #if UNITY_EDITOR
             UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(path, new LoadSceneParameters(LoadSceneMode.Single));
 #else
@@ -32,9 +33,20 @@ namespace Deckscent
 #endif
         }
 
+        /// <summary>
+        /// Quitter l'expédition en cours (menu, recommencer, bureau) compte comme une mort pour
+        /// l'or : on n'en garde que la part de la mort (docs/or.md). Rien à faire s'il est déjà réglé.
+        /// </summary>
+        static void AbandonRun()
+        {
+            if (Gold.Carried > 0)
+                Gold.EndOnDeath();
+        }
+
         /// <summary>Ferme le jeu (arrête le Play mode dans l'éditeur).</summary>
         public static void Quit()
         {
+            AbandonRun();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else

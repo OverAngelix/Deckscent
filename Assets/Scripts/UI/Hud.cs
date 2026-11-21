@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Deckscent
@@ -467,19 +467,21 @@ namespace Deckscent
             // Le bilan de la partie, tous étages confondus, dans un cartouche papier.
             var line1 = $"{Loc.F("bilan.monstres", RunStats.Kills)}   ·   {Loc.F("bilan.coffres", RunStats.Chests)}";
             var line2 = $"{Loc.F("bilan.boss", RunStats.Bosses)}   ·   {Loc.F("bilan.degats", RunStats.DamageDealt)}";
-            var w = Mathf.Max(TextPool.Width(line1, 16), TextPool.Width(line2, 16)) + 48f;
-            var card = new Rect((screen.x - w) * 0.5f, cy + 50f, w, 54f);
+            var line3 = Loc.F("bilan.or", Gold.LastLost, Gold.LastKept);
+            var w = Mathf.Max(TextPool.Width(line1, 16), TextPool.Width(line2, 16), TextPool.Width(line3, 16)) + 48f;
+            var card = new Rect((screen.x - w) * 0.5f, cy + 50f, w, 76f);
             ink.Rect(new Rect(card.x - 4f, card.y - 4f, card.width + 8f, card.height + 8f), WithAlpha(paperColor, a));
             Engraving.DoubleFrame(ink, card, 3f, WithAlpha(inkColor, a));
             texts.Label(line1, card.x, card.y + 7f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
             texts.Label(line2, card.x, card.y + 29f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
+            texts.Label(line3, card.x, card.y + 51f, card.width, 16, WithAlpha(inkColor, a), TextAnchor.UpperCenter);
             if (_deadTime >= restartDelay)
             {
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
                 // Recommencer : Entrée au clavier (Player/Wait), le bouton du bas à la manette (Player/Interact, L3 est peu parlant).
                 var restartKeys = KeyPrompts.Of(ControlDevice.IsGamepad ? "Player/Interact" : "Player/Wait");
                 KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.recommencer"), new Hint(KeyPrompts.Back(), "aide.menu") },
-                    0f, cy + 122f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
+                    0f, cy + 144f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
             }
         }
 

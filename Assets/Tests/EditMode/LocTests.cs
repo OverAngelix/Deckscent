@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Deckscent.Tests
 {
@@ -39,7 +39,7 @@ namespace Deckscent.Tests
         {
             GameSettings.SetLocale("en", false);
             Assert.That(Loc.T("menu.descendre"), Is.EqualTo("Descend"));
-            Assert.That(Loc.F("message.coffre_pv", 3), Is.EqualTo("Chest: +3 HP"));
+            Assert.That(Loc.F("message.coffre_pv", 3, 10), Is.EqualTo("Chest: 10 gold and +3 HP"));
             Assert.That(Loc.In("fr", "menu.descendre"), Is.EqualTo("Descendre"), "une langue donnée, sans changer l'option");
         }
 

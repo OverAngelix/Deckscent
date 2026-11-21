@@ -27,6 +27,7 @@ Vase  [Breakable, AudioSource, SoundEmitter]
   - `potionChance` = 0.3 — Chance qu'il cache une potion (PV).
   - `potionHeal` = 2 — PV rendus par la potion.
   - `cardChance` = 0.06 — Chance qu'il cache une carte (si la potion n'est pas sortie et que la main n'est pas pleine).
+  - `goldChance` = 0.35 — Chance qu'il cache quelques pièces d'or (si ni potion ni carte).
   - `body` = `Corps` — Ce qui se brise (le modèle) : il disparaît d'un coup, remplacé par des éclats.
   - `fragments` = 12 — Nombre d'éclats quand il explose.
   - `burst` = 4 — Vitesse maximale des éclats (m/s).

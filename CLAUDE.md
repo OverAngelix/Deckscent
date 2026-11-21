@@ -128,6 +128,8 @@ docs/decor.md                          Décor des salles et couloirs, vases et c
 Assets/Scripts/Enemies/Mimic.cs        Mimique (coffre qui mord), prefab Enemies/Mimique (DecorBuilder) ; docs/monstres/mimique.md
 Assets/Scripts/FX/                     Effets de particules : Fx.Play, FxLibrary (Resources/Effets.asset)
 Assets/Scripts/Editor/FxBuilder.cs     Menu Deckscent > Construire les effets de particules (Prefabs/FX/, Materials/FX/) ; docs/effets.md
+Assets/Scripts/Progression/Gold.cs     Or porté pendant l'expédition (coffres, vases, monstres), 10 % gardés à la mort ; docs/or.md
+Assets/Scripts/Progression/Progression.cs  Progression durable du hub (or mis à l'abri), JSON dans persistentDataPath
 ```
 
 **Repères de grille** : case (x, y) du plan, x vers l'est, y vers le sud (ligne 0 = nord). Monde : nord = +Z, est = +X, centre de case = `((x + 0,5) × cellSize, 0, −(y + 0,5) × cellSize)`. Orientation 0 = nord, 1 = est (yaw 90°)…
@@ -218,7 +220,7 @@ Deux étages, mis en place par *Deckscent > Installer le rendu gravure* (`Render
 - **Version sombre, choisie par l'utilisateur** (entre plusieurs essais, le 2026-11-15) : ambiante unie 0,2 (Main et scène de test), lanterne du joueur 0,9 / 6 m, torches 2,5 / 9 m, ombres dures (`m_SoftShadowsSupported` 0). Beaucoup de hachures croisées, noir plein dans les recoins, seuls les murs près d'une torche restent blancs. Un essai plus clair (ambiante 0,3, lanterne 2 / 10 m) a été écarté. Ne pas éclaircir sans lui demander.
 - Après un changement de shader, Unity ne réimporte pas toujours tout de suite : forcer `AssetDatabase.ImportAsset(…, ForceUpdate)` avant de refaire les captures, sinon elles montrent l'ancien shader.
 - Pour mettre un objet en valeur : `albedo` **saturé**. Le décor reste en niveaux de gris. **Lumières blanches** uniquement. Ombres à bords durs.
-- **Effets de particules** (`docs/effets.md`, pack Synty POLYGON Particle FX, non versionné) : matériaux convertis en particules URP **en mélange alpha** (l'additif disparaît dans la gravure) et **sans particules douces**. **Peu d'effets, choisis par l'utilisateur** (2026-11-20) : poussière, étoiles du boss sonné, éclats des vases et caisses. Refusés : feu des torches et braseros, coup porté, giclée des slimes, soin (pièces d'or des coffres : idée gardée pour quand il y aura de l'or).
+- **Effets de particules** (`docs/effets.md`, pack Synty POLYGON Particle FX, non versionné) : matériaux convertis en particules URP **en mélange alpha** (l'additif disparaît dans la gravure) et **sans particules douces**. **Peu d'effets, choisis par l'utilisateur** (2026-11-20) : poussière, étoiles du boss sonné, éclats des vases et caisses. Refusés : feu des torches et braseros, coup porté, giclée des slimes, soin, **pièces d'or** (2026-11-21 : pas d'effet pour l'or).
 - **Lumières du décor** (bougies, braseros) : ombres dures au palier « Low » d'URP (`BossBuilder.LowShadows`) ; une lumière sans ombre traverse les murs fins (retour de l'utilisateur).
 - **Lueur propre** (`_Glow` du shader toon, 0 par défaut) : ajoutée à la lumière reçue, seulement sur les slimes (0,25, yeux compris) et les coffres (0,2), réglée dans `ContentBuilder`. Sans elle, dans la version sombre, un slime à deux cases se perdait dans les hachures. Le décor reste à 0 (captures inchangées).
 - La densité des hachures dépend de la luminosité de la scène : après un changement d'éclairage, recaler les seuils.

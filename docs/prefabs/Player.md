@@ -31,6 +31,7 @@ Player  [PlayerController, AudioSource, SoundEmitter]
   - `maxHealth` = 10 — Points de vie au départ (et maximum).
   - `attack` = 1 — Dégâts d'une attaque (avancer vers un ennemi droit devant), avant sa défense.
   - `defense` = 0 — Retirée des dégâts reçus (coups, pièges). Un coup fait toujours au moins 1.
+  - `goldKeptOnDeath` = 0.1 — Part de l'or de l'expédition gardée à la mort (ou en abandonnant) : elle va au hub, le reste est perdu. En remontant, on garde tout. Voir docs/or.md.
   - `move` = `Player/Move` — Se déplacer : ZQSD, stick gauche, croix. Avant / arrière, pas de côté. Avancer vers un ennemi l'attaque, vers un coffre l'ouvre.
   - `turn` = `Player/Turn` — Tourner d'un quart de tour : A / E, LB / RB.
   - `wait` = `Player/Wait` — Attendre un tour : Entrée, L3.

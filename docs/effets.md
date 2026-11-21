@@ -19,7 +19,7 @@ Peu d'effets, choisis après essai par l'utilisateur : la poussière et les éto
 - **Coup porté** (éclats `FX_Impact_Small_01`, entaille `FX_Slash_01`) : retiré.
 - **Giclée à la mort d'un slime** (`FX_BloodSplat_Small_01`) : retirée, le slime fond seul.
 - **Soin** (`FX_Heal_01`) : pas d'effet.
-- **Pièces d'or à l'ouverture d'un coffre** (`FX_Money_Coins_Burst_01`, pièces passées à notre or `M_Toon_Or`) : **idée gardée** pour quand le jeu aura de l'or (GDD §4 : l'or remonte au hub).
+- **Pièces d'or à l'ouverture d'un coffre** (`FX_Money_Coins_Burst_01`) : **refusé** (2026-11-21, l'or existe maintenant : pas d'effet pour l'or, choix de l'utilisateur).
 
 ## Comment ça marche
 

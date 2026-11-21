@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using UnityEngine;
 
@@ -6,8 +6,8 @@ namespace Deckscent
 {
     /// <summary>
     /// Coffre : apparaît dans les tuiles « trésor ». On l'ouvre en avançant dessus (droit devant)
-    /// ou avec l'action Interact ; ça coûte un tour. Butin : une carte de plus dans la main, ou des
-    /// PV. Une fois vidé, il s'enfonce dans le sol et libère sa case.
+    /// ou avec l'action Interact ; ça coûte un tour. Butin : de l'or, plus une carte dans la main
+    /// ou des PV. Une fois vidé, il s'enfonce dans le sol et libère sa case.
     ///
     /// Doré (couleur saturée) : le post-process gravure le garde en couleur (accent). Il ne bloque
     /// que le joueur : un monstre peut se poser sur sa case, et le cache tant qu'il y est (avancer
@@ -20,6 +20,8 @@ namespace Deckscent
         [SerializeField, Range(0, 20)] int healAmount = 3;
         [Tooltip("Chance que le butin soit une carte (sinon des PV). PV au maximum : une carte ; main pleine (ou pas de pioche) : des PV.")]
         [SerializeField, Range(0f, 1f)] float cardChance = 0.5f;
+        [Tooltip("Or trouvé dans le coffre, en plus de la carte ou des PV (au hasard entre les deux bornes, comprises).")]
+        [SerializeField] Vector2Int goldRange = new Vector2Int(8, 15);
 
         [Header("Animation")]
         [Tooltip("Les couvercles, pivot sur leur charnière (celui du décor Synty et celui des formes de secours : seul l'un des deux est affiché).")]
@@ -95,13 +97,15 @@ namespace Deckscent
 
         void GiveLoot(PlayerController player)
         {
+            var gold = UnityEngine.Random.Range(goldRange.x, Mathf.Max(goldRange.x, goldRange.y) + 1);
+            Gold.Add(gold);
             var wantCard = UnityEngine.Random.value < cardChance || player.Health >= player.MaxHealth;
             if (wantCard && Deck != null && Deck.AddCard())
-                player.Notify(Loc.T("message.coffre_carte"));
+                player.Notify(Loc.F("message.coffre_carte", gold));
             else
             {
                 player.Heal(healAmount);
-                player.Notify(Loc.F("message.coffre_pv", healAmount));
+                player.Notify(Loc.F("message.coffre_pv", healAmount, gold));
             }
         }
 

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Deckscent
 {
@@ -97,7 +97,10 @@ namespace Deckscent
         {
             Floor = 1;
             if (Application.isPlaying)
+            {
                 RunStats.Reset();
+                Gold.ResetRun();
+            }
             StartFloor();
         }
 

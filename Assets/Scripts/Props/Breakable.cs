@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace Deckscent
@@ -6,7 +6,7 @@ namespace Deckscent
     /// <summary>
     /// Vase ou caisse à briser, dans les coins des salles (<see cref="Ambience"/>). Il bloque sa
     /// case ; on le brise en avançant dessus (comme une attaque, un tour). Parfois il cache quelque
-    /// chose : une potion (PV) ou une carte. Pas un ennemi : il ne compte pas dans la mission.
+    /// chose : une potion (PV), une carte ou quelques pièces d'or. Pas un ennemi : il ne compte pas dans la mission.
     /// </summary>
     public class Breakable : GridEntity, IDamageable
     {
@@ -17,6 +17,10 @@ namespace Deckscent
         [SerializeField, Range(0, 10)] int potionHeal = 2;
         [Tooltip("Chance qu'il cache une carte (si la potion n'est pas sortie et que la main n'est pas pleine).")]
         [SerializeField, Range(0f, 1f)] float cardChance = 0.08f;
+        [Tooltip("Chance qu'il cache quelques pièces d'or (si ni potion ni carte).")]
+        [SerializeField, Range(0f, 1f)] float goldChance = 0.35f;
+        [Tooltip("Or trouvé dedans (au hasard entre les deux bornes, comprises).")]
+        [SerializeField] Vector2Int goldRange = new Vector2Int(1, 4);
 
         [Header("Animation")]
         [Tooltip("Ce qui se brise (le modèle) : il disparaît d'un coup, remplacé par des éclats.")]
@@ -73,6 +77,12 @@ namespace Deckscent
             }
             else if (roll < potionChance + cardChance && Deck != null && Deck.AddCard())
                 player.Notify(Loc.T("message.vase_carte"));
+            else if (roll < potionChance + cardChance + goldChance)
+            {
+                var gold = Random.Range(goldRange.x, Mathf.Max(goldRange.x, goldRange.y) + 1);
+                Gold.Add(gold);
+                player.Notify(Loc.F("message.vase_or", gold));
+            }
         }
 
         /// <summary>

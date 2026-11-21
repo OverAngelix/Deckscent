@@ -195,6 +195,8 @@ Entre deux expéditions, au hub, on peut :
 - **Forge / craft** : un mini-jeu d'adresse pour améliorer ou fusionner des cartes.
 - Parler aux **PNJ** : une histoire légère, portée par des personnages (ex. un personnage bloqué qu'on peut libérer en atteignant une profondeur).
 
+**Décidé** (2026-11-21) : le hub est un **camp 3D en surface**, parcouru en grille comme le donjon (packs Synty Nature, Meadow Forest, Farm ; PNJ de Fantasy Characters). Première version : dépenser l'**or** pour débloquer des cartes (ajoutées à la pioche, qui reste illimitée pour l'instant), partir en expédition, progression sauvegardée. Or perdu à la mort, sauf **10 %** gardés ; on le garde en entier en **remontant** après le boss du 3ᵉ étage. Voir [todo.md](todo.md).
+
 ## 8. Direction artistique et ambiance
 
 Rendu actuel : section « Rendu gravure » de `CLAUDE.md`.

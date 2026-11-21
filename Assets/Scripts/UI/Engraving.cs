@@ -127,6 +127,15 @@ namespace Deckscent
             c.Polygon(pts, color);
         }
 
+        /// <summary>Pièce d'or : disque doré cerné d'encre, un filet intérieur et un reflet.</summary>
+        public static void Coin(InkCanvas c, Vector2 center, float r, Color gold, Color ink)
+        {
+            c.Circle(center, r, gold);
+            c.Arc(center, r, 0f, Mathf.PI * 2f, ink, 1.5f, 24);
+            c.Arc(center, r * 0.62f, 0f, Mathf.PI * 2f, ink, 1f, 18);
+            c.Arc(center, r * 0.62f, Mathf.PI * 1.05f, Mathf.PI * 1.45f, ink, 2f, 6);
+        }
+
         /// <summary>Étoile à 4 branches (repère du départ).</summary>
         public static void Star(InkCanvas c, Vector2 center, float r, Color color)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace Deckscent
@@ -31,6 +31,8 @@ namespace Deckscent
         public int Defense => defense;
         /// <summary>XP rapportée au joueur à sa mort : PV max + attaque (les monstres durs en donnent plus).</summary>
         public virtual int ExperienceReward => Experience.RewardFor(maxHealth, damage);
+        /// <summary>Or laissé à sa mort : la moitié de son XP (au moins 1), donc plus chez les monstres durs ou profonds.</summary>
+        public virtual int GoldReward => Mathf.Max(1, ExperienceReward / 2);
         public override bool BlocksPlayer => true;
         /// <summary>Menace le joueur (combat, GDD §2) : faux pour un monstre endormi ou caché.</summary>
         public virtual bool Threatens => IsActive;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -49,6 +49,10 @@ namespace Deckscent
         [Header("Niveaux")]
         [Tooltip("XP pour monter de niveau et bienfaits gagnés (ATQ, DÉF, PV max). Voir docs/niveaux.md.")]
         [SerializeField] ExperienceSettings experience = new ExperienceSettings();
+
+        [Header("Or")]
+        [Tooltip("Part de l'or de l'expédition gardée à la mort (ou en abandonnant) : elle va au hub, le reste est perdu. En remontant, on garde tout. Voir docs/or.md.")]
+        [SerializeField, Range(0f, 1f)] float goldKeptOnDeath = 0.1f;
 
         // Actions de la map Player d'InputSystem_Actions (Assets/InputSystem_Actions.inputactions),
         // où se règlent les touches. Clavier en position physique (ZQSD en AZERTY) et manette.
@@ -130,6 +134,7 @@ namespace Deckscent
         void Awake()
         {
             Health = maxHealth;
+            Gold.KeptShare = goldKeptOnDeath;
             if (sounds == null)
                 sounds = GetComponentInChildren<SoundEmitter>();
             if (cameraRig == null)
@@ -547,7 +552,12 @@ namespace Deckscent
         // --- XP et niveaux ------------------------------------------------------
 
         /// <summary>Tout monstre tué rapporte de l'XP (même par un piège : c'est le joueur qui l'y a mené).</summary>
-        void OnEnemyKilled(Enemy enemy) => GainExperience(enemy.ExperienceReward);
+        void OnEnemyKilled(Enemy enemy)
+        {
+            GainExperience(enemy.ExperienceReward);
+            if (!IsDead)
+                Gold.Add(enemy.GoldReward);
+        }
 
         /// <summary>Ajoute de l'XP ; un niveau gagné attend son bienfait (écran de niveau).</summary>
         public void GainExperience(int amount)
@@ -608,6 +618,7 @@ namespace Deckscent
         void Die()
         {
             IsDead = true;
+            Gold.EndOnDeath();
             Died?.Invoke();
             if (cameraRig == null)
                 return;

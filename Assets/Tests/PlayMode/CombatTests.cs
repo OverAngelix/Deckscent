@@ -272,12 +272,15 @@ namespace Deckscent.Tests
             var chest = Spawn<Chest>("Assets/Prefabs/Props/Coffre.prefab", Ahead);
             chest.CardChance = 0f; // pas de pioche ici : toujours des PV
             _player.TakeDamage(5);
+            var goldBefore = Gold.Carried;
             yield return Tap(_keyboard.wKey);
             Assert.That(chest.Opened, Is.True);
             Assert.That(_player.Cell, Is.EqualTo(new Vector2Int(6, 3)), "on ouvre sans avancer");
             Assert.That(_player.Turn, Is.EqualTo(1), "ouvrir coûte un tour");
             Assert.That(_player.Health, Is.EqualTo(8), "+3 PV");
-            Assert.That(_messages, Does.Contain("Coffre : +3 PV"));
+            var gold = Gold.Carried - goldBefore;
+            Assert.That(gold, Is.InRange(8, 15), "le coffre donne toujours de l'or");
+            Assert.That(_messages, Does.Contain($"Coffre : {gold} or et +3 PV"));
 
             yield return WaitSeconds(1.5f);
             Assert.That(chest == null, "il s'enfonce puis disparaît");
