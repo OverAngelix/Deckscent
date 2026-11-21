@@ -125,7 +125,7 @@ namespace Deckscent
 
         /// <summary>
         /// Remontée : tout l'or porté va au camp, le jeu se fige et le HUD montre le retour à la
-        /// surface ; de là, on revient à l'écran titre (en attendant le hub).
+        /// surface ; de là, on revient au camp.
         /// </summary>
         IEnumerator Ascend(Hud hud)
         {
@@ -133,7 +133,7 @@ namespace Deckscent
             Ascended?.Invoke(this);
             if (hud == null)
             {
-                SceneFlow.LoadMenu();
+                SceneFlow.LoadCamp();
                 yield break;
             }
             hud.ShowSurface(brought);

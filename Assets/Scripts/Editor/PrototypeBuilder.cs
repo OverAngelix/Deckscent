@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -20,8 +20,8 @@ namespace Deckscent.Editor
     public static class PrototypeBuilder
     {
         internal const string PrefabDir = "Assets/Prefabs";
-        const string MazeDir = PrefabDir + "/Maze";
-        const string MaterialDir = "Assets/Materials";
+        internal const string MazeDir = PrefabDir + "/Maze";
+        internal const string MaterialDir = "Assets/Materials";
         const string ScenePath = "Assets/Scenes/Main.unity";
         const string Synty = "Assets/Synty/PolygonDungeon/Prefabs/";
 
@@ -415,6 +415,9 @@ namespace Deckscent.Editor
             piece.transform.localScale = scale;
             foreach (var filter in source.GetComponentsInChildren<MeshFilter>(true))
             {
+                // Seulement le modèle le plus détaillé : les LOD suivants (…_LOD_01) s'empileraient dessus.
+                if (System.Text.RegularExpressions.Regex.IsMatch(filter.name, @"_LOD_?0*[1-9]"))
+                    continue;
                 var part = new GameObject(filter.name);
                 part.transform.SetParent(piece.transform, false);
                 // Position de la sous-pièce par rapport à la racine du prefab Synty.

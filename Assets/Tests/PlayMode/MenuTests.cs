@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -121,16 +121,16 @@ namespace Deckscent.Tests
         }
 
         [UnityTest]
-        public IEnumerator DescendreLanceLaPartie()
+        public IEnumerator DescendreMeneAuCamp()
         {
             yield return LoadMenu();
             yield return Tap(_keyboard.enterKey);
             Assert.That(_menu.IsLeaving, Is.True, "fondu au noir");
             Assert.That(Object.FindAnyObjectByType<MenuMusic>().IsFadingOut, Is.True, "la musique s'éteint");
             var timeout = Time.realtimeSinceStartup + 5f;
-            while (SceneManager.GetActiveScene().name != "Main" && Time.realtimeSinceStartup < timeout)
+            while (SceneManager.GetActiveScene().name != "Camp" && Time.realtimeSinceStartup < timeout)
                 yield return null;
-            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main"));
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Camp"));
             yield return null;
             Assert.That(Object.FindAnyObjectByType<PlayerController>(), Is.Not.Null);
         }

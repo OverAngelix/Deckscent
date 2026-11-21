@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -42,15 +42,16 @@ namespace Deckscent.Editor
             UpdateBuildScenes();
         }
 
-        /// <summary>Scènes du build : Menu (0), Main (1), puis les autres déjà listées.</summary>
+        /// <summary>Scènes du build : Menu (0), Camp (1), Main (2), puis les autres déjà listées.</summary>
         public static void UpdateBuildScenes()
         {
             var scenes = new List<EditorBuildSettingsScene>();
-            foreach (var path in new[] { SceneFlow.MenuScene, SceneFlow.GameScene })
+            var ordered = new[] { SceneFlow.MenuScene, SceneFlow.CampScene, SceneFlow.GameScene };
+            foreach (var path in ordered)
                 if (AssetDatabase.LoadAssetAtPath<SceneAsset>(path) != null)
                     scenes.Add(new EditorBuildSettingsScene(path, true));
             foreach (var other in EditorBuildSettings.scenes)
-                if (other.path != SceneFlow.MenuScene && other.path != SceneFlow.GameScene)
+                if (System.Array.IndexOf(ordered, other.path) < 0)
                     scenes.Add(other);
             EditorBuildSettings.scenes = scenes.ToArray();
         }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -123,7 +123,7 @@ namespace Deckscent
             if (IsLeaving && _fade >= 1f)
             {
                 IsLeaving = false; // une seule fois
-                SceneFlow.LoadGame();
+                SceneFlow.LoadCamp();
                 return;
             }
             for (var i = 0; i < _lift.Length; i++)

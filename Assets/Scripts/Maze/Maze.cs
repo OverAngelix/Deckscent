@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +12,7 @@ namespace Deckscent
     ///   .  sol
     ///   P  départ du joueur
     ///   T  torche accrochée au premier mur voisin (nord, est, sud puis ouest)
+    ///   ~  hors du chemin mais **sans mur** devant (dehors : l'entrée d'une grotte, une vue dégagée)
     ///
     /// Chaque case de sol reçoit un sol, un plafond et un pan de mur sur chaque côté qui donne
     /// sur un mur : un plan peut être « plein de roche » autour des couloirs sans coût.
@@ -30,7 +31,7 @@ namespace Deckscent
             public GameObject[] walls = Array.Empty<GameObject>();
             [Tooltip("Sol d'une case.")]
             public GameObject floor;
-            [Tooltip("Plafond d'une case (visible seulement par-dessous).")]
+            [Tooltip("Plafond d'une case (visible seulement par-dessous). Vide : pas de plafond (dehors, sous le ciel).")]
             public GameObject ceiling;
 
             /// <summary>Vrai si toutes les pièces sont là, maillages compris (pack Synty importé).</summary>
@@ -41,7 +42,7 @@ namespace Deckscent
                 foreach (var wall in walls)
                     if (!HasMeshes(wall))
                         return false;
-                return HasMeshes(floor) && HasMeshes(ceiling);
+                return HasMeshes(floor) && (ceiling == null || HasMeshes(ceiling));
             }
 
             static bool HasMeshes(GameObject prefab)
@@ -65,7 +66,7 @@ namespace Deckscent
         [SerializeField, Min(0.5f)] float wallHeight = 3.5f;
 
         [Header("Plan")]
-        [Tooltip("# mur, . sol, P départ, T torche. En jeu, le plateau de tuiles le remplacera à chaque pose.")]
+        [Tooltip("# mur, . sol, P départ, T torche, ~ hors du chemin sans mur. En jeu, le plateau de tuiles le remplacera à chaque pose.")]
         [SerializeField, TextArea(8, 30)] string layout =
             "###############\n" +
             "#T....#.......#\n" +
@@ -148,7 +149,11 @@ namespace Deckscent
             Build();
         }
 
-        public bool IsWalkable(Vector2Int cell) => GetCell(cell) != '#';
+        public bool IsWalkable(Vector2Int cell)
+        {
+            var c = GetCell(cell);
+            return c != '#' && c != '~';
+        }
 
         readonly HashSet<Vector2Int> _holes = new HashSet<Vector2Int>();
 
@@ -242,7 +247,7 @@ namespace Deckscent
             {
                 var cell = new Vector2Int(x, y);
                 var c = _rows[y][x];
-                if (c == '#')
+                if (c == '#' || c == '~')
                     continue;
                 if (c == 'P')
                     StartCell = cell;
@@ -277,8 +282,9 @@ namespace Deckscent
             var flat = new Vector3(cellSize / PrefabCellSize, 1f, cellSize / PrefabCellSize);
             if (!_holes.Contains(cell))
                 Spawn(pieces.floor, center, Quaternion.identity, flat, $"Sol_{cell.x}_{cell.y}");
-            Spawn(pieces.ceiling, center + Vector3.up * wallHeight, Quaternion.identity, flat,
-                $"Plafond_{cell.x}_{cell.y}");
+            if (pieces.ceiling != null)
+                Spawn(pieces.ceiling, center + Vector3.up * wallHeight, Quaternion.identity, flat,
+                    $"Plafond_{cell.x}_{cell.y}");
 
             var wallScale = new Vector3(cellSize / PrefabCellSize, wallHeight / PrefabWallHeight, 1f);
             for (var i = 0; i < Grid.Dirs.Length; i++)
@@ -287,6 +293,9 @@ namespace Deckscent
                 // Mur vers la roche, ou mur fin vers une case de sol (pourtour d'une salle : chaque
                 // case pose son pan, tourné vers elle).
                 if (CanStep(cell, i))
+                    continue;
+                // Vers une case « ~ » (dehors, vue dégagée) : pas de mur, sauf mur fin.
+                if (!HasEdgeWall(cell, i) && GetCell(cell + d) == '~')
                     continue;
                 var outward = Grid.ToWorldDir(d);
                 // Le prefab de mur est posé au milieu du bord, sa face (+Z) tournée vers la case.

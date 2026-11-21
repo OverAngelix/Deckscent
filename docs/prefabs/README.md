@@ -5,6 +5,45 @@
 | Prefab | Chemin | Rôle |
 |---|---|---|
 | [MusiqueDonjon](MusiqueDonjon.md) | `Assets/Prefabs/Audio/MusiqueDonjon.prefab` | Musique du donjon, à couches (exploration, menace, coffre, combat, boss), synthétisée en temps réel sur la piste Musique du mixer. `MusicDirector` regarde la situation du joueur, `DungeonMusic` joue. Voir docs/musique.md. |
+| [ArbreMort_01](ArbreMort_01.md) | `Assets/Prefabs/Camp/ArbreMort_01.prefab` | Arbre mort (Nature), forêt autour du camp. |
+| [ArbreMort_02](ArbreMort_02.md) | `Assets/Prefabs/Camp/ArbreMort_02.prefab` | Arbre mort (Nature), forêt autour du camp. |
+| [Bois](Bois.md) | `Assets/Prefabs/Camp/Bois.prefab` | Tas de bûches (Farm `SM_Prop_Wood_Stack_01`), décor de passage du camp. |
+| [BouleauMort](BouleauMort.md) | `Assets/Prefabs/Camp/BouleauMort.prefab` | Bouleau mort (Nature), forêt autour du camp. |
+| [Cabane](Cabane.md) | `Assets/Prefabs/Camp/Cabane.prefab` | Cabane de pierre (Meadow Forest `SM_Bld_Stone_Cabin_01`), à l'ouest du camp, au-delà du muret. |
+| [Caisses](Caisses.md) | `Assets/Prefabs/Camp/Caisses.prefab` | Caisse, tonneau et seau (décor de passage du camp, contre les murets). |
+| [ChariotBrise](ChariotBrise.md) | `Assets/Prefabs/Camp/ChariotBrise.prefab` | Chariot brisé (Meadow Forest), à l'est du camp, au-delà du muret. |
+| [Charrette](Charrette.md) | `Assets/Prefabs/Camp/Charrette.prefab` | Charrette à bras du camp (Meadow Forest `SM_Prop_HandCart_01`). Bloque sa case. |
+| [Cloture](Cloture.md) | `Assets/Prefabs/Camp/Cloture.prefab` | Clôture de bois du camp (Meadow Forest `SM_Prop_Meadow_Fence_03`), variante de muret. |
+| [Colline](Colline.md) | `Assets/Prefabs/Camp/Colline.prefab` | Colline (Farm `SM_Generic_Mountains_Grass_01`), à l'horizon du camp. |
+| [EntreeDuDonjon](EntreeDuDonjon.md) | `Assets/Prefabs/Camp/EntreeDuDonjon.prefab` | Entrée du donjon, au nord du camp : arche de rocher (Nature `SM_Rock_CaveEntrance_01`) avec un fond d'encre. Avancer dedans (ou Interact) lance l'expédition (`DungeonEntrance`). Voir docs/camp.md. |
+| [EpeeDansLaPierre](EpeeDansLaPierre.md) | `Assets/Prefabs/Camp/EpeeDansLaPierre.prefab` | Épée plantée dans la pierre (Meadow Forest `SM_Prop_Sword_Stone_01`), décor du camp. Bloque sa case. |
+| [Falaise_01](Falaise_01.md) | `Assets/Prefabs/Camp/Falaise_01.prefab` | Falaise (Nature `SM_Rock_Cluster_Large_03`) derrière l'entrée du donjon. |
+| [Falaise_02](Falaise_02.md) | `Assets/Prefabs/Camp/Falaise_02.prefab` | Falaise (Nature `SM_Rock_Cluster_Large_05`) derrière l'entrée du donjon. |
+| [FeuDeCamp](FeuDeCamp.md) | `Assets/Prefabs/Camp/FeuDeCamp.prefab` | Feu de camp au milieu du camp : pierres, bûches, trépied et marmite (Meadow Forest), flammes blanches et lumière qui vacille (3 / 12 m). Bloque sa case. |
+| [Fleurs](Fleurs.md) | `Assets/Prefabs/Camp/Fleurs.prefab` | Fleurs (Farm `SM_Env_Flowers_01`), semées çà et là dans le camp. |
+| [GrandPin_01](GrandPin_01.md) | `Assets/Prefabs/Camp/GrandPin_01.prefab` | Grand pin (Nature), forêt autour du camp. |
+| [GrandPin_02](GrandPin_02.md) | `Assets/Prefabs/Camp/GrandPin_02.prefab` | Grand pin (Nature), forêt autour du camp. |
+| [Herbe](Herbe.md) | `Assets/Prefabs/Camp/Herbe.prefab` | Case d'herbe du camp (Farm `SM_Generic_Ground_Tile_01`), le sol du labyrinthe du camp. Voir docs/camp.md. |
+| [Muret_01](Muret_01.md) | `Assets/Prefabs/Camp/Muret_01.prefab` | Muret de pierre du camp (Meadow Forest `SM_Prop_Stonewall_Small_01`) : le « mur » d'un bord fermé, bas, on voit la forêt par-dessus. |
+| [Muret_02](Muret_02.md) | `Assets/Prefabs/Camp/Muret_02.prefab` | Variante de muret du camp (Meadow Forest `SM_Prop_Stonewall_Small_02`). |
+| [Pin_01](Pin_01.md) | `Assets/Prefabs/Camp/Pin_01.prefab` | Pin (Nature), forêt autour du camp. |
+| [Pin_02](Pin_02.md) | `Assets/Prefabs/Camp/Pin_02.prefab` | Pin (Nature), forêt autour du camp. |
+| [PinMaigre_01](PinMaigre_01.md) | `Assets/Prefabs/Camp/PinMaigre_01.prefab` | Pin dégarni (Nature), forêt autour du camp. |
+| [PinMaigre_02](PinMaigre_02.md) | `Assets/Prefabs/Camp/PinMaigre_02.prefab` | Pin dégarni (Nature), forêt autour du camp. |
+| [PinMort](PinMort.md) | `Assets/Prefabs/Camp/PinMort.prefab` | Pin mort (Nature), forêt autour du camp. |
+| [Puits](Puits.md) | `Assets/Prefabs/Camp/Puits.prefab` | Puits du camp (Meadow Forest `SM_Prop_Well_01`). Bloque sa case. |
+| [Rochers_01](Rochers_01.md) | `Assets/Prefabs/Camp/Rochers_01.prefab` | Tas de rochers (Nature), au pied de la falaise du camp. |
+| [Rochers_02](Rochers_02.md) | `Assets/Prefabs/Camp/Rochers_02.prefab` | Tas de rochers (Nature), au pied de la falaise du camp. |
+| [Rochers_03](Rochers_03.md) | `Assets/Prefabs/Camp/Rochers_03.prefab` | Tas de rochers (Nature), dehors. |
+| [Sechoir](Sechoir.md) | `Assets/Prefabs/Camp/Sechoir.prefab` | Séchoir à peaux du camp (Meadow Forest `SM_Prop_Camp_Tanning_Rack_01`). Bloque sa case. |
+| [SolDehors](SolDehors.md) | `Assets/Prefabs/Camp/SolDehors.prefab` | Grand sol d'herbe sous le camp et la forêt (Farm `SM_Generic_Ground_Tile_01`, agrandi). |
+| [Souche](Souche.md) | `Assets/Prefabs/Camp/Souche.prefab` | Souche (Nature), dehors. |
+| [Tente](Tente.md) | `Assets/Prefabs/Camp/Tente.prefab` | Tente du camp (Meadow Forest `SM_Prop_Camp_Tent_01`). Bloque sa case. |
+| [Tombe](Tombe.md) | `Assets/Prefabs/Camp/Tombe.prefab` | Tombe (Nature `SM_Prop_Grave_03`), au sud-ouest du camp. |
+| [TorchePieu](TorchePieu.md) | `Assets/Prefabs/Camp/TorchePieu.prefab` | Torche plantée dans le sol (Nature `SM_Prop_TorchStick_01`), flamme blanche et lumière (2 / 8 m), de part et d'autre de l'entrée du donjon. |
+| [Touffe_01](Touffe_01.md) | `Assets/Prefabs/Camp/Touffe_01.prefab` | Petite touffe d'herbe (Farm), semée çà et là dans le camp. |
+| [Touffe_02](Touffe_02.md) | `Assets/Prefabs/Camp/Touffe_02.prefab` | Petite touffe d'herbe (Farm), semée çà et là dans le camp. |
+| [Touffe_03](Touffe_03.md) | `Assets/Prefabs/Camp/Touffe_03.prefab` |  |
 | [LoupGarou](LoupGarou.md) | `Assets/Prefabs/Enemies/LoupGarou.prefab` | Boss de l'étage : loup-garou (Synty POLYGON Werewolf `SM_Werewolf_01`, riggé, ou secours en formes simples), animé os par os par `WerewolfRig` (poses procédurales, aucune animation dans les packs). Dort dans l'antre posée par le jeu une fois la mission remplie ; coup de griffe armé un tour à l'avance, charge annoncée, louveteaux à la moitié des PV. Le vaincre ouvre l'escalier. Construit par *Deckscent > Construire les prefabs du boss*. Voir docs/monstres/loup-garou.md. |
 | [Louveteau](Louveteau.md) | `Assets/Prefabs/Enemies/Louveteau.prefab` | Louveteau appelé par le loup-garou à la moitié de ses PV : même modèle à l'échelle 0,6, 2 PV, 1 d'attaque, il fonce et mord. Meurt avec le boss. Voir docs/monstres/loup-garou.md. |
 | [Mimique](Mimique.md) | `Assets/Prefabs/Enemies/Mimique.prefab` | Mimique : un monstre qui se fait passer pour un coffre (copie du prefab Coffre). Son couvercle frémit parfois ; essayer de l'ouvrir le révèle et il mord (3 dégâts), puis il bondit et mord (2). 5 PV. Remplace 15 % des coffres de salle. Voir docs/monstres/mimique.md. |
@@ -41,6 +80,7 @@
 | [Escalier](Escalier.md) | `Assets/Prefabs/Props/Escalier.prefab` | Escalier qui descend au sous-sol suivant : un puits sous la case (le sol est percé par `Maze.AddHole`), un rebord de pierre, des marches qui plongent, une lueur blanche qui monte du fond. À la mort du boss, la dalle s'effondre dans le puits ; on le prend en avançant dessus ou avec Interact. Voir docs/antre.md. |
 | [DallePics](DallePics.md) | `Assets/Prefabs/Traps/DallePics.prefab` | Piège : dalle à pics (grille et piques Synty `SM_Trap_Spears_Grate_01` / `SM_Trap_Spears_01`, ou plaque grise et cônes si le pack manque). Pics sortis 1 tour sur 3, pointes visibles le tour d'avant, 2 dégâts au joueur comme aux ennemis. Posé par le Spawner (contenu « piege »). Voir docs/pieges.md. |
 | [CarteDuDonjon](CarteDuDonjon.md) | `Assets/Prefabs/UI/CarteDuDonjon.prefab` | Écran de carte : le plateau et la main de cartes-tuiles, dessinés en gravure (InkCanvas + TextPool), pour poser les tuiles. Canvas en surimpression, au-dessus du jeu et hors du post-process. Met le jeu en pause quand il est ouvert. Voir docs/carte.md. |
+| [Confirmation](Confirmation.md) | `Assets/Prefabs/UI/Confirmation.prefab` | Demande de confirmation gravée (oui / non), par exemple « Descendre dans le donjon ? » en avançant dans la grotte du camp. Met le jeu en pause ; Échap = non. Construit par *Deckscent > Construire le camp*. Voir docs/camp.md. |
 | [EcranTitre](EcranTitre.md) | `Assets/Prefabs/UI/EcranTitre.prefab` | Écran titre du menu, dessiné en gravure (InkCanvas + TextPool) : le nom dans un cartouche, l'accroche, et les choix en main de cartes agrandies (Descendre, Options, Commandes, Quitter), avec les panneaux Options (son, langue FR / EN) et Commandes. Calques : Fond, une toile par carte (échelle 1,3), Dessus (panneaux, fondu). Construit par *Deckscent > Construire la scène du menu*. Voir docs/menu.md. |
 | [Hud](Hud.md) | `Assets/Prefabs/UI/Hud.prefab` | Interface en jeu, dessinée en gravure (InkCanvas + TextPool) : PV, Étage / Tour / ATQ / DÉF, mission, messages, barre de vie du boss, voile rouge quand on est touché, voile d'encre entre deux étages, écran de mort. Canvas en surimpression sous la carte. Voir docs/tour-par-tour.md. |
 | [MenuPause](MenuPause.md) | `Assets/Prefabs/UI/MenuPause.prefab` | Menu pause, dessiné en gravure (InkCanvas + TextPool) : Continuer, Options (le panneau du menu titre : son, langue), Sauvegarder (à venir), Retour au menu, Quitter le jeu. Ouvert par Échap / Start (la carte passe d'abord), met le jeu en pause. Canvas en surimpression au-dessus de la carte. Construit par *Deckscent > Construire le menu pause*. Voir docs/menu.md. |

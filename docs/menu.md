@@ -1,6 +1,6 @@
 # Menu, options, musique, traduction
 
-Le jeu démarre sur le **menu** (scène `Assets/Scenes/Menu.unity`, scène 0 du build ; Main est la 1). Il garde la DA du jeu : une salle du donjon rendue avec le **même post-process gravure** qu'en jeu, la caméra qui tourne lentement sur elle-même, une musique synthétisée, et par-dessus le titre **Deckscent** dans un cartouche papier cerné d'encre, avec l'accroche « Construisez le donjon. Survivez-y. ».
+Le jeu démarre sur le **menu** (scène `Assets/Scenes/Menu.unity`, scène 0 du build ; puis Camp, 1, et Main, 2). Il garde la DA du jeu : une salle du donjon rendue avec le **même post-process gravure** qu'en jeu, la caméra qui tourne lentement sur elle-même, une musique synthétisée, et par-dessus le titre **Deckscent** dans un cartouche papier cerné d'encre, avec l'accroche « Construisez le donjon. Survivez-y. ».
 
 ![Le menu](images/menu.png)
 
@@ -21,7 +21,7 @@ Présentés comme une **main de cartes**, dessinées comme les cartes-tuiles de 
 
 | Carte | Effet |
 |---|---|
-| Descendre | Fondu au noir (la musique s'éteint avec), puis la scène Main : nouvelle partie. |
+| Descendre | Fondu au noir (la musique s'éteint avec), puis le **camp** ([camp.md](camp.md)), d'où part l'expédition. |
 | Options | Volumes (général, musique, effets sonores) et langue (voir plus bas). |
 | Commandes | Liste des touches, lues dans `InputSystem_Actions` et affichées selon l'appareil utilisé (voir « Touches affichées selon l'appareil ») : noms du clavier (Z Q S D en AZERTY) ou pictos de la manette. |
 | Quitter | Ferme le jeu (arrête le Play mode dans l'éditeur). |

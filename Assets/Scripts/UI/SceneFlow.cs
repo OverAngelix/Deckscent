@@ -4,14 +4,18 @@ using UnityEngine.SceneManagement;
 namespace Deckscent
 {
     /// <summary>
-    /// Passages d'une scène à l'autre : menu → jeu, recommencer, retour au menu. Dans l'éditeur,
-    /// les scènes sont chargées par leur chemin (les scènes de test ne sont pas dans le build) ;
-    /// dans un build, par leur nom (Menu = scène 0, Main = scène 1).
+    /// Passages d'une scène à l'autre : menu → camp → jeu, retour au camp (mort, remontée), retour
+    /// au menu. Dans l'éditeur, les scènes sont chargées par leur chemin (les scènes de test ne sont
+    /// pas dans le build) ; dans un build, par leur nom (Menu = scène 0, Camp = 1, Main = 2).
     /// </summary>
     public static class SceneFlow
     {
         public const string MenuScene = "Assets/Scenes/Menu.unity";
         public const string GameScene = "Assets/Scenes/Main.unity";
+        public const string CampScene = "Assets/Scenes/Camp.unity";
+
+        /// <summary>Le camp, à la surface (hub) : d'où part l'expédition, où l'on revient.</summary>
+        public static void LoadCamp() => Load(CampScene);
 
         /// <summary>Nouvelle partie (scène Main).</summary>
         public static void LoadGame() => Load(GameScene);

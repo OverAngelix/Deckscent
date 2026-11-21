@@ -1,4 +1,4 @@
-// Post-process plein écran façon gravure / BD à l'encre, en noir et blanc (inspiration :
+﻿// Post-process plein écran façon gravure / BD à l'encre, en noir et blanc (inspiration :
 // les jeux de donjon dessinés à la plume, dont The Secret of Weepstone) :
 // - contours à l'encre : sauts de profondeur, de normale et de luminosité (ce dernier cerne
 //   les ombres portées et les joints des pierres), tracé légèrement tremblé ;
@@ -76,6 +76,15 @@ Shader "Deckscent/Gravure"
             // Global (hors Properties, pour que Shader.SetGlobalFloat s'applique) : 0 = image non
             // touchée. Mis à 0 pour la vue Scène de l'éditeur par GravureSceneView.cs.
             float _GravureOff;
+            // Ciel gravé (globaux, hors Properties, posés par CampSky.cs ; 0 = fond noir du donjon) :
+            // _SkyOn allume le ciel, _MoonDir = direction de la lune (monde), _SkyParams =
+            // (ton à l'horizon, ton au zénith, densité des étoiles, rayon de la lune en radians).
+            float _SkyOn;
+            float4 _MoonDir;
+            float4 _SkyParams;
+            // Dehors (camp) : les distances de l'obscurité (_DarkStart, _DarkEnd) sont multipliées
+            // par ce facteur global (0 = 1 : le donjon garde les siennes).
+            float _DarkScale;
 
             float3 SceneColor(float2 uv)
             {
@@ -146,6 +155,71 @@ Shader "Deckscent/Gravure"
                 return saturate((start - tone) / max(start, 1e-4));
             }
 
+            float Hash3(float3 p)
+            {
+                return frac(sin(dot(p, float3(12.9898, 78.233, 37.719))) * 43758.5453);
+            }
+
+            // Angle (radians) entre deux directions unitaires.
+            float AngleBetween(float3 a, float3 b)
+            {
+                return acos(clamp(dot(a, b), -1.0, 1.0));
+            }
+
+            // Ciel de nuit, là où rien n'est dessiné : un aplat d'encre, noir au zénith, gris sombre
+            // vers l'horizon (les silhouettes du décor s'y découpent en noir) ; étoiles en points de
+            // papier, fixes dans le ciel ; croissant de lune en papier, cerné d'encre, dans un halo.
+            float3 SkyColor(float2 uv)
+            {
+                // Rayon de vue : du plan proche au plan lointain sous ce pixel.
+                float3 nearP = ComputeWorldSpacePosition(uv, UNITY_NEAR_CLIP_VALUE, UNITY_MATRIX_I_VP);
+                float3 farP = ComputeWorldSpacePosition(uv, UNITY_RAW_FAR_CLIP_VALUE, UNITY_MATRIX_I_VP);
+                float3 dir = normalize(farP - nearP);
+                float el = asin(clamp(dir.y, -1.0, 1.0));
+                // Pixels par radian à l'écran (champ vertical de la caméra ; la projection peut être
+                // retournée quand on rend dans une texture, d'où abs).
+                float pxPerRad = _ScreenParams.y * 0.5 * abs(UNITY_MATRIX_P[1][1]);
+
+                float3 moon = normalize(_MoonDir.xyz);
+                float moonR = _SkyParams.w;
+                float toMoon = AngleBetween(dir, moon);
+
+                // Ton du ciel (aplat, sans traits, choix de l'utilisateur) : _SkyParams.x à
+                // l'horizon, .y au zénith (0 = encre, 1 = papier), plus clair autour de la lune.
+                float t = pow(saturate(el / 1.2), 0.6);
+                float tone = lerp(_SkyParams.x, _SkyParams.y, t);
+                tone += 0.12 * (1.0 - smoothstep(moonR * 1.2, moonR * 8.0, toMoon));
+                float ink = 1.0 - saturate(tone);
+
+                // Étoiles : une sur quelques cellules d'une grille en direction, au centre de sa cellule.
+                float3 cell = floor(dir * _SkyParams.z);
+                float h = Hash3(cell);
+                float3 starDir = normalize((cell + 0.5) / _SkyParams.z);
+                float starPx = AngleBetween(dir, starDir) * pxPerRad;
+                float size = 0.6 + 1.2 * frac(h * 37.0);
+                float star = (h < 0.022 ? 1.0 : 0.0) * saturate(size - starPx + 0.5) * smoothstep(0.03, 0.15, el);
+                star *= smoothstep(moonR * 2.0, moonR * 4.0, toMoon); // pas d'étoile dans le halo
+
+                // Lune : un disque moins un disque décalé (la part dans l'ombre) = un croissant.
+                float3 right = normalize(cross(float3(0, 1, 0), moon) + 1e-4);
+                float3 up = cross(moon, right);
+                float3 shadowCenter = normalize(moon + (right * 0.62 + up * 0.3) * moonR);
+                float inDisc = saturate((moonR - toMoon) * pxPerRad + 0.5);
+                float lit = inDisc * saturate((AngleBetween(dir, shadowCenter) - moonR * 0.95) * pxPerRad + 0.5);
+                // La part sombre de la lune se fond dans le ciel, elle cache
+                // seulement les étoiles ; le croissant est en papier, cerné d'un trait d'encre.
+                star *= 1.0 - inDisc;
+                float litSide = saturate((AngleBetween(dir, shadowCenter) - moonR * 0.95) * pxPerRad + 0.5);
+                float rim = saturate(1.2 - abs(toMoon - moonR) * pxPerRad) * litSide;
+                ink = lerp(ink, 0.0, max(lit, star));
+                ink = max(ink, rim);
+                // Sous l'horizon (au loin, sous le décor) : le noir.
+                ink = lerp(ink, 1.0, 1.0 - smoothstep(-0.02, 0.0, el));
+
+                float3 paper = _PaperColor.rgb + (Hash(floor(uv * _ScreenParams.xy)) - 0.5) * _Grain;
+                return lerp(paper, _InkColor.rgb, ink);
+            }
+
             half4 GravureFragment(Varyings input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -163,6 +237,8 @@ Shader "Deckscent/Gravure"
                 #else
                     float geoMask = rawDepth < 1.0 ? 1.0 : 0.0;
                 #endif
+                if (geoMask < 0.5 && _SkyOn > 0.5)
+                    return half4(SkyColor(uv), 1);
 
                 // --- Contours ---
                 // Le point de mesure tremble un peu, d'après la position à l'écran : un trait de
@@ -207,7 +283,8 @@ Shader "Deckscent/Gravure"
                 // lointain resterait sinon à mi-ton (quadrillé). Le ton descend vers le noir entre
                 // _DarkStart et _DarkEnd.
                 // Là où rien n'est dessiné (au-delà de tout), le noir complet.
-                float darkness = geoMask > 0.0 ? smoothstep(_DarkStart, max(_DarkEnd, _DarkStart + 0.01), d0) : 1.0;
+                float darkScale = _DarkScale > 0.0 ? _DarkScale : 1.0;
+                float darkness = geoMask > 0.0 ? smoothstep(_DarkStart * darkScale, max(_DarkEnd, _DarkStart + 0.01) * darkScale, d0) : 1.0;
                 // Ce qu'une vraie lumière éclaire (torche au loin) échappe à l'obscurité : un point
                 // lumineux dans le noir. Seul ce qui n'a que la lumière ambiante s'y perd.
                 darkness *= 1.0 - smoothstep(_LitKeep, _LitKeep + 0.25, toneLum) * geoMask;

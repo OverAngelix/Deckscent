@@ -1,4 +1,4 @@
-// Éclairage en aplats façon bande dessinée : la lumière est découpée net (éclairé / ombre)
+﻿// Éclairage en aplats façon bande dessinée : la lumière est découpée net (éclairé / ombre)
 // au lieu d'un dégradé. Toutes les lumières de la scène (principale et additionnelles, en
 // Forward+) et leurs ombres portées. La décroissance des lumières reste continue : la
 // découper en paliers crée des anneaux cernés d'encre dans le post-process gravure.
@@ -18,7 +18,9 @@ Shader "Deckscent/Toon"
         _ShadeThreshold("Frontière éclairé / ombre (-1 à 1)", Range(-1, 1)) = 0
         _ShadeSoftness("Douceur de la frontière", Range(0, 0.5)) = 0.03
         _Glow("Lueur propre, ajoutée à la lumière reçue (0 = aucune ; ennemis et trésors, pour qu'on les voie dans le noir)", Range(0, 1)) = 0
-        [HideInInspector] _Cutoff("Seuil alpha", Range(0, 1)) = 0.5
+        [Toggle(_ALPHATEST_ON)] _AlphaClip("Découpe alpha (feuillages : la texture porte la forme des feuilles)", Float) = 0
+        _Cutoff("Seuil alpha", Range(0, 1)) = 0.5
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Faces dessinées (Off = les deux : feuillages en cartes)", Float) = 2
     }
 
     SubShader
@@ -29,6 +31,7 @@ Shader "Deckscent/Toon"
         {
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
+            Cull [_Cull]
 
             HLSLPROGRAM
             #pragma target 3.0
@@ -45,6 +48,7 @@ Shader "Deckscent/Toon"
             #pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
+            #pragma shader_feature_local _ALPHATEST_ON
 
             #include "ToonInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -94,16 +98,22 @@ Shader "Deckscent/Toon"
                     * light.distanceAttenuation * light.shadowAttenuation;
             }
 
-            half4 ToonFragment(Varyings input) : SV_Target
+            half4 ToonFragment(Varyings input, bool isFrontFace : SV_IsFrontFace) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
 
-                half3 tex = SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap)).rgb;
+                half4 texel = SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
+                #if defined(_ALPHATEST_ON)
+                    clip(texel.a * _BaseColor.a - _Cutoff);
+                #endif
+                half3 tex = texel.rgb;
                 half gray = dot(tex, half3(0.299, 0.587, 0.114));
                 tex = min(lerp(gray.xxx, tex, _TextureSaturation) * _TextureGain, 1.0);
                 half3 albedo = _BaseColor.rgb * lerp(half3(1, 1, 1), tex, _TextureStrength);
 
                 half3 normalWS = NormalizeNormalPerPixel(input.normalWS);
+                // Faces doubles (feuillages) : le dos d'une carte est éclairé comme sa face.
+                normalWS = isFrontFace ? normalWS : -normalWS;
                 InputData inputData = (InputData)0;
                 inputData.positionWS = input.positionWS;
                 inputData.normalWS = normalWS;
@@ -144,6 +154,7 @@ Shader "Deckscent/Toon"
         {
             Name "ShadowCaster"
             Tags { "LightMode" = "ShadowCaster" }
+            Cull [_Cull]
             ZWrite On
             ZTest LEqual
             ColorMask 0
@@ -154,6 +165,7 @@ Shader "Deckscent/Toon"
             #pragma fragment ShadowPassFragment
             #pragma multi_compile_instancing
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #pragma shader_feature_local _ALPHATEST_ON
             #include "ToonInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
             ENDHLSL
@@ -163,6 +175,7 @@ Shader "Deckscent/Toon"
         {
             Name "DepthOnly"
             Tags { "LightMode" = "DepthOnly" }
+            Cull [_Cull]
             ZWrite On
             ColorMask R
 
@@ -171,6 +184,7 @@ Shader "Deckscent/Toon"
             #pragma vertex DepthOnlyVertex
             #pragma fragment DepthOnlyFragment
             #pragma multi_compile_instancing
+            #pragma shader_feature_local _ALPHATEST_ON
             #include "ToonInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
             ENDHLSL
@@ -181,6 +195,7 @@ Shader "Deckscent/Toon"
         {
             Name "DepthNormals"
             Tags { "LightMode" = "DepthNormals" }
+            Cull [_Cull]
             ZWrite On
 
             HLSLPROGRAM
@@ -190,6 +205,7 @@ Shader "Deckscent/Toon"
             #pragma multi_compile_instancing
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
             #pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+            #pragma shader_feature_local _ALPHATEST_ON
             #include "ToonInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLitDepthNormalsPass.hlsl"
             ENDHLSL

@@ -213,7 +213,7 @@ namespace Deckscent
                 if (before < restartDelay + 1f)
                     _dirty = true;
                 if (_surfaceTime >= restartDelay && (Pressed(_restart) || Pressed(_restartAlt) || Pressed(_toMenu)))
-                    SceneFlow.LoadMenu();
+                    SceneFlow.LoadCamp();
             }
             var mission = dungeon != null ? dungeon.Mission : null;
             if (mission != _shownMission || (mission != null && mission.Version != _shownVersion))
@@ -273,7 +273,8 @@ namespace Deckscent
         }
 
         /// <summary>Recharge la scène (nouvelle partie).</summary>
-        public void Restart() => SceneFlow.Reload();
+        /// <summary>Après la mort : retour au camp (on repart de là en expédition).</summary>
+        public void Restart() => SceneFlow.LoadCamp();
 
         public void Redraw()
         {
@@ -503,7 +504,7 @@ namespace Deckscent
                 var b = Mathf.Clamp01((_deadTime - restartDelay) / 0.4f);
                 // Recommencer : Entrée au clavier (Player/Wait), le bouton du bas à la manette (Player/Interact, L3 est peu parlant).
                 var restartKeys = KeyPrompts.Of(ControlDevice.IsGamepad ? "Player/Interact" : "Player/Wait");
-                KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.recommencer"), new Hint(KeyPrompts.Back(), "aide.menu") },
+                KeyPrompts.DrawHints(ink, texts, new[] { new Hint(restartKeys, "aide.camp"), new Hint(KeyPrompts.Back(), "aide.menu") },
                     0f, cy + 144f, screen.x, 18, WithAlpha(paperColor, b), WithAlpha(paperColor, b), WithAlpha(inkColor, b));
             }
         }

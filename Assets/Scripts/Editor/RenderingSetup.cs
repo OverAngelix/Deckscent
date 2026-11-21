@@ -147,11 +147,25 @@ namespace Deckscent.Editor
             if (material != null)
                 return material;
             material = new Material(toon);
-            var texture = source.HasProperty("_Albedo_Map") ? source.GetTexture("_Albedo_Map")
-                : source.HasProperty("_BaseMap") ? source.GetTexture("_BaseMap") : null;
+            // Atlas des décors (Generic_Basic : _Albedo_Map), des arbres (SyntyStudios_Trees :
+            // _Main_Texture) ou d'un matériau URP (_BaseMap).
+            Texture texture = null;
+            foreach (var property in new[] { "_Albedo_Map", "_Main_Texture", "_BaseMap" })
+                if (texture == null && source.HasProperty(property))
+                    texture = source.GetTexture(property);
             material.SetTexture("_BaseMap", texture);
             material.SetFloat("_TextureGain", texture != null ? SyntyTextureGain : 1f);
             material.SetFloat("_TextureSaturation", 0f);
+            // Feuillages Synty : des cartes dont la texture découpe les feuilles (alpha), vues des
+            // deux côtés. Les atlas sans alpha restent pleins.
+            if (texture is Texture2D t2d && UnityEngine.Experimental.Rendering.GraphicsFormatUtility.HasAlphaChannel(t2d.graphicsFormat)
+                && (source.shader.name.Contains("Trees") || source.shader.name.Contains("LOD") || source.shader.name.Contains("Foliage")))
+            {
+                material.EnableKeyword("_ALPHATEST_ON");
+                material.SetFloat("_AlphaClip", 1f);
+                material.SetFloat("_Cutoff", 0.5f);
+                material.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
+            }
             AssetDatabase.CreateAsset(material, path);
             return material;
         }
