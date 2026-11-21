@@ -199,29 +199,48 @@ namespace Deckscent.Editor
             set.FindPropertyRelative("ceiling").objectReferenceValue = Load(MazeDir + "/" + ceiling + ".prefab");
         }
 
+        /// <summary>
+        /// Avancée de la torche ornée (SM_Prop_Torch_Ornate_02) : sa plaque de pierre va de z = −0,18 à
+        /// 0,064 dans le modèle, la pierre des murs (Mur_01/03/04) est à z ≈ 0,16 de leur racine. Avec
+        /// 0,11, la plaque est enfoncée dans le mur et n'en dépasse que d'un centimètre (demande de
+        /// l'utilisateur : « incruste-la dans le mur »).
+        /// </summary>
+        const float TorchPlateDepth = 0.11f;
+
+        /// <summary>Reconstruit seulement la torche (sans toucher aux autres prefabs du labyrinthe ni au joueur).</summary>
+        [MenuItem("Deckscent/Construire la torche")]
+        public static void BuildTorchPrefab()
+        {
+            EnsureFolder(MazeDir);
+            SavePrefab(BuildTorch(UnlitMaterial("M_Flamme", Color.white)), MazeDir);
+            RenderingSetup.ConvertPrefabs();
+            AssetDatabase.SaveAssets();
+            Debug.Log("Deckscent : torche reconstruite dans " + MazeDir);
+        }
+
         /// <summary>Torche murale : sa racine est sur le mur, +Z vers la case.</summary>
         static GameObject BuildTorch(Material flame)
         {
             var root = new GameObject("Torche");
 
-            // Bâton Synty, penché de 20° en s'écartant du mur.
-            var stick = FromSynty("Bâton", Synty + "Props/SM_Prop_TorchStick_01.prefab",
-                Vector3.zero, Quaternion.identity, Vector3.one * 0.5f);
-            stick.transform.SetParent(root.transform, false);
-            stick.transform.localPosition = new Vector3(0f, -0.35f, 0.12f);
-            stick.transform.localRotation = Quaternion.Euler(20f, 0f, 0f);
-            foreach (var r in stick.GetComponentsInChildren<MeshRenderer>())
+            // Torche ornée Synty sur sa plaque de pierre, la plaque incrustée dans le mur.
+            var torch = FromSynty("Support", Synty + "Props/SM_Prop_Torch_Ornate_02.prefab",
+                Vector3.zero, Quaternion.identity, Vector3.one);
+            torch.transform.SetParent(root.transform, false);
+            torch.transform.localPosition = new Vector3(0f, -0.2f, TorchPlateDepth);
+            foreach (var r in torch.GetComponentsInChildren<MeshRenderer>())
                 r.shadowCastingMode = ShadowCastingMode.Off; // sinon un trait d'ombre parasite sur le mur
 
+            // Flamme dans la coupe de la torche (tête du modèle vers (0 ; 0,36 ; 0,37)).
             var fire = Primitive("Flamme", PrimitiveType.Sphere, flame,
-                new Vector3(0f, 0.3f, 0.36f), Quaternion.identity, new Vector3(0.2f, 0.28f, 0.2f));
+                new Vector3(0f, 0.3f, 0.37f + TorchPlateDepth), Quaternion.identity, new Vector3(0.18f, 0.26f, 0.18f));
             foreach (var r in fire.GetComponentsInChildren<MeshRenderer>())
                 r.shadowCastingMode = ShadowCastingMode.Off;
             fire.transform.SetParent(root.transform, false);
 
             var lightGo = new GameObject("Lumière");
             lightGo.transform.SetParent(root.transform, false);
-            lightGo.transform.localPosition = new Vector3(0f, 0.3f, 0.6f);
+            lightGo.transform.localPosition = new Vector3(0f, 0.3f, 0.6f + TorchPlateDepth); // devant la flamme
             var light = lightGo.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = new Color(1f, 0.97f, 0.92f);

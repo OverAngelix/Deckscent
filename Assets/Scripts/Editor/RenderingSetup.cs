@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -92,7 +92,7 @@ namespace Deckscent.Editor
         }
 
         /// <summary>Remplace les matériaux des prefabs par leur équivalent toon (sauf l'unlit de la flamme).</summary>
-        static void ConvertPrefabs()
+        internal static void ConvertPrefabs()
         {
             if (!AssetDatabase.IsValidFolder(ToonDir))
                 AssetDatabase.CreateFolder(MaterialDir, "Toon");
@@ -105,6 +105,9 @@ namespace Deckscent.Editor
                 var changed = false;
                 foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
+                    // Les particules gardent leurs matériaux (FxBuilder : mélange alpha, voir docs/effets.md).
+                    if (renderer is ParticleSystemRenderer)
+                        continue;
                     var materials = renderer.sharedMaterials;
                     for (var i = 0; i < materials.Length; i++)
                     {

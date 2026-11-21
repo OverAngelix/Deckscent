@@ -10,9 +10,9 @@ Torche murale, posée sur les cases `T`, accrochée au premier mur voisin. Sa ra
 
 ```
 Torche
-├─ Bâton
+├─ Support
 │  └─ Pièce
-│     └─ SM_Prop_TorchStick_01  [MeshFilter, MeshRenderer]
+│     └─ SM_Prop_Torch_Ornate_02  [MeshFilter, MeshRenderer]
 ├─ Flamme
 │  └─ Forme  [MeshFilter, MeshRenderer]
 └─ Lumière  [Light, TorchFlicker]
@@ -20,21 +20,15 @@ Torche
 
 ## Contenu
 
-### Torche / Bâton
+### Torche / Support
 
 - **Transform**
-  - position (0, -0.35, 0.12)
-  - rotation (20, 0, 0)°
+  - position (0, -0.2, 0.11)
 
-### Torche / Bâton / Pièce
-
-- **Transform**
-  - échelle (0.5, 0.5, 0.5)
-
-### Torche / Bâton / Pièce / SM_Prop_TorchStick_01
+### Torche / Support / Pièce / SM_Prop_Torch_Ornate_02
 
 - **MeshFilter**
-  - maillage `SM_Prop_TorchStick_01` (`Assets/Synty/PolygonDungeon/Models/SM_Prop_TorchStick_01.fbx`)
+  - maillage `SM_Prop_Torch_Ornate_02` (`Assets/Synty/PolygonDungeon/Models/SM_Prop_Torch_Ornate_02.fbx`)
 - **MeshRenderer**
   - matériaux `M_Toon_PolygonDungeon_01` (Deckscent/Toon)
   - ombres portées : Off
@@ -42,8 +36,8 @@ Torche
 ### Torche / Flamme / Forme
 
 - **Transform**
-  - position (0, 0.3, 0.36)
-  - échelle (0.2, 0.28, 0.2)
+  - position (0, 0.3, 0.48)
+  - échelle (0.18, 0.26, 0.18)
 - **MeshFilter**
   - maillage `Sphere` (`Library/unity default resources`)
 - **MeshRenderer**
@@ -53,7 +47,7 @@ Torche
 ### Torche / Lumière
 
 - **Transform**
-  - position (0, 0.3, 0.6)
+  - position (0, 0.3, 0.71)
 - **Light**
   - Point, couleur (1, 0.97, 0.92), intensité 2.5, portée 9 m, ombres Hard
 - **TorchFlicker**
